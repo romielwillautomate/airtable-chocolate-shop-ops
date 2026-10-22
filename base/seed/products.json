@@ -1,0 +1,807 @@
+{
+  "table": "Products",
+  "records": [
+    {
+      "ref": "dss",
+      "fields": {
+        "SKU": "DC-BAR-DARK-SEASALT",
+        "Name": "Dark 70% Sea Salt Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "Dark",
+        "Flavor Family": "Salty",
+        "Flavor Notes": [
+          "Sea Salt"
+        ],
+        "Diet Labels": [
+          "Vegan",
+          "Dairy-Free",
+          "Gluten-Free"
+        ],
+        "Ingredients": "Cocoa mass, cane sugar, cocoa butter, sea salt.",
+        "Price": 7.5,
+        "Weight Grams": 85,
+        "Subscription Eligible": true,
+        "Wholesale Available": true,
+        "Reorder Point": 60,
+        "Reorder Quantity": 300,
+        "Daily Capacity": 400,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000101",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000101",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000101",
+        "Shopify Stock": 180,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "d85",
+      "fields": {
+        "SKU": "DC-BAR-DARK-85",
+        "Name": "Dark 85% Single Origin Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "Dark",
+        "Flavor Family": "Classic",
+        "Flavor Notes": [
+          "Red Fruit"
+        ],
+        "Diet Labels": [
+          "Vegan",
+          "Dairy-Free",
+          "Gluten-Free"
+        ],
+        "Ingredients": "Cocoa mass, cane sugar, cocoa butter.",
+        "Price": 8.0,
+        "Weight Grams": 85,
+        "Subscription Eligible": true,
+        "Wholesale Available": true,
+        "Reorder Point": 40,
+        "Reorder Quantity": 200,
+        "Daily Capacity": 300,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000102",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000102",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000102",
+        "Shopify Stock": 30,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "msc",
+      "fields": {
+        "SKU": "DC-BAR-MILK-CARAMEL",
+        "Name": "Milk Salted Caramel Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "Milk",
+        "Flavor Family": "Caramel",
+        "Flavor Notes": [
+          "Caramel",
+          "Sea Salt"
+        ],
+        "Contains Allergens": [
+          "Milk",
+          "Soy"
+        ],
+        "May Contain Traces": [
+          "Wheat"
+        ],
+        "Ingredients": "Cane sugar, cocoa butter, whole milk powder, cocoa mass, caramel (sugar, cream, butter), sea salt, soy lecithin.",
+        "Price": 7.0,
+        "Weight Grams": 85,
+        "Subscription Eligible": true,
+        "Wholesale Available": true,
+        "Reorder Point": 60,
+        "Reorder Quantity": 300,
+        "Daily Capacity": 400,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000103",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000103",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000103",
+        "Shopify Stock": 290,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "mhz",
+      "fields": {
+        "SKU": "DC-BAR-MILK-HAZELNUT",
+        "Name": "Milk Hazelnut Crunch Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "Milk",
+        "Flavor Family": "Nutty",
+        "Flavor Notes": [
+          "Hazelnut"
+        ],
+        "Contains Allergens": [
+          "Milk",
+          "Tree Nuts",
+          "Soy"
+        ],
+        "May Contain Traces": [
+          "Peanuts"
+        ],
+        "Ingredients": "Cane sugar, cocoa butter, whole milk powder, roasted hazelnuts, cocoa mass, soy lecithin.",
+        "Price": 7.5,
+        "Weight Grams": 90,
+        "Subscription Eligible": true,
+        "Wholesale Available": true,
+        "Reorder Point": 50,
+        "Reorder Quantity": 250,
+        "Daily Capacity": 350,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000104",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000104",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000104",
+        "Shopify Stock": 250,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "dal",
+      "fields": {
+        "SKU": "DC-BAR-DARK-ALMOND",
+        "Name": "Dark Toasted Almond Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "Dark",
+        "Flavor Family": "Nutty",
+        "Flavor Notes": [
+          "Almond"
+        ],
+        "Contains Allergens": [
+          "Tree Nuts"
+        ],
+        "May Contain Traces": [
+          "Milk",
+          "Peanuts"
+        ],
+        "Diet Labels": [
+          "Gluten-Free"
+        ],
+        "Ingredients": "Cocoa mass, cane sugar, toasted almonds, cocoa butter.",
+        "Price": 7.5,
+        "Weight Grams": 90,
+        "Subscription Eligible": true,
+        "Wholesale Available": false,
+        "Reorder Point": 40,
+        "Reorder Quantity": 200,
+        "Daily Capacity": 300,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000105",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000105",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000105",
+        "Shopify Stock": 110,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "drb",
+      "fields": {
+        "SKU": "DC-BAR-DARK-RASPBERRY",
+        "Name": "Dark Raspberry Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "Dark",
+        "Flavor Family": "Fruity",
+        "Flavor Notes": [
+          "Raspberry"
+        ],
+        "May Contain Traces": [
+          "Milk",
+          "Tree Nuts"
+        ],
+        "Diet Labels": [
+          "Vegan",
+          "Gluten-Free"
+        ],
+        "Ingredients": "Cocoa mass, cane sugar, cocoa butter, freeze dried raspberry. Made on shared equipment with tree nuts.",
+        "Price": 7.5,
+        "Weight Grams": 85,
+        "Subscription Eligible": true,
+        "Wholesale Available": false,
+        "Reorder Point": 40,
+        "Reorder Quantity": 200,
+        "Daily Capacity": 300,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000106",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000106",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000106",
+        "Shopify Stock": 55,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "dor",
+      "fields": {
+        "SKU": "DC-BAR-DARK-ORANGE",
+        "Name": "Dark Orange Zest Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "Dark",
+        "Flavor Family": "Fruity",
+        "Flavor Notes": [
+          "Orange"
+        ],
+        "May Contain Traces": [
+          "Milk"
+        ],
+        "Diet Labels": [
+          "Vegan",
+          "Gluten-Free"
+        ],
+        "Ingredients": "Cocoa mass, cane sugar, cocoa butter, candied orange peel, orange oil.",
+        "Price": 7.5,
+        "Weight Grams": 85,
+        "Subscription Eligible": true,
+        "Wholesale Available": false,
+        "Reorder Point": 40,
+        "Reorder Quantity": 200,
+        "Daily Capacity": 300,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000107",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000107",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000107",
+        "Shopify Stock": 62,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "dcc",
+      "fields": {
+        "SKU": "DC-BAR-DARK-CHILI",
+        "Name": "Dark Chili Cinnamon Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "Dark",
+        "Flavor Family": "Spiced",
+        "Flavor Notes": [
+          "Chili",
+          "Cinnamon"
+        ],
+        "May Contain Traces": [
+          "Milk"
+        ],
+        "Diet Labels": [
+          "Vegan",
+          "Gluten-Free"
+        ],
+        "Ingredients": "Cocoa mass, cane sugar, cocoa butter, cinnamon, chipotle chili.",
+        "Price": 7.75,
+        "Weight Grams": 85,
+        "Subscription Eligible": true,
+        "Wholesale Available": false,
+        "Reorder Point": 30,
+        "Reorder Quantity": 150,
+        "Daily Capacity": 250,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000108",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000108",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000108",
+        "Shopify Stock": 19,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "wma",
+      "fields": {
+        "SKU": "DC-BAR-WHITE-MATCHA",
+        "Name": "White Matcha Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "White",
+        "Flavor Family": "Earthy",
+        "Flavor Notes": [
+          "Matcha"
+        ],
+        "Contains Allergens": [
+          "Milk",
+          "Soy"
+        ],
+        "May Contain Traces": [
+          "Tree Nuts"
+        ],
+        "Diet Labels": [
+          "Gluten-Free"
+        ],
+        "Ingredients": "Cane sugar, cocoa butter, whole milk powder, matcha, soy lecithin. Made on shared equipment with tree nuts.",
+        "Price": 7.75,
+        "Weight Grams": 85,
+        "Subscription Eligible": true,
+        "Wholesale Available": false,
+        "Reorder Point": 30,
+        "Reorder Quantity": 150,
+        "Daily Capacity": 250,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000109",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000109",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000109",
+        "Shopify Stock": 20,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "oat",
+      "fields": {
+        "SKU": "DC-BAR-OAT-MILK",
+        "Name": "Oat Milk Chocolate Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "Oat Milk",
+        "Flavor Family": "Classic",
+        "Flavor Notes": [
+          "Vanilla"
+        ],
+        "May Contain Traces": [
+          "Wheat"
+        ],
+        "Diet Labels": [
+          "Vegan",
+          "Dairy-Free"
+        ],
+        "Ingredients": "Cane sugar, cocoa butter, oat powder, cocoa mass, vanilla. Oats processed in a facility that handles wheat.",
+        "Price": 7.5,
+        "Weight Grams": 85,
+        "Subscription Eligible": true,
+        "Wholesale Available": false,
+        "Reorder Point": 40,
+        "Reorder Quantity": 200,
+        "Daily Capacity": 300,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000110",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000110",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000110",
+        "Shopify Stock": 80,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "mes",
+      "fields": {
+        "SKU": "DC-BAR-MILK-ESPRESSO",
+        "Name": "Milk Espresso Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "Milk",
+        "Flavor Family": "Coffee",
+        "Flavor Notes": [
+          "Coffee"
+        ],
+        "Contains Allergens": [
+          "Milk",
+          "Soy"
+        ],
+        "Diet Labels": [
+          "Gluten-Free"
+        ],
+        "Ingredients": "Cane sugar, cocoa butter, whole milk powder, cocoa mass, ground espresso, soy lecithin.",
+        "Price": 7.5,
+        "Weight Grams": 85,
+        "Subscription Eligible": true,
+        "Wholesale Available": false,
+        "Reorder Point": 30,
+        "Reorder Quantity": 150,
+        "Daily Capacity": 250,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000111",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000111",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000111",
+        "Shopify Stock": 50,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "dmi",
+      "fields": {
+        "SKU": "DC-BAR-DARK-MINT",
+        "Name": "Dark Mint Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "Dark",
+        "Flavor Family": "Fresh",
+        "Flavor Notes": [
+          "Mint"
+        ],
+        "Diet Labels": [
+          "Vegan",
+          "Dairy-Free",
+          "Gluten-Free"
+        ],
+        "Ingredients": "Cocoa mass, cane sugar, cocoa butter, peppermint oil.",
+        "Price": 7.5,
+        "Weight Grams": 85,
+        "Subscription Eligible": true,
+        "Wholesale Available": false,
+        "Reorder Point": 30,
+        "Reorder Quantity": 150,
+        "Daily Capacity": 250,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000112",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000112",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000112",
+        "Shopify Stock": 3,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "mpb",
+      "fields": {
+        "SKU": "DC-BAR-MILK-PEANUT",
+        "Name": "Milk Peanut Butter Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "Milk",
+        "Flavor Family": "Nutty",
+        "Flavor Notes": [
+          "Peanut"
+        ],
+        "Contains Allergens": [
+          "Milk",
+          "Peanuts",
+          "Soy"
+        ],
+        "May Contain Traces": [
+          "Tree Nuts"
+        ],
+        "Ingredients": "Cane sugar, cocoa butter, whole milk powder, peanut butter, cocoa mass, soy lecithin.",
+        "Price": 7.5,
+        "Weight Grams": 90,
+        "Subscription Eligible": true,
+        "Wholesale Available": false,
+        "Reorder Point": 40,
+        "Reorder Quantity": 200,
+        "Daily Capacity": 300,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000113",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000113",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000113",
+        "Shopify Stock": 85,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "wcc",
+      "fields": {
+        "SKU": "DC-BAR-WHITE-COOKIE",
+        "Name": "White Cookies and Cream Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "White",
+        "Flavor Family": "Classic",
+        "Flavor Notes": [
+          "Cookie",
+          "Vanilla"
+        ],
+        "Contains Allergens": [
+          "Milk",
+          "Wheat",
+          "Soy"
+        ],
+        "May Contain Traces": [
+          "Eggs"
+        ],
+        "Ingredients": "Cane sugar, cocoa butter, whole milk powder, cocoa cookie pieces (wheat flour, sugar, cocoa), soy lecithin.",
+        "Price": 7.25,
+        "Weight Grams": 90,
+        "Subscription Eligible": true,
+        "Wholesale Available": false,
+        "Reorder Point": 30,
+        "Reorder Quantity": 150,
+        "Daily Capacity": 250,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000114",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000114",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000114",
+        "Shopify Stock": 48,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "mlh",
+      "fields": {
+        "SKU": "DC-BAR-MILK-LAVENDER",
+        "Name": "Milk Lavender Honey Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "Milk",
+        "Flavor Family": "Floral",
+        "Flavor Notes": [
+          "Lavender",
+          "Honey"
+        ],
+        "Contains Allergens": [
+          "Milk"
+        ],
+        "May Contain Traces": [
+          "Tree Nuts"
+        ],
+        "Diet Labels": [
+          "Gluten-Free"
+        ],
+        "Ingredients": "Cane sugar, cocoa butter, whole milk powder, cocoa mass, honey, lavender. Made on shared equipment with tree nuts.",
+        "Price": 7.75,
+        "Weight Grams": 85,
+        "Subscription Eligible": true,
+        "Wholesale Available": false,
+        "Reorder Point": 30,
+        "Reorder Quantity": 150,
+        "Daily Capacity": 250,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000115",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000115",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000115",
+        "Shopify Stock": 49,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "mcl",
+      "fields": {
+        "SKU": "DC-BAR-MILK-CLASSIC",
+        "Name": "Classic Milk 40% Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "Milk",
+        "Flavor Family": "Classic",
+        "Flavor Notes": [
+          "Vanilla"
+        ],
+        "Contains Allergens": [
+          "Milk",
+          "Soy"
+        ],
+        "Diet Labels": [
+          "Gluten-Free"
+        ],
+        "Ingredients": "Cane sugar, cocoa butter, whole milk powder, cocoa mass, soy lecithin, vanilla.",
+        "Price": 6.5,
+        "Weight Grams": 85,
+        "Subscription Eligible": true,
+        "Wholesale Available": true,
+        "Reorder Point": 60,
+        "Reorder Quantity": 300,
+        "Daily Capacity": 400,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000116",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000116",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000116",
+        "Shopify Stock": 200,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "wst",
+      "fields": {
+        "SKU": "DC-BAR-WHITE-STRAWBERRY",
+        "Name": "White Strawberry Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "White",
+        "Flavor Family": "Fruity",
+        "Flavor Notes": [
+          "Strawberry"
+        ],
+        "Contains Allergens": [
+          "Milk",
+          "Soy"
+        ],
+        "Diet Labels": [
+          "Gluten-Free"
+        ],
+        "Ingredients": "Cane sugar, cocoa butter, whole milk powder, freeze dried strawberry, soy lecithin.",
+        "Price": 7.25,
+        "Weight Grams": 85,
+        "Subscription Eligible": true,
+        "Wholesale Available": false,
+        "Reorder Point": 30,
+        "Reorder Quantity": 150,
+        "Daily Capacity": 250,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000117",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000117",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000117",
+        "Shopify Stock": 62,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "rch",
+      "fields": {
+        "SKU": "DC-BAR-RUBY-CHERRY",
+        "Name": "Ruby Cherry Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "Ruby",
+        "Flavor Family": "Fruity",
+        "Flavor Notes": [
+          "Cherry"
+        ],
+        "Contains Allergens": [
+          "Milk",
+          "Soy"
+        ],
+        "Diet Labels": [
+          "Gluten-Free"
+        ],
+        "Ingredients": "Ruby chocolate (sugar, cocoa butter, skim milk powder, cocoa mass, soy lecithin), dried cherry.",
+        "Price": 7.75,
+        "Weight Grams": 85,
+        "Subscription Eligible": true,
+        "Wholesale Available": false,
+        "Reorder Point": 30,
+        "Reorder Quantity": 150,
+        "Daily Capacity": 250,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000118",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000118",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000118",
+        "Shopify Stock": 63,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "des",
+      "fields": {
+        "SKU": "DC-BAR-DARK-ESPRESSO",
+        "Name": "Dark Espresso Bean Bar",
+        "Status": "Active",
+        "Category": "Bar",
+        "Chocolate Type": "Dark",
+        "Flavor Family": "Coffee",
+        "Flavor Notes": [
+          "Coffee"
+        ],
+        "Diet Labels": [
+          "Vegan",
+          "Dairy-Free",
+          "Gluten-Free"
+        ],
+        "Ingredients": "Cocoa mass, cane sugar, cocoa butter, roasted espresso beans.",
+        "Price": 7.75,
+        "Weight Grams": 85,
+        "Subscription Eligible": true,
+        "Wholesale Available": false,
+        "Reorder Point": 30,
+        "Reorder Quantity": 150,
+        "Daily Capacity": 250,
+        "Production Lead Days": 3,
+        "Shopify Product ID": "gid://shopify/Product/8800000000119",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000119",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000119",
+        "Shopify Stock": 68,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "prb",
+      "fields": {
+        "SKU": "DC-BOX-PRALINE-12",
+        "Name": "Hazelnut Praline Box (12 pieces)",
+        "Status": "Active",
+        "Category": "Praline Box",
+        "Chocolate Type": "Milk",
+        "Flavor Family": "Nutty",
+        "Flavor Notes": [
+          "Hazelnut",
+          "Caramel"
+        ],
+        "Contains Allergens": [
+          "Milk",
+          "Tree Nuts",
+          "Soy",
+          "Wheat"
+        ],
+        "May Contain Traces": [
+          "Peanuts",
+          "Eggs"
+        ],
+        "Ingredients": "Milk chocolate, hazelnut praline (hazelnuts, sugar), wafer (wheat flour), cream, soy lecithin.",
+        "Price": 24.0,
+        "Weight Grams": 150,
+        "Subscription Eligible": false,
+        "Wholesale Available": true,
+        "Reorder Point": 20,
+        "Reorder Quantity": 100,
+        "Daily Capacity": 120,
+        "Production Lead Days": 2,
+        "Shopify Product ID": "gid://shopify/Product/8800000000120",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000120",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000120",
+        "Shopify Stock": 38,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "prl",
+      "fields": {
+        "SKU": "DC-PRALINE-HAZELNUT",
+        "Name": "Hazelnut Praline, single piece (wholesale)",
+        "Status": "Active",
+        "Category": "Praline",
+        "Chocolate Type": "Milk",
+        "Flavor Family": "Nutty",
+        "Flavor Notes": [
+          "Hazelnut"
+        ],
+        "Contains Allergens": [
+          "Milk",
+          "Tree Nuts",
+          "Soy"
+        ],
+        "May Contain Traces": [
+          "Peanuts",
+          "Eggs"
+        ],
+        "Ingredients": "Milk chocolate, hazelnut praline (hazelnuts, sugar), cream, soy lecithin.",
+        "Price": 1.6,
+        "Weight Grams": 12,
+        "Subscription Eligible": false,
+        "Wholesale Available": true,
+        "Reorder Point": 200,
+        "Reorder Quantity": 1000,
+        "Daily Capacity": 1500,
+        "Production Lead Days": 2
+      }
+    },
+    {
+      "ref": "hot",
+      "fields": {
+        "SKU": "DC-HOT-COCOA-250",
+        "Name": "Drinking Chocolate Flakes 250 g",
+        "Status": "Active",
+        "Category": "Drinking Chocolate",
+        "Chocolate Type": "Dark",
+        "Flavor Family": "Classic",
+        "Flavor Notes": [
+          "Vanilla"
+        ],
+        "Contains Allergens": [
+          "Milk"
+        ],
+        "May Contain Traces": [
+          "Soy"
+        ],
+        "Diet Labels": [
+          "Gluten-Free"
+        ],
+        "Ingredients": "Dark chocolate flakes (cocoa mass, sugar, cocoa butter), milk powder, vanilla.",
+        "Price": 14.0,
+        "Weight Grams": 250,
+        "Subscription Eligible": false,
+        "Wholesale Available": true,
+        "Reorder Point": 20,
+        "Reorder Quantity": 100,
+        "Daily Capacity": 200,
+        "Production Lead Days": 2,
+        "Shopify Product ID": "gid://shopify/Product/8800000000122",
+        "Shopify Variant ID": "gid://shopify/ProductVariant/4510000000122",
+        "Shopify Inventory Item ID": "gid://shopify/InventoryItem/4720000000122",
+        "Shopify Stock": 39,
+        "Stock Synced At": "2026-10-19T10:00:00.000Z"
+      }
+    },
+    {
+      "ref": "psb",
+      "fields": {
+        "SKU": "DC-BAR-PUMPKIN-SPICE",
+        "Name": "Pumpkin Spice Milk Bar",
+        "Status": "Draft",
+        "Category": "Bar",
+        "Chocolate Type": "Milk",
+        "Flavor Family": "Spiced",
+        "Flavor Notes": [
+          "Pumpkin",
+          "Cinnamon"
+        ],
+        "Price": 7.5,
+        "Weight Grams": 85,
+        "Subscription Eligible": false,
+        "Wholesale Available": false,
+        "Needs Review": true,
+        "Review Reason": "Created automatically from Shopify order #1019: unknown SKU. Add allergens, ingredients and stock rules before selling."
+      }
+    }
+  ]
+}

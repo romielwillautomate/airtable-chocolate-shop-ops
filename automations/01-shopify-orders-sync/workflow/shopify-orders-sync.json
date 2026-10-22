@@ -1,0 +1,2620 @@
+{
+  "name": "Shopify Orders to Airtable, with Melt-Risk Check",
+  "nodes": [
+    {
+      "id": "3bdf4430-cb89-548f-afec-f73a859d8144",
+      "name": "Webhook: Shopify Orders",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "shopify-orders",
+        "responseMode": "responseNode",
+        "options": {
+          "rawBody": true
+        }
+      },
+      "webhookId": "5b0a3f0e-6c1d-4d2a-9a51-0d1e7c2b4a01"
+    },
+    {
+      "id": "7007ad48-20c6-561f-ab63-36f98de3c889",
+      "name": "Crypto: Sign Raw Body",
+      "type": "n8n-nodes-base.crypto",
+      "typeVersion": 1,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "action": "hmac",
+        "type": "SHA256",
+        "binaryData": true,
+        "binaryPropertyName": "data",
+        "dataPropertyName": "expectedHmac",
+        "secret": "={{ $env.SHOPIFY_WEBHOOK_SECRET }}",
+        "encoding": "base64"
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "eb77adfc-4fe0-508e-9fb2-98c5945f3a8a",
+      "name": "Code: Verify And Parse",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Checks the Shopify signature, then turns the order into the values this workflow writes.\n// The Crypto node above computed the expected signature from the raw body with SHOPIFY_WEBHOOK_SECRET.\n// Verdicts: accepted, ignored (another topic), invalid (signed but not an order), unauthorized, error.\nconst hook = $('Webhook: Shopify Orders').item.json;\nconst headers = hook.headers || {};\nconst secret = String($env.SHOPIFY_WEBHOOK_SECRET || '');\nconst topic = String(headers['x-shopify-topic'] || '').trim();\nconst TOPICS = ['orders/create', 'orders/updated'];\nconst out = {\n  verdict: 'accepted', reason: '', topic,\n  webhookId: String(headers['x-shopify-webhook-id'] || '').trim(),\n  eventId: String(headers['x-shopify-event-id'] || '').trim(),\n  receivedAt: new Date().toISOString(),\n};\n\n// Headers are not covered by the signature, and these reasons end up in a Slack alert. Show header values with\n// safe characters only, so a forged call cannot post <!channel> or a link through the error workflow.\nconst shown = (v) => (String(v || '').replace(/[^A-Za-z0-9._\\/@-]/g, '?').slice(0, 64) || 'none');\n\n// Compare without stopping at the first different character.\nfunction sameSignature(a, b) {\n  if (!a || !b || a.length !== b.length) return false;\n  let diff = 0;\n  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);\n  return diff === 0;\n}\n\nconst num = (v) => { const n = Number.parseFloat(v); return Number.isFinite(n) ? n : 0; };\nconst money = (v) => Math.round(num(v) * 100) / 100;\nconst int = (v) => { const n = Number.parseInt(v, 10); return Number.isFinite(n) ? n : 0; };\nconst text = (v) => (v === null || v === undefined ? '' : String(v).trim());\nconst isoTime = (v) => { if (!v) return null; const t = Date.parse(v); return Number.isNaN(t) ? null : new Date(t).toISOString(); };\n\nconst FINANCIAL = {\n  pending: 'Pending', authorized: 'Authorized', partially_paid: 'Partially Paid', paid: 'Paid',\n  partially_refunded: 'Partially Refunded', refunded: 'Refunded', voided: 'Voided', expired: 'Expired',\n};\nconst FULFILLMENT = {\n  fulfilled: 'Fulfilled', partial: 'Partial', restocked: 'Restocked', not_eligible: 'Not Eligible', unfulfilled: 'Unfulfilled',\n};\n\ntry {\n  if (!secret) {\n    return { json: { ...out, verdict: 'error', reason: 'SHOPIFY_WEBHOOK_SECRET is not set, so no Shopify webhook can be trusted' } };\n  }\n  const given = String(headers['x-shopify-hmac-sha256'] || '').trim();\n  if (!sameSignature(String($json.expectedHmac || ''), given)) {\n    return { json: { ...out, verdict: 'unauthorized',\n      reason: `Rejected a Shopify webhook with a ${given ? 'wrong' : 'missing'} X-Shopify-Hmac-Sha256 signature (topic ${shown(topic)}, webhook id ${shown(out.webhookId)})` } };\n  }\n  if (!TOPICS.includes(topic)) {\n    return { json: { ...out, verdict: 'ignored', reason: `Topic ${shown(topic)} is not handled here` } };\n  }\n  const o = hook.body;\n  if (!o || typeof o !== 'object' || !o.id || !Array.isArray(o.line_items) || o.line_items.length === 0\n      || o.line_items.some((li) => !li || !li.id)) {\n    return { json: { ...out, verdict: 'invalid', reason: `A signed ${shown(topic)} webhook (id ${shown(out.webhookId)}) did not contain an order with line items` } };\n  }\n  if (!out.webhookId) out.webhookId = `no-webhook-id-${o.id}-${text(o.updated_at)}-${topic}`;\n\n  // Refunds: units per line, and the money actually refunded.\n  const refundedQty = {};\n  let refundTotal = 0;\n  for (const r of o.refunds || []) {\n    for (const rli of r.refund_line_items || []) {\n      const key = text(rli.line_item_id);\n      refundedQty[key] = (refundedQty[key] || 0) + int(rli.quantity);\n    }\n    const tx = (r.transactions || []).filter((t) => t && t.kind === 'refund' && t.status === 'success');\n    if (tx.length) refundTotal += tx.reduce((s, t) => s + num(t.amount), 0);\n    else refundTotal += (r.refund_line_items || []).reduce((s, x) => s + num(x.subtotal) + num(x.total_tax), 0);\n  }\n\n  const lines = o.line_items.map((li, i) => {\n    const id = text(li.id);\n    const quantity = int(li.quantity);\n    const refunded = refundedQty[id] || 0;\n    const current = li.current_quantity === null || li.current_quantity === undefined\n      ? Math.max(quantity - refunded, 0) : int(li.current_quantity);\n    const unit = money(li.price);\n    const skuRaw = li.sku === null || li.sku === undefined ? '' : String(li.sku);\n    return {\n      id, position: i + 1, skuRaw, sku: skuRaw.trim().toUpperCase(), title: text(li.title || li.name),\n      variantId: li.variant_id ? String(li.variant_id) : '', quantity, current, refunded, unit,\n      total: Math.round(unit * current * 100) / 100,\n    };\n  });\n\n  // Gift orders: a cart attribute such as \"Gift\" = \"Yes\" or \"Gift Message\" = \"...\", or the tag \"gift\".\n  const attrs = (o.note_attributes || []).map((a) => ({ name: text(a && a.name).toLowerCase(), value: text(a && a.value) }));\n  const tags = text(o.tags).split(',').map((t) => t.trim()).filter(Boolean);\n  const giftMessage = (attrs.find((a) => a.name.includes('gift') && /(message|note)/.test(a.name) && a.value) || {}).value || '';\n  const giftFlag = attrs.some((a) => a.name.includes('gift') && !/(message|note)/.test(a.name) && /^(yes|y|true|1|on)$/i.test(a.value));\n  const isGift = Boolean(giftMessage) || giftFlag || tags.some((t) => t.toLowerCase() === 'gift');\n\n  const s = o.shipping_address && typeof o.shipping_address === 'object' ? o.shipping_address : null;\n  const ship = s ? {\n    name: text(s.name) || [text(s.first_name), text(s.last_name)].filter(Boolean).join(' '),\n    address: [text(s.address1), text(s.address2)].filter(Boolean).join(', '),\n    city: text(s.city), region: text(s.province_code), country: text(s.country_code).toUpperCase(), zip: text(s.zip),\n  } : null;\n\n  const c = o.customer && typeof o.customer === 'object' ? o.customer : {};\n  const email = text(o.email || o.contact_email || c.email).toLowerCase();\n  const consent = c.email_marketing_consent && c.email_marketing_consent.state;\n  const customer = {\n    shopifyId: c.id ? String(c.id) : '',\n    email,\n    name: [text(c.first_name), text(c.last_name)].filter(Boolean).join(' ') || (ship ? ship.name : ''),\n    phone: text(c.phone || o.phone || (s && s.phone)),\n    acceptsMarketing: consent ? consent === 'subscribed' : Boolean(o.buyer_accepts_marketing),\n  };\n\n  const shippingSet = o.total_shipping_price_set && o.total_shipping_price_set.shop_money;\n  const financialRaw = text(o.financial_status).toLowerCase();\n  const fulfillmentRaw = text(o.fulfillment_status).toLowerCase();\n  const cancelledAt = isoTime(o.cancelled_at);\n  const closedAt = isoTime(o.closed_at);\n  out.order = {\n    shopifyId: String(o.id),\n    number: text(o.name) || `#${text(o.order_number)}`,\n    email,\n    createdAt: isoTime(o.created_at),\n    updatedAt: isoTime(o.updated_at) || isoTime(o.created_at),\n    cancelledAt,\n    financialRaw,\n    financial: FINANCIAL[financialRaw] || null,\n    fulfillmentRaw,\n    fulfillment: fulfillmentRaw ? (FULFILLMENT[fulfillmentRaw] || null) : 'Unfulfilled',\n    status: cancelledAt ? 'Cancelled' : (closedAt ? 'Closed' : 'Open'),\n    subtotal: money(o.subtotal_price),\n    shipping: money(shippingSet ? shippingSet.amount : (o.shipping_lines || []).reduce((t, l) => t + num(l.price), 0)),\n    tax: money(o.total_tax),\n    total: money(o.total_price),\n    refunded: Math.round(refundTotal * 100) / 100,\n    currency: text(o.currency) || 'USD',\n    ship,\n    tags: tags.join(', '),\n    isGift,\n    giftNote: isGift ? (giftMessage || text(o.note)) : '',\n    customer,\n    lines,\n  };\n  return { json: out };\n} catch (e) {\n  return { json: { ...out, verdict: 'error', reason: `Could not read the Shopify webhook (${String(e.message || e).replace(/: /g, ', ')})` } };\n}\n"
+      }
+    },
+    {
+      "id": "73100fa7-c06b-58a9-bbc3-317d9096edeb",
+      "name": "Switch: Route Webhook",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        660,
+        300
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "66d18c48-5ec0-5af4-b0ac-7749bf41db62",
+                    "leftValue": "={{ $json.verdict }}",
+                    "rightValue": "accepted",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Accepted"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "2fad57bf-fa3e-5411-b862-d52610932097",
+                    "leftValue": "={{ $json.verdict }}",
+                    "rightValue": "ignored",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Ignored Topic"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "edbcfe23-6bf5-5a2b-90ce-7d7e99ce70a7",
+                    "leftValue": "={{ $json.verdict }}",
+                    "rightValue": "invalid",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Not An Order"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "81483a45-8551-513f-b47d-137f8a769a8d",
+                    "leftValue": "={{ $json.verdict }}",
+                    "rightValue": "unauthorized",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Bad Signature"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "8122cc5d-b27c-5c9a-9a8e-12d929ba678f",
+                    "leftValue": "={{ $json.verdict }}",
+                    "rightValue": "error",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Not Configured"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "ac7bca4d-ffc0-5769-9250-d407b5ecfe18",
+      "name": "Respond: 200 Accepted",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        940,
+        300
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "ok",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "44cd599c-9c5f-5012-a307-f9cfa68acd87",
+      "name": "Respond: 200 Ignored Topic",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        940,
+        480
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "ignored",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "6565a67d-3444-5acf-b127-87fa701ca42e",
+      "name": "Respond: 200 Not An Order",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        940,
+        660
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "ok",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "1f48a267-98c3-52a7-bd1f-e316c371a6bb",
+      "name": "Respond: 401 Bad Signature",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        940,
+        840
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "invalid signature",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    },
+    {
+      "id": "749f471c-49b5-55f7-bdf3-fa7350bb2a9e",
+      "name": "Respond: 500 Not Configured",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        940,
+        1020
+      ],
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "webhook not configured",
+        "options": {
+          "responseCode": 500
+        }
+      }
+    },
+    {
+      "id": "77b286cb-c70c-5733-a91b-a711e1f74b7c",
+      "name": "Stop: Not An Order",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        660
+      ],
+      "parameters": {
+        "errorMessage": "={{ $json.reason }}"
+      }
+    },
+    {
+      "id": "558d34e9-7dfb-5c03-a2d8-53b27d93e040",
+      "name": "Stop: Bad Signature",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        840
+      ],
+      "parameters": {
+        "errorMessage": "={{ $json.reason }}"
+      }
+    },
+    {
+      "id": "e92c7a95-4731-504a-b168-06d529c1722c",
+      "name": "Stop: Not Configured",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        1020
+      ],
+      "parameters": {
+        "errorMessage": "={{ $json.reason }}"
+      }
+    },
+    {
+      "id": "81ba2ecc-a3a5-5cfb-b040-a57735d0fd8a",
+      "name": "IF: Update Webhook?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1300,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ba8d58e3-1fac-5b4b-8a29-4b32eade14a2",
+              "leftValue": "={{ $json.topic === 'orders/updated' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "345b901e-004b-552d-9105-c58233b4cd79",
+      "name": "Wait: Let Create Finish",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1520,
+        500
+      ],
+      "parameters": {
+        "amount": 10,
+        "unit": "seconds"
+      },
+      "webhookId": "2c9b8e7d-6a5f-4e3d-9c2b-1a0f9e8d7c6b"
+    },
+    {
+      "id": "d4a3e82d-6477-571d-a5e2-8a94017b011c",
+      "name": "Code: Start Processing",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1740,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Starts (or, after an Airtable cooldown, restarts) the work for one webhook.\n// ctx.memo keeps what this webhook already decided or sent, so a restart only repeats the\n// Airtable lookups and upserts (all safe to repeat) and never sends a Slack alert twice.\n//\n// Pacing: Airtable allows 5 requests per second per base, shared by everything that uses the base.\n// Every Airtable call in this workflow waits 500 ms after the previous one, so one run makes at most\n// 2 calls in any second, and two webhooks processed at the same moment stay at 4.\nconst ctx = { ...$json };\nfor (const k of ['error', 'failure', 'retry', 'records', 'repeat', 'stale', 'stored', 'alerts', 'cooldownSeconds']) delete ctx[k];\nctx.attempt = (ctx.attempt || 0) + 1;\nctx.memo = ctx.memo || {};\nctx.ids = { customer: null, order: null, products: {} };\nctx.counts = { linesCreated: 0, linesUpdated: 0 };\nctx.startedAt = ctx.startedAt || ctx.receivedAt || new Date().toISOString();\nconst esc = (s) => String(s).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\");\nctx.q = { webhook: `{Event ID} = '${esc(ctx.webhookId)}'` };\nctx.step = 'Find Webhook';\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "8317f244-5523-5d34-80f1-2dd3f9e400cf",
+      "name": "Airtable: Find Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1960,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Webhook%20Log/listRecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ filterByFormula: $json.q.webhook, fields: [\"Event ID\", \"Status\"], maxRecords: 10 }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "ff467e81-8d1d-5f24-981a-5431a19e03fa",
+      "name": "Code: Check Repeat",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2180,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Shopify can deliver the same webhook more than once. A delivery whose X-Shopify-Webhook-Id is already\n// in Webhook Log as Processed or Ignored is skipped. A Failed row does not count, so a redelivery can heal it.\nconst ctx = { ...$('Code: Start Processing').item.json };\nconst rows = Array.isArray($json.records) ? $json.records : [];\nconst done = rows.find((r) => ['Processed', 'Ignored'].includes((r.fields || {}).Status));\n// After a cooldown restart this run may have written that row itself, so it is not a repeat then.\nctx.repeat = Boolean(done) && !ctx.memo.webhookLogged;\nif (!ctx.repeat) {\n  const esc = (s) => String(s).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\");\n  ctx.q.order = `{Shopify Order ID} = '${esc(ctx.order.shopifyId)}'`;\n  ctx.step = 'Find Order';\n  await new Promise((resolve) => setTimeout(resolve, 500)); // pace Airtable, see the note in Code: Start Processing\n}\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "3da6ee48-a1c9-5a67-95d9-774d64124f5c",
+      "name": "IF: New Delivery?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2400,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1a606690-85f4-5a44-ab8e-3d31977756f7",
+              "leftValue": "={{ !$json.repeat }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "8d3f01d9-a6b3-59eb-800a-ee24b4503964",
+      "name": "Done: Repeat Skipped",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2620,
+        500
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "e0d2f993-eab6-514f-b3b7-790cd9118493",
+      "name": "Airtable: Find Order",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2620,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Orders/listRecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ filterByFormula: $json.q.order, fields: [\"Order Number\", \"Shopify Updated At\", \"Cold Pack\", \"Shipping City\", \"Shipping Region\", \"Shipping Country\", \"Needs Review\", \"Review Reason\"], maxRecords: 2 }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "e2288c45-e9be-5d28-9ae7-5a7c50df92a6",
+      "name": "Code: Check Order",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2840,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Looks at the order as Airtable has it now.\n//  * stale: Shopify does not promise delivery order, so a webhook older than the stored Shopify Updated At is\n//    ignored. This is checked again on every attempt: during a 31 to 60 second cooldown another webhook for the\n//    same order can save a newer version, and the restarted run must not write the older one over it.\n//  * melt check: run it for a new order, a changed shipping address, or when the last check ended in Review.\n//    This is decided once per webhook (a cooldown restart keeps it, so the weather is never checked twice).\nconst ctx = { ...$('Code: Check Repeat').item.json };\nconst memo = ctx.memo;\nconst o = ctx.order;\nconst rows = Array.isArray($json.records) ? $json.records : [];\n\nconst limitEnv = Number.parseFloat($env.MELT_TEMP_C);\nconst daysEnv = Number.parseInt($env.MELT_FORECAST_DAYS, 10);\nctx.meltConfig = {\n  limit: Number.isFinite(limitEnv) ? limitEnv : 27,\n  days: Number.isFinite(daysEnv) ? Math.min(Math.max(daysEnv, 1), 16) : 3,\n};\n\nconst key = (city, region, country) => [city, region, country].map((x) => String(x || '').trim().toLowerCase()).join('|');\n\n// What Airtable holds right now (fresh on every attempt).\nconst now = rows[0] || null;\nconst nf = now ? now.fields || {} : {};\nctx.stored = now ? { id: now.id, updatedAt: nf['Shopify Updated At'] || null } : null;\nmemo.duplicateOrderRows = rows.length > 1;\nctx.stale = Boolean(ctx.stored && ctx.stored.updatedAt && o.updatedAt\n  && Date.parse(o.updatedAt) < Date.parse(ctx.stored.updatedAt));\n\nif (!memo.decided) {\n  memo.before = now ? {\n    id: now.id,\n    updatedAt: nf['Shopify Updated At'] || null,\n    coldPack: nf['Cold Pack'] || null,\n    location: key(nf['Shipping City'], nf['Shipping Region'], nf['Shipping Country']),\n    needsReview: Boolean(nf['Needs Review']),\n    reviewReason: nf['Review Reason'] || '',\n  } : null;\n\n  const before = memo.before;\n  let plan;\n  if (o.status === 'Cancelled') plan = { run: false, note: 'Order cancelled, no melt check.' };\n  else if (o.fulfillment === 'Fulfilled') plan = { run: false, note: 'Order already fulfilled, no melt check.' };\n  else if (!o.ship || !o.ship.city) plan = { run: false, coldPack: 'Not Needed', note: 'No shipping address (pickup or digital order), no melt check.' };\n  else if (!before) plan = { run: true, why: 'new order' };\n  else if (before.location !== key(o.ship.city, o.ship.region, o.ship.country)) plan = { run: true, why: 'shipping address changed' };\n  else if (!before.coldPack || before.coldPack === 'Review') plan = { run: true, why: before.coldPack ? 'the last check needs review' : 'not checked yet' };\n  else plan = { run: false };\n  memo.meltPlan = plan;\n  // A new order that needs no check still gets a note (and Not Needed when there is no address to ship to).\n  if (!plan.run && !before && plan.note) memo.melt = { coldPack: plan.coldPack || null, max: null, note: plan.note, checked: false };\n  memo.decided = true;\n}\n\nctx.meltNeeded = Boolean(!ctx.stale && memo.meltPlan && memo.meltPlan.run && !memo.melt);\nif (ctx.meltNeeded) {\n  const city = o.ship.city.replace(/,/g, ' ').trim();\n  // count 10: the comma qualifier narrows the results, and asking for more than one keeps a qualified match\n  // from being cut off. The first result (Open-Meteo orders them by relevance and population) is used.\n  const query = { name: o.ship.region ? `${city}, ${o.ship.region}` : city, count: 10, language: 'en', format: 'json' };\n  if (/^[A-Z]{2}$/.test(o.ship.country)) query.countryCode = o.ship.country;\n  ctx.geo = { query, label: [o.ship.city, o.ship.region, o.ship.country].filter(Boolean).join(', ') };\n}\n\nconst esc = (s) => String(s).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\");\nconst c = o.customer;\nconst clauses = [];\nif (c.shopifyId) clauses.push(`{Shopify Customer ID} = '${esc(c.shopifyId)}'`);\nif (c.email) clauses.push(`LOWER(TRIM({Email})) = '${esc(c.email)}'`);\nctx.q.customer = clauses.length ? `OR(${clauses.join(', ')})` : 'FALSE()';\nctx.step = 'Find Customer';\nawait new Promise((resolve) => setTimeout(resolve, 500)); // pace Airtable\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "2ccf039e-441c-5c8b-a1e6-e8446fdba09b",
+      "name": "IF: Newer Than Stored?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3060,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "37d9842d-db13-59ff-9a2e-64897a5f5cfa",
+              "leftValue": "={{ !$json.stale }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "70ace55a-3a39-53cd-abac-8a0289cf2b1a",
+      "name": "Airtable: Find Customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3280,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Customers/listRecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ filterByFormula: $json.q.customer, fields: [\"Name\", \"Email\", \"Phone\", \"Shopify Customer ID\", \"Accepts Marketing\", \"Record Status\", \"Merged Into\"], maxRecords: 20 }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "8a0e9779-6e60-5a09-b452-a7375e789f86",
+      "name": "Code: Pick Customer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3500,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Customers are matched by lookup, never by an upsert on Email (Airtable does not take email fields as an\n// upsert key, and the base has the same email on more than one record). Order of preference:\n//   1. a record with this Shopify Customer ID, 2. a record whose LOWER(TRIM(Email)) matches,\n//   and among several: Active before Duplicate, then one that has a Shopify Customer ID, then the oldest.\n// A Duplicate record that points to its survivor in Merged Into is replaced by the survivor.\nconst ctx = { ...$('Code: Check Order').item.json };\nconst memo = ctx.memo;\nconst c = ctx.order.customer;\nconst recs = Array.isArray($json.records) ? $json.records : [];\nconst norm = (s) => String(s || '').trim().toLowerCase();\n\nconst byId = c.shopifyId ? recs.filter((r) => String((r.fields || {})['Shopify Customer ID'] || '').trim() === c.shopifyId) : [];\nconst byEmail = c.email ? recs.filter((r) => norm((r.fields || {}).Email) === c.email) : [];\nconst how = byId.length ? 'Shopify Customer ID' : 'email';\nconst rank = (r) => [r.fields['Record Status'] === 'Duplicate' ? 1 : 0, r.fields['Shopify Customer ID'] ? 0 : 1, Date.parse(r.createdTime) || 0];\nconst pool = (byId.length ? byId : byEmail).slice().sort((a, b) => {\n  const x = rank(a); const y = rank(b);\n  for (let i = 0; i < x.length; i++) if (x[i] !== y[i]) return x[i] - y[i];\n  return 0;\n});\n\nlet chosen = pool[0] || null;\nlet survivorId = null;\nif (chosen && chosen.fields['Record Status'] === 'Duplicate' && Array.isArray(chosen.fields['Merged Into']) && chosen.fields['Merged Into'][0]) {\n  const target = chosen.fields['Merged Into'][0];\n  const found = recs.find((r) => r.id === target);\n  if (found) chosen = found; else survivorId = target;\n}\n\nctx.customerWrite = null;\nif (survivorId) {\n  ctx.ids.customer = survivorId;\n  memo.customer = memo.customer || { action: 'matched', name: c.name, how: `${how}, then Merged Into` };\n} else if (chosen) {\n  ctx.ids.customer = chosen.id;\n  const f = chosen.fields;\n  const updates = {};\n  if (c.shopifyId && !f['Shopify Customer ID']) updates['Shopify Customer ID'] = c.shopifyId;\n  if (c.name && !f.Name) updates.Name = c.name;\n  if (c.phone && !f.Phone) updates.Phone = c.phone;\n  // Ticked when an order says the buyer accepts marketing. Never unticked from an order.\n  if (c.acceptsMarketing && !f['Accepts Marketing']) updates['Accepts Marketing'] = true;\n  if (Object.keys(updates).length) {\n    ctx.customerWrite = { kind: 'update', how, method: 'PATCH', body: { records: [{ id: chosen.id, fields: updates }] } };\n  } else {\n    memo.customer = memo.customer || { action: 'matched', name: f.Name || c.name, how };\n  }\n} else if (c.shopifyId || c.email) {\n  const fields = { 'Created Via': 'Shopify', 'Record Status': 'Active', 'Accepts Marketing': c.acceptsMarketing };\n  if (c.name) fields.Name = c.name;\n  if (c.email) fields.Email = c.email;\n  if (c.phone) fields.Phone = c.phone;\n  if (c.shopifyId) fields['Shopify Customer ID'] = c.shopifyId;\n  // With a Shopify Customer ID the create is an upsert on that id, so two webhooks for the same new\n  // customer that arrive together end up on one record.\n  ctx.customerWrite = c.shopifyId\n    ? { kind: 'create', how: 'new', method: 'PATCH', body: { performUpsert: { fieldsToMergeOn: ['Shopify Customer ID'] }, records: [{ fields }] } }\n    : { kind: 'create', how: 'new', method: 'POST', body: { records: [{ fields }] } };\n} else {\n  memo.customer = memo.customer || { action: 'none' };\n}\n\nctx.hasCustomerWrite = Boolean(ctx.customerWrite);\nif (ctx.hasCustomerWrite) {\n  ctx.step = 'Save Customer';\n  await new Promise((resolve) => setTimeout(resolve, 500)); // pace Airtable\n}\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "ffcd6cb6-c8f5-5a9b-8acf-5e1e4c0c1323",
+      "name": "IF: Customer Write?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3720,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b1c6e1ca-0265-54ea-9459-517a34921c12",
+              "leftValue": "={{ $json.hasCustomerWrite }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "75c27aa2-5d0c-5e01-9e29-2f3750ebf338",
+      "name": "Airtable: Save Customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3940,
+        500
+      ],
+      "parameters": {
+        "method": "={{ $json.customerWrite.method }}",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Customers",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.customerWrite.body) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "c947fdd2-c7b9-5188-98e6-3fc4ffa90f0e",
+      "name": "Code: Read Customer",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4160,
+        500
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// The customer record id the order will link to, and what happened to the customer.\nconst ctx = { ...$('Code: Pick Customer').item.json };\nconst memo = ctx.memo;\nconst rec = (Array.isArray($json.records) ? $json.records : [])[0];\nif (!rec || !rec.id) throw new Error('Airtable saved the customer but returned no record id');\nctx.ids.customer = rec.id;\nconst created = Array.isArray($json.createdRecords) ? $json.createdRecords.includes(rec.id) : ctx.customerWrite.kind === 'create';\nmemo.customer = memo.customer || {\n  action: created ? 'created' : 'updated',\n  name: (rec.fields || {}).Name || ctx.order.customer.name,\n  how: ctx.customerWrite.how,\n};\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "821eb48e-4203-5932-acb2-81f67fd4c418",
+      "name": "Code: Plan Product Lookup",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4380,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// One lookup for every SKU on the order. SKUs are compared trimmed and in upper case on both sides,\n// so \" dc-bar-milk-caramel\" from Shopify still finds DC-BAR-MILK-CARAMEL.\nconst ctx = { ...$json };\ndelete ctx.customerWrite;\nconst esc = (s) => String(s).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\");\nconst skus = [...new Set(ctx.order.lines.map((l) => l.sku).filter(Boolean))];\nctx.q.products = skus.length ? `OR(${skus.map((s) => `UPPER(TRIM({SKU})) = '${esc(s)}'`).join(', ')})` : 'FALSE()';\nctx.step = 'Find Products';\nawait new Promise((resolve) => setTimeout(resolve, 500)); // pace Airtable\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "2fadb104-b537-55f2-8295-cf2d207737be",
+      "name": "Airtable: Find Products",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4600,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Products/listRecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ filterByFormula: $json.q.products, fields: [\"SKU\", \"Name\", \"Status\"], maxRecords: 100 }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "efb764df-e23c-5bf0-bf90-1cfe3a48f8f4",
+      "name": "Code: Match Products",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4820,
+        300
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Links each SKU to its product. A SKU with no product is created as a Draft product with Needs Review\n// ticked (an upsert on SKU, in batches of at most 10). An existing Draft, such as one created by an\n// earlier order, is matched like any other product and never created again.\nconst ctx = { ...$('Code: Plan Product Lookup').item.json };\nconst memo = ctx.memo;\nconst o = ctx.order;\nconst recs = Array.isArray($json.records) ? $json.records : [];\nconst RANK = { Active: 0, Draft: 1, Discontinued: 2 };\nconst bySku = {};\nfor (const r of recs) {\n  const k = String((r.fields || {}).SKU || '').trim().toUpperCase();\n  if (k) (bySku[k] = bySku[k] || []).push(r);\n}\nctx.ids.products = {};\nfor (const [k, list] of Object.entries(bySku)) {\n  list.sort((a, b) => ((RANK[a.fields.Status] ?? 3) - (RANK[b.fields.Status] ?? 3)) || (Date.parse(a.createdTime) - Date.parse(b.createdTime)));\n  ctx.ids.products[k] = list[0].id;\n}\n\nconst records = [];\nconst seen = new Set();\nfor (const l of o.lines) {\n  if (!l.sku || ctx.ids.products[l.sku] || seen.has(l.sku)) continue;\n  seen.add(l.sku);\n  records.push({ fields: {\n    SKU: l.sku,\n    Name: l.title || l.sku,\n    Status: 'Draft',\n    'Needs Review': true,\n    'Review Reason': `Created automatically from Shopify order ${o.number}: unknown SKU${l.variantId ? ` (Shopify variant ${l.variantId})` : ''}. Add allergens, ingredients and stock rules before selling.`,\n    Price: l.unit,\n  } });\n}\nctx.draftBatches = [];\nfor (let i = 0; i < records.length; i += 10) ctx.draftBatches.push(records.slice(i, i + 10));\nctx.draftIndex = 0;\nctx.hasDrafts = ctx.draftBatches.length > 0;\nmemo.draftSkus = memo.draftSkus || [];\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "f3d6d0d5-b3d8-5321-a3ef-1d4cb5a6f530",
+      "name": "IF: Unknown SKUs?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5040,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "eaed7f54-2067-520b-8de8-747e0a34d208",
+              "leftValue": "={{ $json.hasDrafts }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "665ebf2a-6b33-5caf-afab-c7355e922e09",
+      "name": "Code: Next Draft Batch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5260,
+        500
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// One Airtable request per pass, at most 10 records, 500 ms apart.\nconst ctx = { ...$json };\nctx.records = ctx.draftBatches[ctx.draftIndex];\nctx.step = `Create Draft Products (batch ${ctx.draftIndex + 1} of ${ctx.draftBatches.length})`;\nawait new Promise((resolve) => setTimeout(resolve, 500)); // pace Airtable\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "cfeccfad-376d-5ab5-9811-ced0cc80160d",
+      "name": "Airtable: Create Draft Products",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5480,
+        500
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Products",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ performUpsert: { fieldsToMergeOn: [\"SKU\"] }, records: $json.records }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "d1ffcf60-8ecc-5bd8-82d9-c40707c889b4",
+      "name": "Code: Read Draft Batch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5700,
+        500
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Remembers the new product ids, and which SKUs this webhook created (for the SKU alert and the order flag).\nconst ctx = { ...$('Code: Next Draft Batch').item.json };\nconst memo = ctx.memo;\nconst created = new Set(Array.isArray($json.createdRecords) ? $json.createdRecords : []);\nfor (const r of Array.isArray($json.records) ? $json.records : []) {\n  const k = String((r.fields || {}).SKU || '').trim().toUpperCase();\n  ctx.ids.products[k] = r.id;\n  if (created.has(r.id) && !memo.draftSkus.includes(k)) memo.draftSkus.push(k);\n}\ndelete ctx.records;\nctx.draftIndex += 1;\nctx.moreDrafts = ctx.draftIndex < ctx.draftBatches.length;\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "130b39e1-bcbf-520e-82ac-943eb969b10f",
+      "name": "IF: More Draft Batches?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5920,
+        500
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e8658859-a278-58f4-b7bb-aba4bc54e873",
+              "leftValue": "={{ $json.moreDrafts }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d86d4560-b1da-5a6c-b0d6-7d3d8eae33fc",
+      "name": "IF: Melt Check Needed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        1640
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6d718fb6-91d2-5d6f-bf29-d9a85aba2d6f",
+              "leftValue": "={{ $json.meltNeeded }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "1ea74f9d-4d24-5e2a-adab-255637e90d56",
+      "name": "Open-Meteo: Geocode City",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        1840
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://geocoding-api.open-meteo.com/v1/search",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={{ JSON.stringify($json.geo.query) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "1625a4b5-b8bc-538e-b4ed-ec00764cdea3",
+      "name": "Code: Read Location",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        1840
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Open-Meteo geocoding answers 200 even when nothing matches (no results, or an empty list).\n// A place it cannot find means Cold Pack Review: a person checks the forecast instead of guessing.\nconst ctx = { ...$('IF: Melt Check Needed?').item.json };\nconst results = Array.isArray($json.results) ? $json.results : [];\nconst r = results[0];\nconst lat = r ? Number(r.latitude) : NaN;\nconst lon = r ? Number(r.longitude) : NaN;\nif (Number.isFinite(lat) && Number.isFinite(lon)) {\n  ctx.cityFound = true;\n  ctx.place = { name: r.name || ctx.order.ship.city, admin1: r.admin1 || '', country: r.country_code || '', latitude: lat, longitude: lon };\n  ctx.forecastQuery = { latitude: lat, longitude: lon, daily: 'temperature_2m_max', timezone: 'auto', forecast_days: ctx.meltConfig.days };\n} else {\n  ctx.cityFound = false;\n  ctx.memo.melt = {\n    coldPack: 'Review', max: null, checked: true, checkedAt: new Date().toISOString(), failed: 'place not found',\n    note: `Melt check could not run: Open-Meteo geocoding found no place called \"${ctx.geo.query.name}\"${ctx.geo.query.countryCode ? ` in ${ctx.geo.query.countryCode}` : ''}. Cold Pack set to Review, check the forecast for ${ctx.geo.label} by hand.`,\n  };\n}\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "9ff46d8a-d7e6-5c18-be5d-3c110a755d53",
+      "name": "IF: City Found?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        1840
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ee83b54c-44c9-53f4-81f7-d8f2739371c2",
+              "leftValue": "={{ $json.cityFound }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "3b6f63f2-372a-50c0-8c3f-03c279bc6d43",
+      "name": "Open-Meteo: Get Forecast",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        1840
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={{ JSON.stringify($json.forecastQuery) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "5d631f78-53a9-5526-b066-8afd4777be2e",
+      "name": "Code: Decide Cold Pack",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        1840
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Cold Pack is Required when any of the first MELT_FORECAST_DAYS daily maximums (day 1 is today at the\n// destination) reaches MELT_TEMP_C. Missing or broken forecast data means Review, never a guess.\nconst ctx = { ...$('Code: Read Location').item.json };\nconst { limit, days } = ctx.meltConfig;\nconst daily = $json.daily || {};\nconst raw = Array.isArray(daily.temperature_2m_max) ? daily.temperature_2m_max.slice(0, days) : [];\nconst temps = raw.map((t) => (t === null || t === undefined || t === '' ? NaN : Number(t)));\nconst place = [ctx.place.name, ctx.place.admin1].filter(Boolean).join(', ');\nconst checkedAt = new Date().toISOString();\nif (temps.length < days || temps.some((t) => !Number.isFinite(t))) {\n  ctx.memo.melt = {\n    coldPack: 'Review', max: null, checked: true, checkedAt, failed: 'incomplete forecast',\n    note: `Melt check could not finish: the Open-Meteo forecast for ${place} did not include ${days} days of maximum temperatures. Cold Pack set to Review, check the forecast by hand.`,\n  };\n} else {\n  const max = Math.round(Math.max(...temps) * 10) / 10;\n  const hot = temps.some((t) => t >= limit);\n  ctx.memo.melt = {\n    coldPack: hot ? 'Required' : 'Not Needed', max, checked: true, checkedAt, place,\n    note: `Forecast max ${max.toFixed(1)} C over the next ${days} days in ${place} (cold pack from ${limit} C).`,\n  };\n}\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "090c4470-5592-555d-a537-726af66efee1",
+      "name": "Code: Weather Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        2040
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// The geocoding or forecast call failed after 3 tries. The order is still saved, with Cold Pack Review\n// and a note that says why, and the packing team gets a \"check by hand\" message.\nconst ctx = { ...$json };\nconst err = ctx.error || {};\ndelete ctx.error;\nconst status = Number(err.status || err.statusCode || (err.response && err.response.status)) || null;\nconst service = ctx.cityFound === true ? 'forecast' : 'geocoding';\nctx.memo.melt = {\n  coldPack: 'Review', max: null, checked: true, checkedAt: new Date().toISOString(), failed: `${service} ${status || 'no answer'}`,\n  note: `Melt check failed: the Open-Meteo ${service} service ${status ? `answered HTTP ${status}` : 'did not answer'} after 3 tries. Cold Pack set to Review, check the forecast for ${ctx.geo.label} by hand.`,\n};\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "32e1aada-4cc4-5f9e-95fb-f095e9446009",
+      "name": "Code: Build Order",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        1640
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// The Orders record for an upsert on Shopify Order ID. Every webhook carries the whole order, so the\n// same upsert serves orders/create and orders/updated. Fields a person may have set (Needs Review,\n// a linked product, a typed gift note) are only ever added to, never cleared.\nconst ctx = { ...$json };\nconst memo = ctx.memo;\nconst o = ctx.order;\nconst f = {\n  'Order Number': o.number,\n  'Shopify Order ID': o.shopifyId,\n  'Shopify Updated At': o.updatedAt,\n  'Order Status': o.status,\n  'Cancelled At': o.cancelledAt,\n  Subtotal: o.subtotal,\n  Shipping: o.shipping,\n  Tax: o.tax,\n  Total: o.total,\n  'Refunded Amount': o.refunded,\n  Currency: o.currency,\n  'Shopify Tags': o.tags,\n  'Is Gift': o.isGift,\n};\nif (o.createdAt) f['Order Date'] = o.createdAt;\nif (o.email) f.Email = o.email;\nif (o.financial) f['Financial Status'] = o.financial;\nif (o.fulfillment) f['Fulfillment Status'] = o.fulfillment;\nif (o.giftNote) f['Gift Note'] = o.giftNote;\nif (ctx.ids.customer) f.Customer = [ctx.ids.customer];\nif (o.ship) {\n  f['Shipping Name'] = o.ship.name;\n  f['Shipping Address'] = o.ship.address;\n  f['Shipping City'] = o.ship.city;\n  f['Shipping Region'] = o.ship.region;\n  f['Shipping Country'] = o.ship.country;\n  f['Shipping Postal Code'] = o.ship.zip;\n}\nconst melt = memo.melt;\nif (melt) {\n  if (melt.coldPack) f['Cold Pack'] = melt.coldPack;\n  if (melt.checked) {\n    f['Forecast Max C'] = melt.max;\n    f['Melt Checked At'] = melt.checkedAt;\n  }\n  f['Melt Check Note'] = melt.note;\n}\n\nconst reasons = [];\nfor (const l of o.lines) {\n  if (l.sku && memo.draftSkus.includes(l.sku)) reasons.push(`Unknown SKU ${l.sku} on line ${l.position}. A draft product was created.`);\n}\nif (!ctx.ids.customer) reasons.push('No customer email or Shopify customer id on the order, so no customer is linked.');\nif (o.financialRaw && !o.financial) reasons.push(`Unknown Shopify financial status \"${o.financialRaw}\".`);\nif (o.fulfillmentRaw && !o.fulfillment) reasons.push(`Unknown Shopify fulfillment status \"${o.fulfillmentRaw}\".`);\nconst stored = (memo.before && memo.before.reviewReason) || '';\nconst fresh = reasons.filter((r) => !stored.includes(r));\nif (fresh.length) {\n  f['Needs Review'] = true;\n  f['Review Reason'] = [stored, ...fresh].filter(Boolean).join('\\n');\n}\nctx.records = [{ fields: f }];\nctx.step = 'Upsert Order';\nawait new Promise((resolve) => setTimeout(resolve, 500)); // pace Airtable\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "7119bcea-ce13-5d00-b4af-9dc3bb6608f4",
+      "name": "Airtable: Upsert Order",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        1640
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Orders",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ performUpsert: { fieldsToMergeOn: [\"Shopify Order ID\"] }, records: $json.records }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "5aeb86c5-046a-5af2-9170-f68b7a32a034",
+      "name": "Code: Plan Alerts",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        1640
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// The order is saved. Alerts go out now, before the lines, so a later failure cannot swallow them.\n// Packing alert: when the melt check moves the order to Required or Review (or from Required to Not Needed).\n// SKU alert: when this webhook created Draft products. memo makes sure neither is sent twice.\nconst ctx = { ...$('Code: Build Order').item.json };\ndelete ctx.records;\nconst memo = ctx.memo;\nconst o = ctx.order;\nconst rec = (Array.isArray($json.records) ? $json.records : [])[0];\nif (!rec || !rec.id) throw new Error('Airtable saved the order but returned no record id');\nctx.ids.order = rec.id;\nmemo.orderAction = memo.orderAction || ((Array.isArray($json.createdRecords) && $json.createdRecords.includes(rec.id)) ? 'created' : 'updated');\n\n// Slack reads &, < and > as control characters (<!channel>, <url|text>). Gift notes, names, addresses and\n// product titles come from the shop and its customers, so they are escaped the way Slack documents.\nconst s = (v) => String(v === null || v === undefined ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst handle = String($env.SHOPIFY_STORE_DOMAIN || '').trim().replace(/\\.myshopify\\.com$/i, '');\nconst link = /^[a-z0-9][a-z0-9-]*$/i.test(handle) && /^\\d+$/.test(o.shopifyId)\n  ? `<https://admin.shopify.com/store/${handle}/orders/${o.shopifyId}|${s(o.number)}>` : s(o.number);\nconst items = o.lines.filter((l) => l.current > 0).map((l) => `${l.current} x ${s(l.title || l.sku || 'item')}`).join(', ');\nconst shipTo = o.ship ? s([o.ship.name, o.ship.city, o.ship.region, o.ship.zip].filter(Boolean).join(', ')) : 'no shipping address';\nconst gift = o.isGift && o.giftNote ? `\\nGift note for the packing slip: \"${s(o.giftNote)}\"` : (o.isGift ? '\\nGift order (no message).' : '');\n\nconst melt = memo.melt;\nconst before = memo.before;\nlet packing = null;\nif (melt && melt.checked && !memo.packingSent) {\n  const was = before ? before.coldPack : null;\n  const note = s(melt.note);\n  if (melt.coldPack === 'Required' && was !== 'Required') {\n    packing = `:snowflake: *Cold pack needed* for order ${link}\\n${note}\\nShip to: ${shipTo}\\nItems: ${items}${gift}`;\n  } else if (melt.coldPack === 'Review' && was !== 'Review') {\n    packing = `:warning: *Check the cold pack by hand* for order ${link}\\n${note}\\nShip to: ${shipTo}\\nItems: ${items}${gift}`;\n  } else if (melt.coldPack === 'Not Needed' && was === 'Required') {\n    packing = `*Cold pack no longer needed* for order ${link} (the shipping address changed)\\n${note}\\nShip to: ${shipTo}`;\n  }\n}\nconst packingUrl = String($env.SLACK_PACKING_WEBHOOK_URL || $env.SLACK_WEBHOOK_URL || '').trim();\nconst opsUrl = String($env.SLACK_WEBHOOK_URL || '').trim();\n\nlet sku = null;\nif (memo.draftSkus.length && !memo.skuAlertSent) {\n  const list = memo.draftSkus.map((code) => {\n    const l = o.lines.find((x) => x.sku === code);\n    return l && l.title ? `${s(code)} (${s(l.title)})` : s(code);\n  }).join(', ');\n  const one = memo.draftSkus.length === 1;\n  sku = `:package: *New SKU from Shopify* on order ${link}\\n${list} ${one ? 'is' : 'are'} not in Airtable, so ${one ? 'a Draft product was' : 'Draft products were'} created with Needs Review ticked. Add allergens, ingredients and stock rules, then set ${one ? 'it' : 'them'} to Active.`;\n}\n\nctx.alerts = {\n  packing: packing && packingUrl ? { url: packingUrl, text: packing } : null,\n  sku: sku && opsUrl ? { url: opsUrl, text: sku } : null,\n};\nif (packing && !packingUrl) memo.packingSkipped = 'no Slack webhook URL is set';\nif (sku && !opsUrl) memo.skuSkipped = 'no Slack webhook URL is set';\nctx.hasPackingAlert = Boolean(ctx.alerts.packing);\nctx.hasSkuAlert = Boolean(ctx.alerts.sku);\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "b8f69693-051b-58d8-8e7f-550b14a57083",
+      "name": "IF: Packing Alert?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1980,
+        1640
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "b1b64171-dc8c-54b7-9c68-866b86a2f158",
+              "leftValue": "={{ $json.hasPackingAlert }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "7f862bc6-1111-51ca-96b0-c7ff1344e937",
+      "name": "Slack: Packing Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2200,
+        1840
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.alerts.packing.url }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: $json.alerts.packing.text }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "5b0caaeb-bcd4-56f2-9922-d5b0fc64cd12",
+      "name": "Code: Note Packing Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2420,
+        1640
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Runs whether the packing alert was sent, failed after 3 tries, or was not needed.\n// A failed alert does not stop the order sync; the run is marked failed at the very end instead.\nconst ctx = { ...$('Code: Plan Alerts').item.json };\nif (ctx.alerts.packing) {\n  if ($json.error) {\n    const e = $json.error;\n    const status = Number(e.status || e.statusCode || (e.response && e.response.status)) || null;\n    ctx.memo.packingError = `Slack answered ${status ? `HTTP ${status}` : 'nothing'} after 3 tries`;\n  } else {\n    ctx.memo.packingSent = true;\n    delete ctx.memo.packingError;\n  }\n}\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "34d0645a-bf55-536c-adaa-9f5c054c82dc",
+      "name": "IF: New SKU Alert?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2640,
+        1640
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d3bbdca5-723b-52e3-9a97-0e81ad86a10b",
+              "leftValue": "={{ $json.hasSkuAlert }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "1a321974-180e-57ba-93ee-1b6c76c678d5",
+      "name": "Slack: New SKU Alert",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2860,
+        1840
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.alerts.sku.url }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: $json.alerts.sku.text }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "09550c72-4080-5f3f-a534-2ca23098e14c",
+      "name": "Code: Note SKU Alert",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3080,
+        1640
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Same as the packing alert: record what happened, keep going.\nconst ctx = { ...$('Code: Note Packing Alert').item.json };\nif (ctx.alerts.sku) {\n  if ($json.error) {\n    const e = $json.error;\n    const status = Number(e.status || e.statusCode || (e.response && e.response.status)) || null;\n    ctx.memo.skuError = `Slack answered ${status ? `HTTP ${status}` : 'nothing'} after 3 tries`;\n  } else {\n    ctx.memo.skuAlertSent = true;\n    delete ctx.memo.skuError;\n  }\n}\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "1453f78a-3241-5946-8c55-34b8901001a3",
+      "name": "Code: Plan Order Lines",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3300,
+        1640
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// One Order Lines record per Shopify line item, upserted on Line Item ID, so a rerun or an\n// orders/updated webhook updates the same rows (quantities after refunds) instead of adding new ones.\n// SKU Status: Matched (linked to a product, a new Draft included), Missing SKU (no SKU on the line),\n// Unknown SKU (a SKU that could not be linked). The order itself carries the unknown SKU flag.\nconst ctx = { ...$json };\nconst o = ctx.order;\nconst records = o.lines.map((l) => {\n  const fields = {\n    'Line Item ID': l.id,\n    Order: [ctx.ids.order],\n    'Product Title': l.title,\n    Quantity: l.quantity,\n    'Current Quantity': l.current,\n    'Refunded Quantity': l.refunded,\n    'Unit Price': l.unit,\n    'Line Total': l.total,\n  };\n  if (l.skuRaw.trim()) fields.SKU = l.skuRaw;\n  const productId = l.sku ? ctx.ids.products[l.sku] : null;\n  if (productId) fields.Product = [productId];\n  fields['SKU Status'] = !l.sku ? 'Missing SKU' : (productId ? 'Matched' : 'Unknown SKU');\n  return { fields };\n});\nctx.lineBatches = [];\nfor (let i = 0; i < records.length; i += 10) ctx.lineBatches.push(records.slice(i, i + 10));\nctx.lineIndex = 0;\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "92aafdc2-7dfb-532e-8449-528f5483a07f",
+      "name": "Code: Next Line Batch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3520,
+        1640
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// One Airtable request per pass, at most 10 records, 500 ms apart. One item per pass also keeps\n// n8n's retry from sending earlier batches again.\nconst ctx = { ...$json };\nctx.records = ctx.lineBatches[ctx.lineIndex];\nctx.step = `Upsert Order Lines (batch ${ctx.lineIndex + 1} of ${ctx.lineBatches.length})`;\nawait new Promise((resolve) => setTimeout(resolve, 500)); // pace Airtable\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "1d0e9677-7e81-5248-9541-2cffca0f359e",
+      "name": "Airtable: Upsert Order Lines",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3740,
+        1640
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Order%20Lines",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ performUpsert: { fieldsToMergeOn: [\"Line Item ID\"] }, records: $json.records }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "28b6b2de-ed1f-50d0-afd9-f65c16d2a0fd",
+      "name": "Code: Read Line Batch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3960,
+        1640
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Counts what the batch created and updated, then moves on to the next batch.\nconst ctx = { ...$('Code: Next Line Batch').item.json };\nctx.counts.linesCreated += Array.isArray($json.createdRecords) ? $json.createdRecords.length : 0;\nctx.counts.linesUpdated += Array.isArray($json.updatedRecords) ? $json.updatedRecords.length : 0;\ndelete ctx.records;\nctx.lineIndex += 1;\nctx.moreLines = ctx.lineIndex < ctx.lineBatches.length;\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "8039a9f2-706f-5163-8ce0-0db3a8022e21",
+      "name": "IF: More Line Batches?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4180,
+        1640
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "46327c49-9e61-5ca5-a193-7a02a04b34f8",
+              "leftValue": "={{ $json.moreLines }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "61337a8a-be5a-5f68-945b-60bbadf2511d",
+      "name": "Code: Build Logs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4400,
+        1640
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Writes the Webhook Log row last, as Processed (or Ignored for a stale webhook). Until this row exists a\n// redelivery of the same webhook is processed again, which is safe because every write is an upsert.\nconst ctx = { ...$json };\ndelete ctx.records;\nconst memo = ctx.memo;\nconst o = ctx.order;\nconst parts = [];\nconst problems = [];\nif (ctx.stale) {\n  parts.push(`Skipped. This ${ctx.topic} webhook has updated_at ${o.updatedAt}, older than the version already in Airtable (${ctx.stored.updatedAt}).`);\n  // A cooldown restart can find a newer version saved in the meantime. Say what the first attempt already did.\n  const drafts = memo.draftSkus || [];\n  if (drafts.length) parts.push(`Before that, this webhook created Draft products for ${drafts.join(', ')} (Needs Review is ticked on them).`);\n  if (memo.customer && memo.customer.action === 'created') parts.push(`Before that, this webhook created the customer ${memo.customer.name || o.customer.email}.`);\n} else {\n  parts.push(`Order ${o.number} ${memo.orderAction || 'saved'}.`);\n  const c = memo.customer || { action: 'none' };\n  if (c.action === 'created') parts.push(`Customer created (${c.name || o.customer.email}).`);\n  else if (c.action === 'updated') parts.push(`Customer updated (${c.name || o.customer.email}, matched by ${c.how}).`);\n  else if (c.action === 'matched') parts.push(`Customer matched by ${c.how} (${c.name || o.customer.email}).`);\n  else parts.push('No customer linked.');\n  const n = o.lines.length;\n  parts.push(`${n} line${n === 1 ? '' : 's'} (${ctx.counts.linesCreated} new, ${ctx.counts.linesUpdated} updated).`);\n  if (memo.draftSkus.length) parts.push(`Draft product created for ${memo.draftSkus.join(', ')}.`);\n  if (memo.melt && memo.melt.checked) parts.push(`Cold Pack ${memo.melt.coldPack}. ${memo.melt.note}`);\n  else if (memo.melt) parts.push(memo.melt.note);\n  else if (memo.before && memo.before.coldPack) parts.push(`Melt check not repeated, Cold Pack stays ${memo.before.coldPack}.`);\n  if (memo.packingSent) parts.push('Packing alert sent.');\n  if (memo.skuAlertSent) parts.push('New SKU alert sent.');\n  if (memo.melt && memo.melt.failed) problems.push(`Weather check problem (${memo.melt.failed}).`);\n  if (memo.packingError) problems.push(`Packing alert not sent, ${memo.packingError}.`);\n  if (memo.skuError) problems.push(`New SKU alert not sent, ${memo.skuError}.`);\n  if (memo.packingSkipped) parts.push(`Packing alert skipped, ${memo.packingSkipped}.`);\n  if (memo.skuSkipped) parts.push(`New SKU alert skipped, ${memo.skuSkipped}.`);\n}\nctx.summary = parts.join(' ');\nctx.problems = problems;\nconst orderId = ctx.ids.order || (ctx.stored && ctx.stored.id) || (memo.before && memo.before.id) || null;\nconst fields = {\n  'Event ID': ctx.webhookId,\n  Source: 'Shopify',\n  Topic: ctx.topic,\n  'Received At': ctx.receivedAt,\n  Status: ctx.stale ? 'Ignored' : 'Processed',\n  Notes: [ctx.summary, ...problems].join(' '),\n};\nif (orderId) fields.Order = [orderId];\nctx.records = [{ fields }];\nctx.step = 'Log Webhook';\nawait new Promise((resolve) => setTimeout(resolve, 500)); // pace Airtable\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "343ab331-4bcc-53dd-a979-0f7757d9101d",
+      "name": "Airtable: Log Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4620,
+        1640
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Webhook%20Log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ performUpsert: { fieldsToMergeOn: [\"Event ID\"] }, records: $json.records }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "96072a8a-2847-578d-8056-efac2822454e",
+      "name": "Code: Plan Run Log",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4840,
+        1640
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// One Sync Log row per webhook (upsert on Run ID, so a cooldown restart updates the same row).\nconst ctx = { ...$('Code: Build Logs').item.json };\nconst memo = ctx.memo;\nconst o = ctx.order;\nmemo.webhookLogged = true;\nconst c = memo.customer || {};\nconst changed = ctx.stale ? 0\n  : (['created', 'updated'].includes(c.action) ? 1 : 0) + memo.draftSkus.length + 1 + ctx.counts.linesCreated + ctx.counts.linesUpdated;\nconst fields = {\n  'Run ID': `orders-${ctx.webhookId}`,\n  Automation: '01 Shopify Orders',\n  Trigger: 'Webhook',\n  'Started At': ctx.startedAt,\n  'Finished At': new Date().toISOString(),\n  Status: ctx.problems.length ? 'Partial' : 'Success',\n  'Items Checked': ctx.stale ? 0 : o.lines.length,\n  'Items Changed': changed,\n  'Shopify Updates': 0,\n  Errors: ctx.problems.length,\n  Details: [`${ctx.topic} ${o.number}.`, ctx.summary, ...ctx.problems].join(' '),\n};\nctx.records = [{ fields }];\nconst failed = [];\nif (memo.packingError) failed.push(`the packing alert (${memo.packingError})`);\nif (memo.skuError) failed.push(`the new SKU alert (${memo.skuError})`);\nctx.alertFailed = failed.length > 0;\nctx.alertFailureText = ctx.alertFailed\n  ? `Order ${o.number} is saved in Airtable, but ${failed.join(' and ')} could not be posted to Slack.${memo.melt && memo.melt.coldPack ? ` Cold Pack is ${memo.melt.coldPack}.` : ''} Tell the packing team by hand.`\n  : '';\nctx.step = 'Log Run';\nawait new Promise((resolve) => setTimeout(resolve, 500)); // pace Airtable\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "e334d92c-3899-5b81-9121-af1d927e66c4",
+      "name": "Airtable: Log Run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5060,
+        1640
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Sync%20Log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ performUpsert: { fieldsToMergeOn: [\"Run ID\"] }, records: $json.records }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "75ad4adc-b8c2-502f-b713-2ef440c93be1",
+      "name": "IF: Alert Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5280,
+        1640
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c4581447-f0e5-521d-87f0-1cdf22243db6",
+              "leftValue": "={{ $('Code: Plan Run Log').item.json.alertFailed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f81ba937-651c-5fe5-bd35-fbd83424b1b6",
+      "name": "Stop: Slack Alert Failed",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        5500,
+        1640
+      ],
+      "parameters": {
+        "errorMessage": "={{ $('Code: Plan Run Log').item.json.alertFailureText }}"
+      }
+    },
+    {
+      "id": "c6e7e929-f900-5c66-bb24-d59cf80cc4aa",
+      "name": "Done: Order Synced",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        5500,
+        1840
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "167a347f-0aa9-5bff-a826-ca777ddf8709",
+      "name": "Code: Airtable Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3300,
+        1040
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Every Airtable node sends its error output here (after n8n's own 3 tries).\n// 429 (rate limit), 5xx and no answer: wait 31 to 60 seconds (Airtable blocks a base for 30 seconds after a\n// burst; the random part keeps runs that were blocked together from coming back together) and start the\n// webhook again from the top. Every lookup and upsert is safe to repeat, and ctx.memo keeps the decisions and\n// the alerts already sent. Anything else, or a third failure: log it and stop the run.\nconst ctx = { ...$json };\nconst err = ctx.error || {};\ndelete ctx.error;\nconst o = ctx.order;\nconst status = Number(err.status || err.statusCode || (err.response && err.response.status)) || null;\nlet type = '';\nlet detail = '';\ntry {\n  const m = String(err.message || '');\n  const body = JSON.parse(JSON.parse(m.slice(m.indexOf(' - ') + 3)));\n  const e = body && body.error;\n  type = typeof e === 'string' ? e : (e && e.type) || '';\n  detail = (e && typeof e === 'object' && e.message) || '';\n} catch (x) { /* not an Airtable JSON error body */ }\nif (!type) type = status === 429 ? 'RATE_LIMIT_REACHED' : (err.code || (status ? 'HTTP_ERROR' : 'NO_RESPONSE'));\n// The webhook id comes from a header (not signed), and this text is posted to Slack by the error workflow.\nconst shownId = String(ctx.webhookId || '').replace(/[^A-Za-z0-9._\\/@-]/g, '?').slice(0, 64);\nconst MAX_ATTEMPTS = 3;\nconst transient = status === 429 || status === null || status >= 500;\nctx.retry = transient && ctx.attempt < MAX_ATTEMPTS;\nif (ctx.retry) ctx.cooldownSeconds = 31 + Math.floor(Math.random() * 30);\nconst clean = (s) => String(s || '').replace(/https?:\\/\\/\\S+/g, '').replace(/: /g, ', ').replace(/\\s+/g, ' ').trim();\nconst what = `Airtable answered ${status || 'nothing'} ${type}${detail ? ` (${clean(detail)})` : ''} at step ${ctx.step}`;\nconst tries = `${ctx.attempt} attempt${ctx.attempt === 1 ? '' : 's'}`;\nconst hint = ctx.memo.duplicateOrderRows && ctx.step === 'Upsert Order'\n  ? ` Two Orders records have Shopify Order ID ${o.shopifyId}, merge them in Airtable.` : '';\nconst next = ctx.memo.webhookLogged\n  ? `The order and its lines are saved and webhook ${shownId} is logged as Processed, only the Sync Log row is missing.`\n  : `Webhook ${shownId} is not marked Processed, so the next orders/updated for this order (or a redelivery) writes it again.`;\nctx.failure = {\n  status, type, step: ctx.step, attempt: ctx.attempt,\n  text: `Order ${o.number} from ${ctx.topic} was not fully saved after ${tries}. ${what}.${hint} ${next}`,\n};\nif (!ctx.retry) {\n  const fields = {\n    'Event ID': ctx.webhookId,\n    Source: 'Shopify',\n    Topic: ctx.topic,\n    'Received At': ctx.receivedAt,\n    Status: ctx.memo.webhookLogged ? 'Processed' : 'Failed',\n    Notes: ctx.failure.text,\n  };\n  if (ctx.ids && ctx.ids.order) fields.Order = [ctx.ids.order];\n  ctx.records = [{ fields }];\n  ctx.step = 'Log Failure';\n  await new Promise((resolve) => setTimeout(resolve, 500)); // pace Airtable\n}\nreturn { json: ctx };\n"
+      }
+    },
+    {
+      "id": "b2fe4040-60f0-5997-8b47-4d6ef5125d2c",
+      "name": "IF: Retry After Cooldown?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3520,
+        1040
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "677234ba-c071-5df4-8c3c-26056c7b4119",
+              "leftValue": "={{ $json.retry }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b26ed439-067a-5edc-875c-f69c13a192ec",
+      "name": "Wait: Airtable Cooldown",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3740,
+        930
+      ],
+      "parameters": {
+        "amount": "={{ $json.cooldownSeconds }}",
+        "unit": "seconds"
+      },
+      "webhookId": "7d4e2c1a-3b5f-4e6a-8c9d-1f2e3a4b5c6d"
+    },
+    {
+      "id": "08631032-25de-5f97-b1fc-f5b6ec4f4a70",
+      "name": "Airtable: Log Failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3740,
+        1150
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Webhook%20Log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ performUpsert: { fieldsToMergeOn: [\"Event ID\"] }, records: $json.records }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "onError": "continueRegularOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000
+    },
+    {
+      "id": "51b7df29-b92d-5c73-9c6b-6914c06a1d56",
+      "name": "Stop: Airtable Failed",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        3960,
+        1150
+      ],
+      "parameters": {
+        "errorMessage": "={{ $('Code: Airtable Error').item.json.failure.text }}"
+      }
+    },
+    {
+      "id": "3b0fe1c2-4103-58cf-8d4f-3a8f7b04f943",
+      "name": "Note: Title",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -260
+      ],
+      "parameters": {
+        "content": "# Shopify Orders to Airtable, with Melt-Risk Check\nShopify orders/create and orders/updated webhooks keep Customers, Orders and Order Lines in Airtable up to date, and every new order gets a weather check for the shipping city. Import and **activate** `shared/error-alert-slack.json`, then pick it as this workflow's Error Workflow. Settings come from `$env` (see `.env.example`).",
+        "height": 230,
+        "width": 1180,
+        "color": 7
+      }
+    },
+    {
+      "id": "db7685cb-87ee-5dbd-92ce-b31c2d658b22",
+      "name": "Note: Receive",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        0
+      ],
+      "parameters": {
+        "content": "## 1. Receive and verify\nThe raw body is signed again with `SHOPIFY_WEBHOOK_SECRET` (HMAC SHA256, base64) and compared with `X-Shopify-Hmac-Sha256`. Wrong or missing signature: 401 and a failed run. No secret set: 500, nothing is trusted. A real order gets 200 right away and the work happens after the answer, because Shopify wants a reply within 5 seconds.",
+        "height": 1180,
+        "width": 1290,
+        "color": 5
+      }
+    },
+    {
+      "id": "a63aaacf-8935-5cd9-9cdb-de411c6db8ee",
+      "name": "Note: Repeats",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1250,
+        0
+      ],
+      "parameters": {
+        "content": "## 2. Let updates settle, skip repeats and stale updates\nShopify often sends orders/updated a moment after orders/create, so an update waits 10 seconds and the create is saved first. Webhook Log holds every `X-Shopify-Webhook-Id` already processed, so a repeat delivery does nothing. Shopify does not promise the order of webhooks: one older than the stored `Shopify Updated At` is logged as Ignored. This is checked again after an Airtable cooldown, because another webhook may have saved a newer version in the meantime.",
+        "height": 700,
+        "width": 1970,
+        "color": 6
+      }
+    },
+    {
+      "id": "56295477-f4f0-5864-870b-3e9cf1b206df",
+      "name": "Note: Customer",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3240,
+        0
+      ],
+      "parameters": {
+        "content": "## 3. Customer and products\nThe customer is looked up by Shopify Customer ID, then by `LOWER(TRIM({Email}))` (never an upsert on Email), then updated by record id or created. SKUs are matched to Products, trimmed and in upper case. An unknown SKU becomes a Draft product with Needs Review ticked, 10 per request.",
+        "height": 700,
+        "width": 2860,
+        "color": 4
+      }
+    },
+    {
+      "id": "ca848f16-c033-5b4d-bced-f348ba726710",
+      "name": "Note: Melt",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        1340
+      ],
+      "parameters": {
+        "content": "## 4. Melt-risk check\nOpen-Meteo geocoding finds the shipping city (`City, ST`, country filter), the daily forecast gives `temperature_2m_max` for the next `MELT_FORECAST_DAYS` days. Any day at or above `MELT_TEMP_C` means Cold Pack Required. A failed call or an unknown city means Review, with a note that says why. Runs for new orders, a changed address, or a previous Review.",
+        "height": 900,
+        "width": 1520,
+        "color": 3
+      }
+    },
+    {
+      "id": "bd330731-f6b9-5f53-b738-35388c66d71e",
+      "name": "Note: Order",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1480,
+        1340
+      ],
+      "parameters": {
+        "content": "## 5. Save the order, then alert\nOne upsert on `Shopify Order ID` (create and update are the same call). The packing channel hears about Cold Pack Required or Review, the ops channel about new Draft products. A failed Slack post never stops the sync; the run is marked failed at the end. Text from the shop and its customers (gift notes, names, titles) is escaped for Slack, so it cannot ping a channel or post a link.",
+        "height": 700,
+        "width": 1760,
+        "color": 6
+      }
+    },
+    {
+      "id": "3cef047a-a2ed-5454-9868-60d1b7f651b1",
+      "name": "Note: Lines",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3260,
+        1340
+      ],
+      "parameters": {
+        "content": "## 6. Lines and logs\nOrder Lines are upserted on `Line Item ID`, 10 per request. Every Airtable call waits 500 ms after the last one: the limit is 5 per second per base, so two webhooks at once still fit. Webhook Log and Sync Log rows close the run.",
+        "height": 700,
+        "width": 2400,
+        "color": 5
+      }
+    },
+    {
+      "id": "66e0f472-837d-5c91-ad9c-c14339f42635",
+      "name": "Note: Errors",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3100,
+        760
+      ],
+      "parameters": {
+        "content": "## Airtable errors\nEvery Airtable call tries 3 times. Then a 429, a 5xx or no answer waits 31 to 60 seconds and starts this webhook again (lookups and upserts are safe to repeat, alerts are never sent twice), up to 3 attempts. Anything else marks the webhook Failed and stops the run, so the error workflow posts to Slack.",
+        "height": 540,
+        "width": 1080,
+        "color": 2
+      }
+    }
+  ],
+  "connections": {
+    "Webhook: Shopify Orders": {
+      "main": [
+        [
+          {
+            "node": "Crypto: Sign Raw Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crypto: Sign Raw Body": {
+      "main": [
+        [
+          {
+            "node": "Code: Verify And Parse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Verify And Parse": {
+      "main": [
+        [
+          {
+            "node": "Switch: Route Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch: Route Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond: 200 Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond: 200 Ignored Topic",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond: 200 Not An Order",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond: 401 Bad Signature",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond: 500 Not Configured",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond: 200 Not An Order": {
+      "main": [
+        [
+          {
+            "node": "Stop: Not An Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond: 401 Bad Signature": {
+      "main": [
+        [
+          {
+            "node": "Stop: Bad Signature",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond: 500 Not Configured": {
+      "main": [
+        [
+          {
+            "node": "Stop: Not Configured",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond: 200 Accepted": {
+      "main": [
+        [
+          {
+            "node": "IF: Update Webhook?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Update Webhook?": {
+      "main": [
+        [
+          {
+            "node": "Wait: Let Create Finish",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Start Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Let Create Finish": {
+      "main": [
+        [
+          {
+            "node": "Code: Start Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Start Processing": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Find Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Find Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code: Check Repeat",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Airtable Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Check Repeat": {
+      "main": [
+        [
+          {
+            "node": "IF: New Delivery?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: New Delivery?": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Find Order",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Done: Repeat Skipped",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Find Order": {
+      "main": [
+        [
+          {
+            "node": "Code: Check Order",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Airtable Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Check Order": {
+      "main": [
+        [
+          {
+            "node": "IF: Newer Than Stored?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Newer Than Stored?": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Find Customer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Build Logs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Find Customer": {
+      "main": [
+        [
+          {
+            "node": "Code: Pick Customer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Airtable Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Pick Customer": {
+      "main": [
+        [
+          {
+            "node": "IF: Customer Write?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Customer Write?": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Save Customer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Plan Product Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Save Customer": {
+      "main": [
+        [
+          {
+            "node": "Code: Read Customer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Airtable Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Read Customer": {
+      "main": [
+        [
+          {
+            "node": "Code: Plan Product Lookup",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Plan Product Lookup": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Find Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Find Products": {
+      "main": [
+        [
+          {
+            "node": "Code: Match Products",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Airtable Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Match Products": {
+      "main": [
+        [
+          {
+            "node": "IF: Unknown SKUs?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Unknown SKUs?": {
+      "main": [
+        [
+          {
+            "node": "Code: Next Draft Batch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: Melt Check Needed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Next Draft Batch": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Create Draft Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Create Draft Products": {
+      "main": [
+        [
+          {
+            "node": "Code: Read Draft Batch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Airtable Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Read Draft Batch": {
+      "main": [
+        [
+          {
+            "node": "IF: More Draft Batches?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: More Draft Batches?": {
+      "main": [
+        [
+          {
+            "node": "Code: Next Draft Batch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: Melt Check Needed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Melt Check Needed?": {
+      "main": [
+        [
+          {
+            "node": "Open-Meteo: Geocode City",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Build Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Open-Meteo: Geocode City": {
+      "main": [
+        [
+          {
+            "node": "Code: Read Location",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Weather Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Read Location": {
+      "main": [
+        [
+          {
+            "node": "IF: City Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: City Found?": {
+      "main": [
+        [
+          {
+            "node": "Open-Meteo: Get Forecast",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Build Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Open-Meteo: Get Forecast": {
+      "main": [
+        [
+          {
+            "node": "Code: Decide Cold Pack",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Weather Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Decide Cold Pack": {
+      "main": [
+        [
+          {
+            "node": "Code: Build Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Weather Failed": {
+      "main": [
+        [
+          {
+            "node": "Code: Build Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Build Order": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Upsert Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Upsert Order": {
+      "main": [
+        [
+          {
+            "node": "Code: Plan Alerts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Airtable Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Plan Alerts": {
+      "main": [
+        [
+          {
+            "node": "IF: Packing Alert?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Packing Alert?": {
+      "main": [
+        [
+          {
+            "node": "Slack: Packing Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Note Packing Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Packing Alert": {
+      "main": [
+        [
+          {
+            "node": "Code: Note Packing Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Note Packing Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Note Packing Alert": {
+      "main": [
+        [
+          {
+            "node": "IF: New SKU Alert?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: New SKU Alert?": {
+      "main": [
+        [
+          {
+            "node": "Slack: New SKU Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Note SKU Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: New SKU Alert": {
+      "main": [
+        [
+          {
+            "node": "Code: Note SKU Alert",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Note SKU Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Note SKU Alert": {
+      "main": [
+        [
+          {
+            "node": "Code: Plan Order Lines",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Plan Order Lines": {
+      "main": [
+        [
+          {
+            "node": "Code: Next Line Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Next Line Batch": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Upsert Order Lines",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Upsert Order Lines": {
+      "main": [
+        [
+          {
+            "node": "Code: Read Line Batch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Airtable Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Read Line Batch": {
+      "main": [
+        [
+          {
+            "node": "IF: More Line Batches?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: More Line Batches?": {
+      "main": [
+        [
+          {
+            "node": "Code: Next Line Batch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Build Logs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Build Logs": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Log Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Log Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code: Plan Run Log",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Airtable Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Plan Run Log": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Log Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Log Run": {
+      "main": [
+        [
+          {
+            "node": "IF: Alert Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Airtable Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Alert Failed?": {
+      "main": [
+        [
+          {
+            "node": "Stop: Slack Alert Failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Done: Order Synced",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Airtable Error": {
+      "main": [
+        [
+          {
+            "node": "IF: Retry After Cooldown?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Retry After Cooldown?": {
+      "main": [
+        [
+          {
+            "node": "Wait: Airtable Cooldown",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Airtable: Log Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Airtable Cooldown": {
+      "main": [
+        [
+          {
+            "node": "Code: Start Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Log Failure": {
+      "main": [
+        [
+          {
+            "node": "Stop: Airtable Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true
+  },
+  "pinData": {}
+}

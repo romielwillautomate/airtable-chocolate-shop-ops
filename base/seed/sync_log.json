@@ -1,0 +1,41 @@
+{
+  "table": "Sync Log",
+  "records": [
+    {
+      "ref": "run-1",
+      "fields": {
+        "Run ID": "inventory-2026-10-18T10:00:00Z",
+        "Automation": "02 Inventory Sync",
+        "Trigger": "Schedule",
+        "Started At": "2026-10-18T10:00:00.000Z",
+        "Finished At": "2026-10-18T10:01:00.000Z",
+        "Status": "Success",
+        "Items Checked": 21,
+        "Items Changed": 3,
+        "Shopify Updates": 1,
+        "Promos Created": 0,
+        "Purchasing Requests Created": 0,
+        "Errors": 0,
+        "Details": "Synced 21 SKUs, 3 changed."
+      }
+    },
+    {
+      "ref": "run-2",
+      "fields": {
+        "Run ID": "inventory-2026-10-19T10:00:00Z",
+        "Automation": "02 Inventory Sync",
+        "Trigger": "Schedule",
+        "Started At": "2026-10-19T10:00:00.000Z",
+        "Finished At": "2026-10-19T10:01:00.000Z",
+        "Status": "Success",
+        "Items Checked": 21,
+        "Items Changed": 2,
+        "Shopify Updates": 1,
+        "Promos Created": 1,
+        "Purchasing Requests Created": 0,
+        "Errors": 0,
+        "Details": "Synced 21 SKUs, 2 changed, 1 promo."
+      }
+    }
+  ]
+}

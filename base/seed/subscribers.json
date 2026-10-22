@@ -1,0 +1,271 @@
+{
+  "table": "Subscribers",
+  "records": [
+    {
+      "ref": "s01",
+      "fields": {
+        "Subscriber ID": "SUB-0001",
+        "Customer": [
+          "maya"
+        ],
+        "Name": "Maya Chen",
+        "Email": "maya.chen@example.com",
+        "Status": "Active",
+        "Plan": "6 Bars",
+        "Dietary Needs": [
+          "Nut-Free"
+        ],
+        "Flavor Dislikes": [
+          "Mint"
+        ],
+        "Started On": "2024-11-01"
+      }
+    },
+    {
+      "ref": "s02",
+      "fields": {
+        "Subscriber ID": "SUB-0002",
+        "Customer": [
+          "jordan"
+        ],
+        "Name": "Jordan Blake",
+        "Email": "jordan.blake@example.com",
+        "Status": "Active",
+        "Plan": "8 Bars",
+        "Started On": "2024-12-14"
+      }
+    },
+    {
+      "ref": "s03",
+      "fields": {
+        "Subscriber ID": "SUB-0003",
+        "Customer": [
+          "priya"
+        ],
+        "Name": "Priya Raman",
+        "Email": "priya.raman@example.com",
+        "Status": "Active",
+        "Plan": "4 Bars",
+        "Dietary Needs": [
+          "Vegan"
+        ],
+        "Started On": "2025-01-20"
+      }
+    },
+    {
+      "ref": "s04",
+      "fields": {
+        "Subscriber ID": "SUB-0004",
+        "Customer": [
+          "derek"
+        ],
+        "Name": "Derek Olsen",
+        "Email": "derek.olsen@example.com",
+        "Status": "Active",
+        "Plan": "6 Bars",
+        "Dietary Needs": [
+          "Dairy-Free"
+        ],
+        "Started On": "2025-02-08"
+      }
+    },
+    {
+      "ref": "s05",
+      "fields": {
+        "Subscriber ID": "SUB-0005",
+        "Customer": [
+          "elena"
+        ],
+        "Name": "Elena Rossi",
+        "Email": "elena.rossi@example.com",
+        "Status": "Active",
+        "Plan": "4 Bars",
+        "Dietary Needs": [
+          "Nut-Free",
+          "Gluten-Free"
+        ],
+        "Flavor Dislikes": [
+          "Chili"
+        ],
+        "Started On": "2025-03-11"
+      }
+    },
+    {
+      "ref": "s06",
+      "fields": {
+        "Subscriber ID": "SUB-0006",
+        "Customer": [
+          "marcus"
+        ],
+        "Name": "Marcus Webb",
+        "Email": "marcus.webb@example.com",
+        "Status": "Active",
+        "Plan": "8 Bars",
+        "Flavor Dislikes": [
+          "Lavender",
+          "Matcha"
+        ],
+        "Started On": "2025-04-03"
+      }
+    },
+    {
+      "ref": "s07",
+      "fields": {
+        "Subscriber ID": "SUB-0007",
+        "Customer": [
+          "hana"
+        ],
+        "Name": "Hana Sato",
+        "Email": "hana.sato@example.com",
+        "Status": "Active",
+        "Plan": "6 Bars",
+        "Dietary Needs": [
+          "Gluten-Free"
+        ],
+        "Started On": "2025-05-19"
+      }
+    },
+    {
+      "ref": "s08",
+      "fields": {
+        "Subscriber ID": "SUB-0008",
+        "Customer": [
+          "omar"
+        ],
+        "Name": "Omar Haddad",
+        "Email": "omar.haddad@example.com",
+        "Status": "Active",
+        "Plan": "4 Bars",
+        "Dietary Needs": [
+          "Nut-Free"
+        ],
+        "Flavor Dislikes": [
+          "Coffee"
+        ],
+        "Started On": "2025-06-07"
+      }
+    },
+    {
+      "ref": "s09",
+      "fields": {
+        "Subscriber ID": "SUB-0009",
+        "Customer": [
+          "lucia"
+        ],
+        "Name": "Lucia Gomez",
+        "Email": "lucia.gomez@example.com",
+        "Status": "Active",
+        "Plan": "4 Bars",
+        "Dietary Needs": [
+          "Vegan",
+          "Nut-Free"
+        ],
+        "Started On": "2025-07-22"
+      }
+    },
+    {
+      "ref": "s10",
+      "fields": {
+        "Subscriber ID": "SUB-0010",
+        "Customer": [
+          "tom"
+        ],
+        "Name": "Tom Becker",
+        "Email": "tom.becker@example.com",
+        "Status": "Active",
+        "Plan": "8 Bars",
+        "Flavor Dislikes": [
+          "Mint",
+          "Chili"
+        ],
+        "Started On": "2025-08-30"
+      }
+    },
+    {
+      "ref": "s11",
+      "fields": {
+        "Subscriber ID": "SUB-0011",
+        "Customer": [
+          "aisha"
+        ],
+        "Name": "Aisha Khan",
+        "Email": "aisha.khan@example.com",
+        "Status": "Active",
+        "Plan": "4 Bars",
+        "Dietary Needs": [
+          "Dairy-Free"
+        ],
+        "Flavor Dislikes": [
+          "Mint"
+        ],
+        "Started On": "2025-09-14"
+      }
+    },
+    {
+      "ref": "s12",
+      "fields": {
+        "Subscriber ID": "SUB-0012",
+        "Customer": [
+          "ben"
+        ],
+        "Name": "Ben Carter",
+        "Email": "ben.carter@example.com",
+        "Status": "Active",
+        "Plan": "6 Bars",
+        "Started On": "2026-01-05"
+      }
+    },
+    {
+      "ref": "s13",
+      "fields": {
+        "Subscriber ID": "SUB-0013",
+        "Customer": [
+          "sofia"
+        ],
+        "Name": "Sofia Marino",
+        "Email": "sofia.marino@example.com",
+        "Status": "Active",
+        "Plan": "4 Bars",
+        "Dietary Needs": [
+          "Nut-Free"
+        ],
+        "Started On": "2026-06-18"
+      }
+    },
+    {
+      "ref": "s14",
+      "fields": {
+        "Subscriber ID": "SUB-0014",
+        "Customer": [
+          "grace"
+        ],
+        "Name": "Grace Kim",
+        "Email": "grace.kim@example.com",
+        "Status": "Paused",
+        "Plan": "6 Bars",
+        "Flavor Dislikes": [
+          "Coffee"
+        ],
+        "Started On": "2025-09-30",
+        "Notes": "Paused until January."
+      }
+    },
+    {
+      "ref": "s15",
+      "fields": {
+        "Subscriber ID": "SUB-0015",
+        "Customer": [
+          "nina"
+        ],
+        "Name": "Nina Patel",
+        "Email": "nina.patel@example.com",
+        "Status": "Cancelled",
+        "Plan": "4 Bars",
+        "Dietary Needs": [
+          "Vegan"
+        ],
+        "Started On": "2025-02-20"
+      }
+    }
+  ]
+}

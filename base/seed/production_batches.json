@@ -1,0 +1,482 @@
+{
+  "table": "Production Batches",
+  "records": [
+    {
+      "ref": "b-dss-260523",
+      "fields": {
+        "Batch Code": "B-DSS-260523",
+        "Product": [
+          "dss"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-05-23",
+        "Best Before": "2026-11-04",
+        "Quantity Made": 200,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 170,
+        "Notes": "Older batch, short dated."
+      }
+    },
+    {
+      "ref": "b-dss-260910",
+      "fields": {
+        "Batch Code": "B-DSS-260910",
+        "Product": [
+          "dss"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-09-10",
+        "Best Before": "2027-09-05",
+        "Quantity Made": 300,
+        "Quantity Reserved": 10,
+        "Quantity Sold": 120
+      }
+    },
+    {
+      "ref": "b-dss-261026",
+      "fields": {
+        "Batch Code": "B-DSS-261026",
+        "Product": [
+          "dss"
+        ],
+        "Status": "Planned",
+        "Produced On": "2026-10-26",
+        "Best Before": "2027-10-25",
+        "Quantity Made": 300,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 0,
+        "Notes": "Scheduled run."
+      }
+    },
+    {
+      "ref": "b-d85-260403",
+      "fields": {
+        "Batch Code": "B-D85-260403",
+        "Product": [
+          "d85"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-04-03",
+        "Best Before": "2026-10-30",
+        "Quantity Made": 150,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 120,
+        "Notes": "Inside the sell-by buffer, pull from sale."
+      }
+    },
+    {
+      "ref": "b-d85-260821",
+      "fields": {
+        "Batch Code": "B-D85-260821",
+        "Product": [
+          "d85"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-08-21",
+        "Best Before": "2027-08-16",
+        "Quantity Made": 120,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 116
+      }
+    },
+    {
+      "ref": "b-msc-260722",
+      "fields": {
+        "Batch Code": "B-MSC-260722",
+        "Product": [
+          "msc"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-07-22",
+        "Best Before": "2026-12-04",
+        "Quantity Made": 200,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 150,
+        "Notes": "Exactly on the promo window edge."
+      }
+    },
+    {
+      "ref": "b-msc-260930",
+      "fields": {
+        "Batch Code": "B-MSC-260930",
+        "Product": [
+          "msc"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-09-30",
+        "Best Before": "2027-06-27",
+        "Quantity Made": 300,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 60
+      }
+    },
+    {
+      "ref": "b-mhz-260712",
+      "fields": {
+        "Batch Code": "B-MHZ-260712",
+        "Product": [
+          "mhz"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-07-12",
+        "Best Before": "2026-12-05",
+        "Quantity Made": 180,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 140,
+        "Notes": "One day outside the promo window."
+      }
+    },
+    {
+      "ref": "b-mhz-260925",
+      "fields": {
+        "Batch Code": "B-MHZ-260925",
+        "Product": [
+          "mhz"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-09-25",
+        "Best Before": "2027-07-02",
+        "Quantity Made": 250,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 40
+      }
+    },
+    {
+      "ref": "b-dal-260314",
+      "fields": {
+        "Batch Code": "B-DAL-260314",
+        "Product": [
+          "dal"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-03-14",
+        "Best Before": "2026-10-15",
+        "Quantity Made": 120,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 100,
+        "Notes": "Expired five days ago but still marked Released."
+      }
+    },
+    {
+      "ref": "b-dal-260920",
+      "fields": {
+        "Batch Code": "B-DAL-260920",
+        "Product": [
+          "dal"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-09-20",
+        "Best Before": "2027-09-15",
+        "Quantity Made": 150,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 70
+      }
+    },
+    {
+      "ref": "b-drb-260831",
+      "fields": {
+        "Batch Code": "B-DRB-260831",
+        "Product": [
+          "drb"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-08-31",
+        "Best Before": "2027-08-26",
+        "Quantity Made": 150,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 95
+      }
+    },
+    {
+      "ref": "b-dor-260905",
+      "fields": {
+        "Batch Code": "B-DOR-260905",
+        "Product": [
+          "dor"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-09-05",
+        "Best Before": "2027-08-31",
+        "Quantity Made": 150,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 88
+      }
+    },
+    {
+      "ref": "b-dor-261015",
+      "fields": {
+        "Batch Code": "B-DOR-261015",
+        "Product": [
+          "dor"
+        ],
+        "Status": "On Hold",
+        "Produced On": "2026-10-15",
+        "Best Before": "2027-10-10",
+        "Quantity Made": 120,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 0,
+        "Notes": "Waiting for quality control."
+      }
+    },
+    {
+      "ref": "b-dcc-260801",
+      "fields": {
+        "Batch Code": "B-DCC-260801",
+        "Product": [
+          "dcc"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-08-01",
+        "Best Before": "2027-07-27",
+        "Quantity Made": 120,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 101
+      }
+    },
+    {
+      "ref": "b-wma-260612",
+      "fields": {
+        "Batch Code": "B-WMA-260612",
+        "Product": [
+          "wma"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-06-12",
+        "Best Before": "2026-11-19",
+        "Quantity Made": 100,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 60,
+        "Notes": "Short dated."
+      }
+    },
+    {
+      "ref": "b-wma-261010",
+      "fields": {
+        "Batch Code": "B-WMA-261010",
+        "Product": [
+          "wma"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-10-10",
+        "Best Before": "2027-07-17",
+        "Quantity Made": 40,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 26
+      }
+    },
+    {
+      "ref": "b-oat-260915",
+      "fields": {
+        "Batch Code": "B-OAT-260915",
+        "Product": [
+          "oat"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-09-15",
+        "Best Before": "2027-06-07",
+        "Quantity Made": 160,
+        "Quantity Reserved": 4,
+        "Quantity Sold": 81
+      }
+    },
+    {
+      "ref": "b-mes-260821",
+      "fields": {
+        "Batch Code": "B-MES-260821",
+        "Product": [
+          "mes"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-08-21",
+        "Best Before": "2027-05-08",
+        "Quantity Made": 140,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 90
+      }
+    },
+    {
+      "ref": "b-dmi-260811",
+      "fields": {
+        "Batch Code": "B-DMI-260811",
+        "Product": [
+          "dmi"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-08-11",
+        "Best Before": "2027-08-06",
+        "Quantity Made": 100,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 97,
+        "Notes": "Nearly sold out."
+      }
+    },
+    {
+      "ref": "b-mpb-260910",
+      "fields": {
+        "Batch Code": "B-MPB-260910",
+        "Product": [
+          "mpb"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-09-10",
+        "Best Before": "2027-05-28",
+        "Quantity Made": 160,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 75
+      }
+    },
+    {
+      "ref": "b-wcc-260826",
+      "fields": {
+        "Batch Code": "B-WCC-260826",
+        "Product": [
+          "wcc"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-08-26",
+        "Best Before": "2027-04-18",
+        "Quantity Made": 140,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 92
+      }
+    },
+    {
+      "ref": "b-mlh-260816",
+      "fields": {
+        "Batch Code": "B-MLH-260816",
+        "Product": [
+          "mlh"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-08-16",
+        "Best Before": "2027-05-08",
+        "Quantity Made": 120,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 71
+      }
+    },
+    {
+      "ref": "b-mcl-260920",
+      "fields": {
+        "Batch Code": "B-MCL-260920",
+        "Product": [
+          "mcl"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-09-20",
+        "Best Before": "2027-06-17",
+        "Quantity Made": 300,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 110
+      }
+    },
+    {
+      "ref": "b-wst-260910",
+      "fields": {
+        "Batch Code": "B-WST-260910",
+        "Product": [
+          "wst"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-09-10",
+        "Best Before": "2027-05-08",
+        "Quantity Made": 120,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 58
+      }
+    },
+    {
+      "ref": "b-rch-260930",
+      "fields": {
+        "Batch Code": "B-RCH-260930",
+        "Product": [
+          "rch"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-09-30",
+        "Best Before": "2027-05-28",
+        "Quantity Made": 110,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 47
+      }
+    },
+    {
+      "ref": "b-des-260925",
+      "fields": {
+        "Batch Code": "B-DES-260925",
+        "Product": [
+          "des"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-09-25",
+        "Best Before": "2027-09-15",
+        "Quantity Made": 120,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 52
+      }
+    },
+    {
+      "ref": "b-prb-260930",
+      "fields": {
+        "Batch Code": "B-PRB-260930",
+        "Product": [
+          "prb"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-09-30",
+        "Best Before": "2026-11-29",
+        "Quantity Made": 80,
+        "Quantity Reserved": 6,
+        "Quantity Sold": 36,
+        "Notes": "Fresh pralines, short shelf life."
+      }
+    },
+    {
+      "ref": "b-prl-261012",
+      "fields": {
+        "Batch Code": "B-PRL-261012",
+        "Product": [
+          "prl"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-10-12",
+        "Best Before": "2026-12-11",
+        "Quantity Made": 400,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 360,
+        "Notes": "Wholesale pralines."
+      }
+    },
+    {
+      "ref": "b-prl-261023",
+      "fields": {
+        "Batch Code": "B-PRL-261023",
+        "Product": [
+          "prl"
+        ],
+        "Status": "Planned",
+        "Produced On": "2026-10-23",
+        "Best Before": "2026-12-22",
+        "Quantity Made": 1500,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 0,
+        "Notes": "Planned for wholesale orders."
+      }
+    },
+    {
+      "ref": "b-hot-260622",
+      "fields": {
+        "Batch Code": "B-HOT-260622",
+        "Product": [
+          "hot"
+        ],
+        "Status": "Released",
+        "Produced On": "2026-06-22",
+        "Best Before": "2027-06-17",
+        "Quantity Made": 100,
+        "Quantity Reserved": 0,
+        "Quantity Sold": 61
+      }
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "shop": {
+    "id": "gid://shopify/Shop/70000001",
+    "name": "Demo Chocolate Co.",
+    "email": "hello@example.com",
+    "myshopifyDomain": "demo-chocolate.myshopify.com",
+    "currencyCode": "USD",
+    "ianaTimezone": "America/New_York"
+  },
+  "locations": [
+    {
+      "id": "gid://shopify/Location/71000000001",
+      "name": "Demo Kitchen",
+      "isActive": true,
+      "legacyResourceId": "71000000001"
+    },
+    {
+      "id": "gid://shopify/Location/71000000002",
+      "name": "Old Warehouse (closed)",
+      "isActive": false,
+      "legacyResourceId": "71000000002"
+    }
+  ],
+  "extraProducts": [
+    {
+      "productId": "gid://shopify/Product/8800000099001",
+      "variantId": "gid://shopify/ProductVariant/4510000099001",
+      "inventoryItemId": "gid://shopify/InventoryItem/4720000099001",
+      "sku": "DC-BAR-GINGER",
+      "title": "Dark Ginger Bar",
+      "price": 7.95,
+      "available": 25,
+      "status": "ACTIVE",
+      "productType": "Bar"
+    },
+    {
+      "productId": "gid://shopify/Product/8800000099002",
+      "variantId": "gid://shopify/ProductVariant/4510000099002",
+      "inventoryItemId": "gid://shopify/InventoryItem/4720000099002",
+      "sku": "DC-BAR-PUMPKIN-SPICE",
+      "title": "Pumpkin Spice Milk Bar",
+      "price": 7.5,
+      "available": 40,
+      "status": "ACTIVE",
+      "productType": "Bar"
+    }
+  ],
+  "note": "Products with Shopify ids in base/seed/products.json are added to the store at load time, with available = Shopify Stock."
+}

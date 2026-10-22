@@ -1,0 +1,925 @@
+{
+  "seedToday": "2026-10-20",
+  "about": "All data is made up. Phone numbers use the 555 range and every email address uses example.com (a few are invalid on purpose). Dates are written for seedToday; the mock and setup/create_base.py can shift every date so the same relationships hold on any day.",
+  "refs": "Each record has a \"ref\" that is unique within its table. Link fields list refs of the linked table.",
+  "loadOrder": [
+    "products.json",
+    "production_batches.json",
+    "customers.json",
+    "orders.json",
+    "order_lines.json",
+    "price_list.json",
+    "quotes.json",
+    "quote_lines.json",
+    "subscribers.json",
+    "box_shipments.json",
+    "box_history.json",
+    "tickets.json",
+    "promos.json",
+    "purchasing_requests.json",
+    "sync_log.json",
+    "data_quality.json",
+    "webhook_log.json"
+  ],
+  "expected": {
+    "02-inventory-sync": {
+      "assumptions": {
+        "SELL_BY_BUFFER_DAYS": 14,
+        "PROMO_WINDOW_DAYS": 45,
+        "sellable_rule": "Status = Released, Produced On <= today, (Best Before - today) > SELL_BY_BUFFER_DAYS; units = max(Quantity Made - Quantity Reserved - Quantity Sold, 0)",
+        "promo_rule": "sellable batch with (Best Before - today) <= PROMO_WINDOW_DAYS and units > 0"
+      },
+      "sellableBySku": {
+        "DC-BAR-DARK-SEASALT": 200,
+        "DC-BAR-DARK-85": 4,
+        "DC-BAR-MILK-CARAMEL": 290,
+        "DC-BAR-MILK-HAZELNUT": 250,
+        "DC-BAR-DARK-ALMOND": 80,
+        "DC-BAR-DARK-RASPBERRY": 55,
+        "DC-BAR-DARK-ORANGE": 62,
+        "DC-BAR-DARK-CHILI": 19,
+        "DC-BAR-WHITE-MATCHA": 54,
+        "DC-BAR-OAT-MILK": 75,
+        "DC-BAR-MILK-ESPRESSO": 50,
+        "DC-BAR-DARK-MINT": 3,
+        "DC-BAR-MILK-PEANUT": 85,
+        "DC-BAR-WHITE-COOKIE": 48,
+        "DC-BAR-MILK-LAVENDER": 49,
+        "DC-BAR-MILK-CLASSIC": 190,
+        "DC-BAR-WHITE-STRAWBERRY": 62,
+        "DC-BAR-RUBY-CHERRY": 63,
+        "DC-BAR-DARK-ESPRESSO": 68,
+        "DC-BOX-PRALINE-12": 38,
+        "DC-PRALINE-HAZELNUT": 40,
+        "DC-HOT-COCOA-250": 39
+      },
+      "onShopify": [
+        "DC-BAR-DARK-85",
+        "DC-BAR-DARK-ALMOND",
+        "DC-BAR-DARK-CHILI",
+        "DC-BAR-DARK-ESPRESSO",
+        "DC-BAR-DARK-MINT",
+        "DC-BAR-DARK-ORANGE",
+        "DC-BAR-DARK-RASPBERRY",
+        "DC-BAR-DARK-SEASALT",
+        "DC-BAR-MILK-CARAMEL",
+        "DC-BAR-MILK-CLASSIC",
+        "DC-BAR-MILK-ESPRESSO",
+        "DC-BAR-MILK-HAZELNUT",
+        "DC-BAR-MILK-LAVENDER",
+        "DC-BAR-MILK-PEANUT",
+        "DC-BAR-OAT-MILK",
+        "DC-BAR-RUBY-CHERRY",
+        "DC-BAR-WHITE-COOKIE",
+        "DC-BAR-WHITE-MATCHA",
+        "DC-BAR-WHITE-STRAWBERRY",
+        "DC-BOX-PRALINE-12",
+        "DC-HOT-COCOA-250"
+      ],
+      "notOnShopify": [
+        "DC-BAR-PUMPKIN-SPICE",
+        "DC-PRALINE-HAZELNUT"
+      ],
+      "notOnShopifyNote": "These Airtable products have no Shopify ids, so the sync cannot push them. DC-PRALINE-HAZELNUT is wholesale only. DC-BAR-PUMPKIN-SPICE does exist in the Shopify store (available 40, it came in on order #1019), but in Airtable it is a Draft product with no Shopify ids and no batches: the sync must skip it (only Active products with a Shopify Inventory Item ID) and must not set its Shopify stock to 0.",
+      "changedSkus": {
+        "DC-BAR-DARK-SEASALT": {
+          "from": 180,
+          "to": 200
+        },
+        "DC-BAR-DARK-85": {
+          "from": 30,
+          "to": 4
+        },
+        "DC-BAR-DARK-ALMOND": {
+          "from": 110,
+          "to": 80
+        },
+        "DC-BAR-WHITE-MATCHA": {
+          "from": 20,
+          "to": 54
+        },
+        "DC-BAR-OAT-MILK": {
+          "from": 80,
+          "to": 75
+        },
+        "DC-BAR-MILK-CLASSIC": {
+          "from": 200,
+          "to": 190
+        }
+      },
+      "unchangedSkuCount": 15,
+      "promoBatches": [
+        {
+          "batch": "B-DSS-260523",
+          "sku": "DC-BAR-DARK-SEASALT",
+          "daysLeft": 15,
+          "units": 30
+        },
+        {
+          "batch": "B-MSC-260722",
+          "sku": "DC-BAR-MILK-CARAMEL",
+          "daysLeft": 45,
+          "units": 50
+        },
+        {
+          "batch": "B-PRB-260930",
+          "sku": "DC-BOX-PRALINE-12",
+          "daysLeft": 40,
+          "units": 38
+        },
+        {
+          "batch": "B-WMA-260612",
+          "sku": "DC-BAR-WHITE-MATCHA",
+          "daysLeft": 30,
+          "units": 40
+        }
+      ],
+      "existingPromo": "PROMO-B-DSS-260523",
+      "newPromosExpected": 3,
+      "belowReorderPoint": [
+        "DC-BAR-DARK-85",
+        "DC-BAR-DARK-CHILI",
+        "DC-BAR-DARK-MINT",
+        "DC-PRALINE-HAZELNUT"
+      ],
+      "alreadyOpenRequest": [
+        "DC-BAR-DARK-MINT"
+      ],
+      "newPurchasingRequestsExpected": [
+        "DC-BAR-DARK-85",
+        "DC-BAR-DARK-CHILI",
+        "DC-PRALINE-HAZELNUT"
+      ]
+    },
+    "04-subscription-boxes": {
+      "assumptions": {
+        "REPEAT_WINDOW": 1,
+        "boxMonth": "2026-11",
+        "lastBoxMonth": "2026-10",
+        "rules": {
+          "Nut-Free": "no Tree Nuts or Peanuts in Contains Allergens or May Contain Traces",
+          "Dairy-Free": "no Milk in Contains Allergens or May Contain Traces",
+          "Vegan": "Diet Labels includes Vegan",
+          "Gluten-Free": "no Wheat in Contains Allergens or May Contain Traces",
+          "dislikes": "no Flavor Notes in Flavor Dislikes"
+        },
+        "eligibleProducts": "Status Active, Subscription Eligible checked, Category Bar"
+      },
+      "subscriptionBars": [
+        "DC-BAR-DARK-SEASALT",
+        "DC-BAR-DARK-85",
+        "DC-BAR-MILK-CARAMEL",
+        "DC-BAR-MILK-HAZELNUT",
+        "DC-BAR-DARK-ALMOND",
+        "DC-BAR-DARK-RASPBERRY",
+        "DC-BAR-DARK-ORANGE",
+        "DC-BAR-DARK-CHILI",
+        "DC-BAR-WHITE-MATCHA",
+        "DC-BAR-OAT-MILK",
+        "DC-BAR-MILK-ESPRESSO",
+        "DC-BAR-DARK-MINT",
+        "DC-BAR-MILK-PEANUT",
+        "DC-BAR-WHITE-COOKIE",
+        "DC-BAR-MILK-LAVENDER",
+        "DC-BAR-MILK-CLASSIC",
+        "DC-BAR-WHITE-STRAWBERRY",
+        "DC-BAR-RUBY-CHERRY",
+        "DC-BAR-DARK-ESPRESSO"
+      ],
+      "nutTraceTraps": [
+        "DC-BAR-DARK-RASPBERRY",
+        "DC-BAR-WHITE-MATCHA",
+        "DC-BAR-MILK-LAVENDER"
+      ],
+      "subscribers": {
+        "SUB-0001": {
+          "status": "Active",
+          "planSize": 6,
+          "startedOn": "2024-11-01",
+          "dietaryNeeds": [
+            "Nut-Free"
+          ],
+          "flavorDislikes": [
+            "Mint"
+          ],
+          "allowedSkus": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-85",
+            "DC-BAR-MILK-CARAMEL",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-DARK-CHILI",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-MILK-ESPRESSO",
+            "DC-BAR-WHITE-COOKIE",
+            "DC-BAR-MILK-CLASSIC",
+            "DC-BAR-WHITE-STRAWBERRY",
+            "DC-BAR-RUBY-CHERRY",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "allowedNotInLastBox": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-MILK-CARAMEL",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-WHITE-COOKIE",
+            "DC-BAR-RUBY-CHERRY"
+          ],
+          "maxBarsWithRepeatWindow1": 6
+        },
+        "SUB-0002": {
+          "status": "Active",
+          "planSize": 8,
+          "startedOn": "2024-12-14",
+          "dietaryNeeds": [],
+          "flavorDislikes": [],
+          "allowedSkus": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-85",
+            "DC-BAR-MILK-CARAMEL",
+            "DC-BAR-MILK-HAZELNUT",
+            "DC-BAR-DARK-ALMOND",
+            "DC-BAR-DARK-RASPBERRY",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-DARK-CHILI",
+            "DC-BAR-WHITE-MATCHA",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-MILK-ESPRESSO",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-MILK-PEANUT",
+            "DC-BAR-WHITE-COOKIE",
+            "DC-BAR-MILK-LAVENDER",
+            "DC-BAR-MILK-CLASSIC",
+            "DC-BAR-WHITE-STRAWBERRY",
+            "DC-BAR-RUBY-CHERRY",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "allowedNotInLastBox": [
+            "DC-BAR-DARK-85",
+            "DC-BAR-MILK-HAZELNUT",
+            "DC-BAR-DARK-ALMOND",
+            "DC-BAR-DARK-CHILI",
+            "DC-BAR-WHITE-MATCHA",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-MILK-PEANUT",
+            "DC-BAR-MILK-LAVENDER",
+            "DC-BAR-RUBY-CHERRY",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "maxBarsWithRepeatWindow1": 8
+        },
+        "SUB-0003": {
+          "status": "Active",
+          "planSize": 4,
+          "startedOn": "2025-01-20",
+          "dietaryNeeds": [
+            "Vegan"
+          ],
+          "flavorDislikes": [],
+          "allowedSkus": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-85",
+            "DC-BAR-DARK-RASPBERRY",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-DARK-CHILI",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "allowedNotInLastBox": [
+            "DC-BAR-DARK-RASPBERRY",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "maxBarsWithRepeatWindow1": 4
+        },
+        "SUB-0004": {
+          "status": "Active",
+          "planSize": 6,
+          "startedOn": "2025-02-08",
+          "dietaryNeeds": [
+            "Dairy-Free"
+          ],
+          "flavorDislikes": [],
+          "allowedSkus": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-85",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "allowedNotInLastBox": [
+            "DC-BAR-DARK-85"
+          ],
+          "maxBarsWithRepeatWindow1": 1
+        },
+        "SUB-0005": {
+          "status": "Active",
+          "planSize": 4,
+          "startedOn": "2025-03-11",
+          "dietaryNeeds": [
+            "Nut-Free",
+            "Gluten-Free"
+          ],
+          "flavorDislikes": [
+            "Chili"
+          ],
+          "allowedSkus": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-85",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-MILK-ESPRESSO",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-MILK-CLASSIC",
+            "DC-BAR-WHITE-STRAWBERRY",
+            "DC-BAR-RUBY-CHERRY",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "allowedNotInLastBox": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-85",
+            "DC-BAR-MILK-ESPRESSO",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-WHITE-STRAWBERRY"
+          ],
+          "maxBarsWithRepeatWindow1": 4
+        },
+        "SUB-0006": {
+          "status": "Active",
+          "planSize": 8,
+          "startedOn": "2025-04-03",
+          "dietaryNeeds": [],
+          "flavorDislikes": [
+            "Lavender",
+            "Matcha"
+          ],
+          "allowedSkus": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-85",
+            "DC-BAR-MILK-CARAMEL",
+            "DC-BAR-MILK-HAZELNUT",
+            "DC-BAR-DARK-ALMOND",
+            "DC-BAR-DARK-RASPBERRY",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-DARK-CHILI",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-MILK-ESPRESSO",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-MILK-PEANUT",
+            "DC-BAR-WHITE-COOKIE",
+            "DC-BAR-MILK-CLASSIC",
+            "DC-BAR-WHITE-STRAWBERRY",
+            "DC-BAR-RUBY-CHERRY",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "allowedNotInLastBox": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-MILK-CARAMEL",
+            "DC-BAR-MILK-HAZELNUT",
+            "DC-BAR-DARK-ALMOND",
+            "DC-BAR-DARK-RASPBERRY",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-MILK-PEANUT",
+            "DC-BAR-WHITE-COOKIE",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "maxBarsWithRepeatWindow1": 8
+        },
+        "SUB-0007": {
+          "status": "Active",
+          "planSize": 6,
+          "startedOn": "2025-05-19",
+          "dietaryNeeds": [
+            "Gluten-Free"
+          ],
+          "flavorDislikes": [],
+          "allowedSkus": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-85",
+            "DC-BAR-MILK-HAZELNUT",
+            "DC-BAR-DARK-ALMOND",
+            "DC-BAR-DARK-RASPBERRY",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-DARK-CHILI",
+            "DC-BAR-WHITE-MATCHA",
+            "DC-BAR-MILK-ESPRESSO",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-MILK-PEANUT",
+            "DC-BAR-MILK-LAVENDER",
+            "DC-BAR-MILK-CLASSIC",
+            "DC-BAR-WHITE-STRAWBERRY",
+            "DC-BAR-RUBY-CHERRY",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "allowedNotInLastBox": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-MILK-HAZELNUT",
+            "DC-BAR-DARK-ALMOND",
+            "DC-BAR-DARK-RASPBERRY",
+            "DC-BAR-WHITE-MATCHA",
+            "DC-BAR-MILK-ESPRESSO",
+            "DC-BAR-MILK-CLASSIC",
+            "DC-BAR-WHITE-STRAWBERRY",
+            "DC-BAR-RUBY-CHERRY",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "maxBarsWithRepeatWindow1": 6
+        },
+        "SUB-0008": {
+          "status": "Active",
+          "planSize": 4,
+          "startedOn": "2025-06-07",
+          "dietaryNeeds": [
+            "Nut-Free"
+          ],
+          "flavorDislikes": [
+            "Coffee"
+          ],
+          "allowedSkus": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-85",
+            "DC-BAR-MILK-CARAMEL",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-DARK-CHILI",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-WHITE-COOKIE",
+            "DC-BAR-MILK-CLASSIC",
+            "DC-BAR-WHITE-STRAWBERRY",
+            "DC-BAR-RUBY-CHERRY"
+          ],
+          "allowedNotInLastBox": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-DARK-CHILI",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-MILK-CLASSIC",
+            "DC-BAR-RUBY-CHERRY"
+          ],
+          "maxBarsWithRepeatWindow1": 4
+        },
+        "SUB-0009": {
+          "status": "Active",
+          "planSize": 4,
+          "startedOn": "2025-07-22",
+          "dietaryNeeds": [
+            "Vegan",
+            "Nut-Free"
+          ],
+          "flavorDislikes": [],
+          "allowedSkus": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-85",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-DARK-CHILI",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "allowedNotInLastBox": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "maxBarsWithRepeatWindow1": 3
+        },
+        "SUB-0010": {
+          "status": "Active",
+          "planSize": 8,
+          "startedOn": "2025-08-30",
+          "dietaryNeeds": [],
+          "flavorDislikes": [
+            "Mint",
+            "Chili"
+          ],
+          "allowedSkus": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-85",
+            "DC-BAR-MILK-CARAMEL",
+            "DC-BAR-MILK-HAZELNUT",
+            "DC-BAR-DARK-ALMOND",
+            "DC-BAR-DARK-RASPBERRY",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-WHITE-MATCHA",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-MILK-ESPRESSO",
+            "DC-BAR-MILK-PEANUT",
+            "DC-BAR-WHITE-COOKIE",
+            "DC-BAR-MILK-LAVENDER",
+            "DC-BAR-MILK-CLASSIC",
+            "DC-BAR-WHITE-STRAWBERRY",
+            "DC-BAR-RUBY-CHERRY",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "allowedNotInLastBox": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-85",
+            "DC-BAR-MILK-CARAMEL",
+            "DC-BAR-MILK-HAZELNUT",
+            "DC-BAR-DARK-ALMOND",
+            "DC-BAR-DARK-RASPBERRY",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-WHITE-MATCHA",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "maxBarsWithRepeatWindow1": 8
+        },
+        "SUB-0011": {
+          "status": "Active",
+          "planSize": 4,
+          "startedOn": "2025-09-14",
+          "dietaryNeeds": [
+            "Dairy-Free"
+          ],
+          "flavorDislikes": [
+            "Mint"
+          ],
+          "allowedSkus": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-85",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "allowedNotInLastBox": [
+            "DC-BAR-DARK-SEASALT"
+          ],
+          "maxBarsWithRepeatWindow1": 1
+        },
+        "SUB-0012": {
+          "status": "Active",
+          "planSize": 6,
+          "startedOn": "2026-01-05",
+          "dietaryNeeds": [],
+          "flavorDislikes": [],
+          "allowedSkus": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-85",
+            "DC-BAR-MILK-CARAMEL",
+            "DC-BAR-MILK-HAZELNUT",
+            "DC-BAR-DARK-ALMOND",
+            "DC-BAR-DARK-RASPBERRY",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-DARK-CHILI",
+            "DC-BAR-WHITE-MATCHA",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-MILK-ESPRESSO",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-MILK-PEANUT",
+            "DC-BAR-WHITE-COOKIE",
+            "DC-BAR-MILK-LAVENDER",
+            "DC-BAR-MILK-CLASSIC",
+            "DC-BAR-WHITE-STRAWBERRY",
+            "DC-BAR-RUBY-CHERRY",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "allowedNotInLastBox": [
+            "DC-BAR-MILK-CARAMEL",
+            "DC-BAR-MILK-HAZELNUT",
+            "DC-BAR-DARK-ALMOND",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-DARK-CHILI",
+            "DC-BAR-MILK-ESPRESSO",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-MILK-PEANUT",
+            "DC-BAR-WHITE-COOKIE",
+            "DC-BAR-MILK-LAVENDER",
+            "DC-BAR-MILK-CLASSIC",
+            "DC-BAR-RUBY-CHERRY",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "maxBarsWithRepeatWindow1": 6
+        },
+        "SUB-0013": {
+          "status": "Active",
+          "planSize": 4,
+          "startedOn": "2026-06-18",
+          "dietaryNeeds": [
+            "Nut-Free"
+          ],
+          "flavorDislikes": [],
+          "allowedSkus": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-85",
+            "DC-BAR-MILK-CARAMEL",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-DARK-CHILI",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-MILK-ESPRESSO",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-WHITE-COOKIE",
+            "DC-BAR-MILK-CLASSIC",
+            "DC-BAR-WHITE-STRAWBERRY",
+            "DC-BAR-RUBY-CHERRY",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "allowedNotInLastBox": [
+            "DC-BAR-DARK-85",
+            "DC-BAR-MILK-CARAMEL",
+            "DC-BAR-DARK-CHILI",
+            "DC-BAR-MILK-ESPRESSO",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-WHITE-COOKIE",
+            "DC-BAR-WHITE-STRAWBERRY",
+            "DC-BAR-RUBY-CHERRY",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "maxBarsWithRepeatWindow1": 4
+        },
+        "SUB-0014": {
+          "status": "Paused",
+          "planSize": 6,
+          "startedOn": "2025-09-30",
+          "dietaryNeeds": [],
+          "flavorDislikes": [
+            "Coffee"
+          ],
+          "allowedSkus": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-85",
+            "DC-BAR-MILK-CARAMEL",
+            "DC-BAR-MILK-HAZELNUT",
+            "DC-BAR-DARK-ALMOND",
+            "DC-BAR-DARK-RASPBERRY",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-DARK-CHILI",
+            "DC-BAR-WHITE-MATCHA",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-MILK-PEANUT",
+            "DC-BAR-WHITE-COOKIE",
+            "DC-BAR-MILK-LAVENDER",
+            "DC-BAR-MILK-CLASSIC",
+            "DC-BAR-WHITE-STRAWBERRY",
+            "DC-BAR-RUBY-CHERRY"
+          ],
+          "allowedNotInLastBox": [
+            "DC-BAR-DARK-85",
+            "DC-BAR-DARK-ALMOND",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-DARK-CHILI",
+            "DC-BAR-WHITE-MATCHA",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-MILK-PEANUT",
+            "DC-BAR-WHITE-COOKIE",
+            "DC-BAR-MILK-LAVENDER",
+            "DC-BAR-RUBY-CHERRY"
+          ],
+          "maxBarsWithRepeatWindow1": 6
+        },
+        "SUB-0015": {
+          "status": "Cancelled",
+          "planSize": 4,
+          "startedOn": "2025-02-20",
+          "dietaryNeeds": [
+            "Vegan"
+          ],
+          "flavorDislikes": [],
+          "allowedSkus": [
+            "DC-BAR-DARK-SEASALT",
+            "DC-BAR-DARK-85",
+            "DC-BAR-DARK-RASPBERRY",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-DARK-CHILI",
+            "DC-BAR-OAT-MILK",
+            "DC-BAR-DARK-MINT",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "allowedNotInLastBox": [
+            "DC-BAR-DARK-RASPBERRY",
+            "DC-BAR-DARK-ORANGE",
+            "DC-BAR-DARK-CHILI",
+            "DC-BAR-DARK-ESPRESSO"
+          ],
+          "maxBarsWithRepeatWindow1": 4
+        }
+      }
+    },
+    "06-airtable-scripts": {
+      "lifetimeValueRule": "sum of (Total - Refunded Amount) over linked orders whose Order Status is not Cancelled",
+      "lifetimeValueByCustomerRef": {
+        "maya": 28.45,
+        "jordan": 43.95,
+        "priya": 36.95,
+        "maya-dup": 21.45,
+        "derek": 80.35,
+        "elena": 30.95,
+        "marcus": 44.2,
+        "hana": 45.45,
+        "omar": 37.45,
+        "lucia": 29.45,
+        "jordan-dup": 30.4,
+        "tom": 33.95,
+        "aisha": 30.45,
+        "ben": 33.95,
+        "sofia": 21.7,
+        "rosa": 38.45,
+        "victor": 54.95,
+        "irene": 28.45,
+        "felix": 29.95,
+        "clara": 27.45,
+        "ahmed": 21.7,
+        "mila": 45.2
+      },
+      "orderCountByCustomerRef": {
+        "maya": 1,
+        "jordan": 1,
+        "priya": 1,
+        "maya-dup": 1,
+        "derek": 3,
+        "elena": 1,
+        "marcus": 1,
+        "hana": 1,
+        "omar": 1,
+        "lucia": 1,
+        "jordan-dup": 1,
+        "tom": 1,
+        "aisha": 1,
+        "ben": 1,
+        "sofia": 1,
+        "rosa": 1,
+        "victor": 1,
+        "irene": 1,
+        "felix": 1,
+        "clara": 1,
+        "ahmed": 1,
+        "mila": 1
+      },
+      "duplicateGroups": {
+        "maya.chen@example.com": [
+          "maya",
+          "maya-dup"
+        ],
+        "jordan.blake@example.com": [
+          "jordan",
+          "jordan-dup"
+        ],
+        "priya.raman@example.com": [
+          "priya",
+          "priya-dup"
+        ]
+      },
+      "invalidEmails": {
+        "sam": "sam.ortiz@example",
+        "lena": "lena.fischer.example.com",
+        "tom-n": "tom.nguyen@@example.com"
+      },
+      "missingRequired": {
+        "grace": "Email",
+        "kai": "Name"
+      },
+      "unlinkedOrderLines": {
+        "l1004-1": "DC-BAR-DARK-SEASALT",
+        "l1004-2": " dc-bar-milk-caramel (needs trim and uppercase)",
+        "l1011-3": "DC-BAR-GINGER (unknown SKU)",
+        "l1008-gift": "(no SKU)"
+      },
+      "orphanOrderLines": [
+        "l-orphan"
+      ],
+      "customersWithoutCountedOrders": [
+        "bluebird",
+        "grace",
+        "kai",
+        "lena",
+        "nina",
+        "owen",
+        "priya-dup",
+        "sam",
+        "tom-n"
+      ],
+      "customersWithoutCountedOrdersNote": "No order that counts (owen has only a cancelled order): Lifetime Value 0 and Order Count 0. The API returns a stored 0, so write 0 rather than leaving the cell empty.",
+      "existingFindingNote": "The seeded finding \"2026-W42 / Invalid Email / sam\" is from last week and was written before record ids existed, so it has no Record ID. New findings use <ISO week> / <check> / <Airtable record id>."
+    },
+    "01-shopify-orders": {
+      "assumptions": {
+        "MELT_TEMP_C": 27,
+        "MELT_FORECAST_DAYS": 3,
+        "meltRule": "Cold Pack Required when any daily temperature_2m_max in the first MELT_FORECAST_DAYS days >= MELT_TEMP_C; Review when the geocoding or forecast call fails or the city is not found"
+      },
+      "existingWebhookId": "b54557e4-bdd9-4b37-8a5f-bf7d70bcd043",
+      "knownSkusOnShopify": [
+        "DC-BAR-DARK-85",
+        "DC-BAR-DARK-ALMOND",
+        "DC-BAR-DARK-CHILI",
+        "DC-BAR-DARK-ESPRESSO",
+        "DC-BAR-DARK-MINT",
+        "DC-BAR-DARK-ORANGE",
+        "DC-BAR-DARK-RASPBERRY",
+        "DC-BAR-DARK-SEASALT",
+        "DC-BAR-MILK-CARAMEL",
+        "DC-BAR-MILK-CLASSIC",
+        "DC-BAR-MILK-ESPRESSO",
+        "DC-BAR-MILK-HAZELNUT",
+        "DC-BAR-MILK-LAVENDER",
+        "DC-BAR-MILK-PEANUT",
+        "DC-BAR-OAT-MILK",
+        "DC-BAR-RUBY-CHERRY",
+        "DC-BAR-WHITE-COOKIE",
+        "DC-BAR-WHITE-MATCHA",
+        "DC-BAR-WHITE-STRAWBERRY",
+        "DC-BOX-PRALINE-12",
+        "DC-HOT-COCOA-250"
+      ],
+      "shopifyOnlySku": "DC-BAR-GINGER",
+      "existingCustomerEmails": [
+        "ahmed.siddiqui@example.com",
+        "aisha.khan@example.com",
+        "ben.carter@example.com",
+        "bluebird.cafe@example.com",
+        "clara.jensen@example.com",
+        "derek.olsen@example.com",
+        "elena.rossi@example.com",
+        "felix.osei@example.com",
+        "hana.sato@example.com",
+        "irene.novak@example.com",
+        "jordan.blake@example.com",
+        "kai.morgan@example.com",
+        "lena.fischer.example.com",
+        "lucia.gomez@example.com",
+        "marcus.webb@example.com",
+        "maya.chen@example.com",
+        "mila.petrova@example.com",
+        "nina.patel@example.com",
+        "omar.haddad@example.com",
+        "owen.price@example.com",
+        "priya.raman@example.com",
+        "rosa.delgado@example.com",
+        "sam.ortiz@example",
+        "sofia.marino@example.com",
+        "tom.becker@example.com",
+        "tom.nguyen@@example.com",
+        "victor.hale@example.com"
+      ],
+      "exactDuplicateEmail": "jordan.blake@example.com (two records with the exact same value: an upsert on Email matches both and fails)",
+      "customerMatching": "Do not upsert Customers on Email. Email is an email field, which is not one of the field types Airtable documents for fieldsToMergeOn (number, single line text, long text, single select, multiple select, date), the seed has an exact duplicate, and stored emails are not always lowercase. Look the customer up with LOWER(TRIM({Email})), then update by record id or create.",
+      "highestOrderNumber": "#1025"
+    },
+    "03-wholesale-quotes": {
+      "approvedUnprocessed": [
+        "Q-2026-0042"
+      ],
+      "approvedButProcessed": [
+        "Q-2026-0043 (Status Converted, Processed checked)"
+      ],
+      "highestQuoteNumber": "Q-2026-0045",
+      "nextQuoteNumber": "Q-2026-0046",
+      "tierRule": "active tier of the matched product with Min Quantity <= qty <= Max Quantity (empty Max means no upper limit)",
+      "exampleInquiry": {
+        "text": "120 dark sea salt bars and 60 hazelnut pralines for our cafe, need them by March 3",
+        "lines": [
+          {
+            "sku": "DC-BAR-DARK-SEASALT",
+            "qty": 120,
+            "tier": "DC-BAR-DARK-SEASALT 100-299",
+            "unitPrice": 4.2,
+            "lineTotal": 504.0,
+            "sellableStock": 200,
+            "onShopify": true
+          },
+          {
+            "sku": "DC-PRALINE-HAZELNUT",
+            "qty": 60,
+            "tier": "DC-PRALINE-HAZELNUT 50-199",
+            "unitPrice": 1.1,
+            "lineTotal": 66.0,
+            "sellableStock": 40,
+            "onShopify": false,
+            "note": "short by 20; a Planned batch of 1500 is produced in 3 days (Daily Capacity 1500, Production Lead Days 2), so the line is feasible with production"
+          }
+        ],
+        "subtotal": 570.0,
+        "ambiguity": "\"hazelnut pralines\" could also mean DC-BOX-PRALINE-12 (Hazelnut Praline Box); the single piece DC-PRALINE-HAZELNUT is the wholesale item"
+      },
+      "noTierExample": "DC-BAR-DARK-ORANGE is Wholesale Available false and has no tiers: a request for it is No Tier",
+      "inactiveTier": "DC-BAR-DARK-SEASALT 300+ (old) at 3.60 is inactive and must never be used"
+    },
+    "05-delivery-triage": {
+      "assumptions": {
+        "CLAIM_WINDOW_DAYS": 7,
+        "CLAIM_LIMIT": 2,
+        "MELT_TEMP_C": 27,
+        "warmForecast": "Orders.Forecast Max C >= MELT_TEMP_C",
+        "late": "Delivered At date is after Expected Delivery",
+        "priorClaims": "Tickets with Resolution Replacement Approved for the same customer email"
+      },
+      "highestTicketId": "T-0004",
+      "priorApprovedClaims": {
+        "derek.olsen@example.com": 2
+      },
+      "scenarios": {
+        "#1012 tom.becker@example.com": "Houston, delivered 2 days ago, Cold Pack Required but Cold Pack Shipped unticked, Forecast Max C 30.5 (Needs Review notes the packing team ran out): warm forecast without a cold pack, approve",
+        "#1015 sofia.marino@example.com": "Denver, delivered 3 days ago, 3 days after Expected Delivery: arrived late",
+        "#1009 omar.haddad@example.com": "Miami, delivered 1 day ago WITH a cold pack, on time: no automatic approval",
+        "#1003 priya.raman@example.com": "delivered 20 days ago: outside a 7 day claim window",
+        "#1021 derek.olsen@example.com": "delivered 2 days ago, 1 day late, but Derek already has 2 approved claims",
+        "#1018 victor.hale@example.com": "delivered 4 days ago: use for a damaged claim",
+        "#1020 felix.osei@example.com": "delivered 3 days ago: use for a wrong item claim",
+        "#1022 clara.jensen@example.com": "shipped 6 days ago, expected 3 days ago, not delivered: use for a missing parcel",
+        "#1017 rosa.delgado@example.com": "in transit, not delivered yet"
+      }
+    }
+  }
+}

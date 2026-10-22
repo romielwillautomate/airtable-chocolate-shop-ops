@@ -1,0 +1,985 @@
+{
+  "table": "Order Lines",
+  "records": [
+    {
+      "ref": "l1001-1",
+      "fields": {
+        "Line Item ID": "14100000100101",
+        "Order": [
+          "o1001"
+        ],
+        "SKU": "DC-BAR-DARK-SEASALT",
+        "Product Title": "Dark 70% Sea Salt Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 15.0,
+        "Product": [
+          "dss"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1001-2",
+      "fields": {
+        "Line Item ID": "14100000100102",
+        "Order": [
+          "o1001"
+        ],
+        "SKU": "DC-BAR-MILK-CLASSIC",
+        "Product Title": "Classic Milk 40% Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 6.5,
+        "Line Total": 6.5,
+        "Product": [
+          "mcl"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1002-1",
+      "fields": {
+        "Line Item ID": "14100000100201",
+        "Order": [
+          "o1002"
+        ],
+        "SKU": "DC-BAR-MILK-CARAMEL",
+        "Product Title": "Milk Salted Caramel Bar",
+        "Quantity": 3,
+        "Current Quantity": 3,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.0,
+        "Line Total": 21.0,
+        "Product": [
+          "msc"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1002-2",
+      "fields": {
+        "Line Item ID": "14100000100202",
+        "Order": [
+          "o1002"
+        ],
+        "SKU": "DC-BAR-DARK-85",
+        "Product Title": "Dark 85% Single Origin Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 8.0,
+        "Line Total": 16.0,
+        "Product": [
+          "d85"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1003-1",
+      "fields": {
+        "Line Item ID": "14100000100301",
+        "Order": [
+          "o1003"
+        ],
+        "SKU": "DC-BAR-DARK-RASPBERRY",
+        "Product Title": "Dark Raspberry Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 15.0,
+        "Product": [
+          "drb"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1003-2",
+      "fields": {
+        "Line Item ID": "14100000100302",
+        "Order": [
+          "o1003"
+        ],
+        "SKU": "DC-BAR-DARK-ORANGE",
+        "Product Title": "Dark Orange Zest Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 15.0,
+        "Product": [
+          "dor"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1004-1",
+      "fields": {
+        "Line Item ID": "IMPORT-1004-1",
+        "Order": [
+          "o1004"
+        ],
+        "SKU": "DC-BAR-DARK-SEASALT",
+        "Product Title": "Dark 70% Sea Salt Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 7.5
+      }
+    },
+    {
+      "ref": "l1004-2",
+      "fields": {
+        "Line Item ID": "IMPORT-1004-2",
+        "Order": [
+          "o1004"
+        ],
+        "SKU": " dc-bar-milk-caramel",
+        "Product Title": "Milk Salted Caramel Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.0,
+        "Line Total": 7.0
+      }
+    },
+    {
+      "ref": "l1005-1",
+      "fields": {
+        "Line Item ID": "14100000100501",
+        "Order": [
+          "o1005"
+        ],
+        "SKU": "DC-BAR-MILK-HAZELNUT",
+        "Product Title": "Milk Hazelnut Crunch Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 15.0,
+        "Product": [
+          "mhz"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1005-2",
+      "fields": {
+        "Line Item ID": "14100000100502",
+        "Order": [
+          "o1005"
+        ],
+        "SKU": "DC-BAR-DARK-ALMOND",
+        "Product Title": "Dark Toasted Almond Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 7.5,
+        "Product": [
+          "dal"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1006-1",
+      "fields": {
+        "Line Item ID": "14100000100601",
+        "Order": [
+          "o1006"
+        ],
+        "SKU": "DC-BOX-PRALINE-12",
+        "Product Title": "Hazelnut Praline Box (12 pieces)",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 24.0,
+        "Line Total": 24.0,
+        "Product": [
+          "prb"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1007-1",
+      "fields": {
+        "Line Item ID": "14100000100701",
+        "Order": [
+          "o1007"
+        ],
+        "SKU": "DC-BAR-MILK-PEANUT",
+        "Product Title": "Milk Peanut Butter Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 15.0,
+        "Product": [
+          "mpb"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1007-2",
+      "fields": {
+        "Line Item ID": "14100000100702",
+        "Order": [
+          "o1007"
+        ],
+        "SKU": "DC-BAR-MILK-ESPRESSO",
+        "Product Title": "Milk Espresso Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 15.0,
+        "Product": [
+          "mes"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1007-3",
+      "fields": {
+        "Line Item ID": "14100000100703",
+        "Order": [
+          "o1007"
+        ],
+        "SKU": "DC-BAR-WHITE-COOKIE",
+        "Product Title": "White Cookies and Cream Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.25,
+        "Line Total": 7.25,
+        "Product": [
+          "wcc"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1008-1",
+      "fields": {
+        "Line Item ID": "14100000100801",
+        "Order": [
+          "o1008"
+        ],
+        "SKU": "DC-BOX-PRALINE-12",
+        "Product Title": "Hazelnut Praline Box (12 pieces)",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 24.0,
+        "Line Total": 24.0,
+        "Product": [
+          "prb"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1008-2",
+      "fields": {
+        "Line Item ID": "14100000100802",
+        "Order": [
+          "o1008"
+        ],
+        "SKU": "DC-BAR-WHITE-STRAWBERRY",
+        "Product Title": "White Strawberry Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.25,
+        "Line Total": 14.5,
+        "Product": [
+          "wst"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1009-1",
+      "fields": {
+        "Line Item ID": "14100000100901",
+        "Order": [
+          "o1009"
+        ],
+        "SKU": "DC-BAR-DARK-SEASALT",
+        "Product Title": "Dark 70% Sea Salt Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 15.0,
+        "Product": [
+          "dss"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1009-2",
+      "fields": {
+        "Line Item ID": "14100000100902",
+        "Order": [
+          "o1009"
+        ],
+        "SKU": "DC-BAR-DARK-CHILI",
+        "Product Title": "Dark Chili Cinnamon Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.75,
+        "Line Total": 15.5,
+        "Product": [
+          "dcc"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1010-1",
+      "fields": {
+        "Line Item ID": "14100000101001",
+        "Order": [
+          "o1010"
+        ],
+        "SKU": "DC-BAR-OAT-MILK",
+        "Product Title": "Oat Milk Chocolate Bar",
+        "Quantity": 3,
+        "Current Quantity": 3,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 22.5,
+        "Product": [
+          "oat"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1011-1",
+      "fields": {
+        "Line Item ID": "14100000101101",
+        "Order": [
+          "o1011"
+        ],
+        "SKU": "DC-BAR-WHITE-MATCHA",
+        "Product Title": "White Matcha Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.75,
+        "Line Total": 7.75,
+        "Product": [
+          "wma"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1011-2",
+      "fields": {
+        "Line Item ID": "14100000101102",
+        "Order": [
+          "o1011"
+        ],
+        "SKU": "DC-BAR-MILK-LAVENDER",
+        "Product Title": "Milk Lavender Honey Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.75,
+        "Line Total": 7.75,
+        "Product": [
+          "mlh"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1011-3",
+      "fields": {
+        "Line Item ID": "14100000101103",
+        "Order": [
+          "o1011"
+        ],
+        "SKU": "DC-BAR-GINGER",
+        "Product Title": "Dark Ginger Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.95,
+        "Line Total": 7.95,
+        "SKU Status": "Unknown SKU"
+      }
+    },
+    {
+      "ref": "l1012-1",
+      "fields": {
+        "Line Item ID": "14100000101201",
+        "Order": [
+          "o1012"
+        ],
+        "SKU": "DC-BAR-MILK-CARAMEL",
+        "Product Title": "Milk Salted Caramel Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.0,
+        "Line Total": 14.0,
+        "Product": [
+          "msc"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1012-2",
+      "fields": {
+        "Line Item ID": "14100000101202",
+        "Order": [
+          "o1012"
+        ],
+        "SKU": "DC-BAR-MILK-CLASSIC",
+        "Product Title": "Classic Milk 40% Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 6.5,
+        "Line Total": 13.0,
+        "Product": [
+          "mcl"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1013-1",
+      "fields": {
+        "Line Item ID": "14100000101301",
+        "Order": [
+          "o1013"
+        ],
+        "SKU": "DC-BAR-DARK-85",
+        "Product Title": "Dark 85% Single Origin Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 8.0,
+        "Line Total": 16.0,
+        "Product": [
+          "d85"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1013-2",
+      "fields": {
+        "Line Item ID": "14100000101302",
+        "Order": [
+          "o1013"
+        ],
+        "SKU": "DC-BAR-OAT-MILK",
+        "Product Title": "Oat Milk Chocolate Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 7.5,
+        "Product": [
+          "oat"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1014-1",
+      "fields": {
+        "Line Item ID": "14100000101401",
+        "Order": [
+          "o1014"
+        ],
+        "SKU": "DC-HOT-COCOA-250",
+        "Product Title": "Drinking Chocolate Flakes 250 g",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 14.0,
+        "Line Total": 14.0,
+        "Product": [
+          "hot"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1014-2",
+      "fields": {
+        "Line Item ID": "14100000101402",
+        "Order": [
+          "o1014"
+        ],
+        "SKU": "DC-BAR-MILK-CLASSIC",
+        "Product Title": "Classic Milk 40% Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 6.5,
+        "Line Total": 13.0,
+        "Product": [
+          "mcl"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1015-1",
+      "fields": {
+        "Line Item ID": "14100000101501",
+        "Order": [
+          "o1015"
+        ],
+        "SKU": "DC-BAR-DARK-SEASALT",
+        "Product Title": "Dark 70% Sea Salt Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 7.5,
+        "Product": [
+          "dss"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1015-2",
+      "fields": {
+        "Line Item ID": "14100000101502",
+        "Order": [
+          "o1015"
+        ],
+        "SKU": "DC-BAR-WHITE-STRAWBERRY",
+        "Product Title": "White Strawberry Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.25,
+        "Line Total": 7.25,
+        "Product": [
+          "wst"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1016-1",
+      "fields": {
+        "Line Item ID": "14100000101601",
+        "Order": [
+          "o1016"
+        ],
+        "SKU": "DC-BAR-MILK-CARAMEL",
+        "Product Title": "Milk Salted Caramel Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.0,
+        "Line Total": 14.0,
+        "Product": [
+          "msc"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1017-1",
+      "fields": {
+        "Line Item ID": "14100000101701",
+        "Order": [
+          "o1017"
+        ],
+        "SKU": "DC-BOX-PRALINE-12",
+        "Product Title": "Hazelnut Praline Box (12 pieces)",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 24.0,
+        "Line Total": 24.0,
+        "Product": [
+          "prb"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1017-2",
+      "fields": {
+        "Line Item ID": "14100000101702",
+        "Order": [
+          "o1017"
+        ],
+        "SKU": "DC-BAR-DARK-MINT",
+        "Product Title": "Dark Mint Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 7.5,
+        "Product": [
+          "dmi"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1018-1",
+      "fields": {
+        "Line Item ID": "14100000101801",
+        "Order": [
+          "o1018"
+        ],
+        "SKU": "DC-BOX-PRALINE-12",
+        "Product Title": "Hazelnut Praline Box (12 pieces)",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 24.0,
+        "Line Total": 48.0,
+        "Product": [
+          "prb"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1019-1",
+      "fields": {
+        "Line Item ID": "14100000101901",
+        "Order": [
+          "o1019"
+        ],
+        "SKU": "DC-BAR-PUMPKIN-SPICE",
+        "Product Title": "Pumpkin Spice Milk Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 15.0,
+        "Product": [
+          "psb"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1019-2",
+      "fields": {
+        "Line Item ID": "14100000101902",
+        "Order": [
+          "o1019"
+        ],
+        "SKU": "DC-BAR-MILK-CLASSIC",
+        "Product Title": "Classic Milk 40% Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 6.5,
+        "Line Total": 6.5,
+        "Product": [
+          "mcl"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1020-1",
+      "fields": {
+        "Line Item ID": "14100000102001",
+        "Order": [
+          "o1020"
+        ],
+        "SKU": "DC-BAR-RUBY-CHERRY",
+        "Product Title": "Ruby Cherry Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.75,
+        "Line Total": 15.5,
+        "Product": [
+          "rch"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1020-2",
+      "fields": {
+        "Line Item ID": "14100000102002",
+        "Order": [
+          "o1020"
+        ],
+        "SKU": "DC-BAR-DARK-ORANGE",
+        "Product Title": "Dark Orange Zest Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 7.5,
+        "Product": [
+          "dor"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1021-1",
+      "fields": {
+        "Line Item ID": "14100000102101",
+        "Order": [
+          "o1021"
+        ],
+        "SKU": "DC-BAR-DARK-SEASALT",
+        "Product Title": "Dark 70% Sea Salt Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 15.0,
+        "Product": [
+          "dss"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1021-2",
+      "fields": {
+        "Line Item ID": "14100000102102",
+        "Order": [
+          "o1021"
+        ],
+        "SKU": "DC-BAR-DARK-85",
+        "Product Title": "Dark 85% Single Origin Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 8.0,
+        "Line Total": 8.0,
+        "Product": [
+          "d85"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1022-1",
+      "fields": {
+        "Line Item ID": "14100000102201",
+        "Order": [
+          "o1022"
+        ],
+        "SKU": "DC-BAR-MILK-CLASSIC",
+        "Product Title": "Classic Milk 40% Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 6.5,
+        "Line Total": 13.0,
+        "Product": [
+          "mcl"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1022-2",
+      "fields": {
+        "Line Item ID": "14100000102202",
+        "Order": [
+          "o1022"
+        ],
+        "SKU": "DC-BAR-MILK-ESPRESSO",
+        "Product Title": "Milk Espresso Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 7.5,
+        "Product": [
+          "mes"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1023-1",
+      "fields": {
+        "Line Item ID": "14100000102301",
+        "Order": [
+          "o1023"
+        ],
+        "SKU": "DC-BAR-WHITE-COOKIE",
+        "Product Title": "White Cookies and Cream Bar",
+        "Quantity": 2,
+        "Current Quantity": 1,
+        "Refunded Quantity": 1,
+        "Unit Price": 7.25,
+        "Line Total": 7.25,
+        "Product": [
+          "wcc"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1023-2",
+      "fields": {
+        "Line Item ID": "14100000102302",
+        "Order": [
+          "o1023"
+        ],
+        "SKU": "DC-BAR-MILK-PEANUT",
+        "Product Title": "Milk Peanut Butter Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 7.5,
+        "Product": [
+          "mpb"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1024-1",
+      "fields": {
+        "Line Item ID": "14100000102401",
+        "Order": [
+          "o1024"
+        ],
+        "SKU": "DC-BAR-DARK-CHILI",
+        "Product Title": "Dark Chili Cinnamon Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.75,
+        "Line Total": 15.5,
+        "Product": [
+          "dcc"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1024-2",
+      "fields": {
+        "Line Item ID": "14100000102402",
+        "Order": [
+          "o1024"
+        ],
+        "SKU": "DC-BAR-DARK-SEASALT",
+        "Product Title": "Dark 70% Sea Salt Bar",
+        "Quantity": 2,
+        "Current Quantity": 2,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.5,
+        "Line Total": 15.0,
+        "Product": [
+          "dss"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1024-3",
+      "fields": {
+        "Line Item ID": "14100000102403",
+        "Order": [
+          "o1024"
+        ],
+        "SKU": "DC-BAR-DARK-ESPRESSO",
+        "Product Title": "Dark Espresso Bean Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 7.75,
+        "Line Total": 7.75,
+        "Product": [
+          "des"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1025-1",
+      "fields": {
+        "Line Item ID": "14100000102501",
+        "Order": [
+          "o1025"
+        ],
+        "SKU": "DC-BOX-PRALINE-12",
+        "Product Title": "Hazelnut Praline Box (12 pieces)",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Refunded Quantity": 0,
+        "Unit Price": 24.0,
+        "Line Total": 24.0,
+        "Product": [
+          "prb"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l-orphan",
+      "fields": {
+        "Line Item ID": "LEGACY-0001",
+        "SKU": "DC-BAR-DARK-SEASALT",
+        "Product Title": "Dark 70% Sea Salt Bar",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Unit Price": 7.5,
+        "Line Total": 7.5,
+        "Product": [
+          "dss"
+        ],
+        "SKU Status": "Matched"
+      }
+    },
+    {
+      "ref": "l1008-gift",
+      "fields": {
+        "Line Item ID": "14100000100809",
+        "Order": [
+          "o1008"
+        ],
+        "Product Title": "Gift wrap",
+        "Quantity": 1,
+        "Current Quantity": 1,
+        "Unit Price": 0,
+        "Line Total": 0,
+        "SKU Status": "Missing SKU"
+      }
+    }
+  ]
+}

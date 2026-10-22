@@ -1,0 +1,143 @@
+{
+  "table": "Quote Lines",
+  "records": [
+    {
+      "ref": "q41-1",
+      "fields": {
+        "Line Label": "Q-2026-0041 / 1",
+        "Quote": [
+          "q41"
+        ],
+        "Product": [
+          "mcl"
+        ],
+        "Price Tier": [
+          "t-mcl-24"
+        ],
+        "Requested Product": "classic milk bars",
+        "Quantity": 60,
+        "Unit Price": 3.9,
+        "Line Total": 234.0,
+        "Match Status": "Matched",
+        "Stock Available": 190
+      }
+    },
+    {
+      "ref": "q41-2",
+      "fields": {
+        "Line Label": "Q-2026-0041 / 2",
+        "Quote": [
+          "q41"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Price Tier": [
+          "t-dss-24"
+        ],
+        "Requested Product": "sea salt bars",
+        "Quantity": 30,
+        "Unit Price": 4.5,
+        "Line Total": 135.0,
+        "Match Status": "Matched",
+        "Stock Available": 170
+      }
+    },
+    {
+      "ref": "q42-1",
+      "fields": {
+        "Line Label": "Q-2026-0042 / 1",
+        "Quote": [
+          "q42"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Price Tier": [
+          "t-dss-100"
+        ],
+        "Requested Product": "dark sea salt bars",
+        "Quantity": 100,
+        "Unit Price": 4.2,
+        "Line Total": 420.0,
+        "Match Status": "Matched",
+        "Stock Available": 170
+      }
+    },
+    {
+      "ref": "q42-2",
+      "fields": {
+        "Line Label": "Q-2026-0042 / 2",
+        "Quote": [
+          "q42"
+        ],
+        "Product": [
+          "hot"
+        ],
+        "Price Tier": [
+          "t-hot-6"
+        ],
+        "Requested Product": "tins of drinking chocolate",
+        "Quantity": 12,
+        "Unit Price": 9.0,
+        "Line Total": 108.0,
+        "Match Status": "Matched",
+        "Stock Available": 39
+      }
+    },
+    {
+      "ref": "q43-1",
+      "fields": {
+        "Line Label": "Q-2026-0043 / 1",
+        "Quote": [
+          "q43"
+        ],
+        "Product": [
+          "mhz"
+        ],
+        "Price Tier": [
+          "t-mhz-24"
+        ],
+        "Requested Product": "hazelnut crunch bars",
+        "Quantity": 48,
+        "Unit Price": 4.5,
+        "Line Total": 216.0,
+        "Match Status": "Matched",
+        "Stock Available": 250
+      }
+    },
+    {
+      "ref": "q44-1",
+      "fields": {
+        "Line Label": "Q-2026-0044 / 1",
+        "Quote": [
+          "q44"
+        ],
+        "Requested Product": "white chocolate raspberry hearts",
+        "Quantity": 200,
+        "Match Status": "Unmatched"
+      }
+    },
+    {
+      "ref": "q45-1",
+      "fields": {
+        "Line Label": "Q-2026-0045 / 1",
+        "Quote": [
+          "q45"
+        ],
+        "Product": [
+          "d85"
+        ],
+        "Price Tier": [
+          "t-d85-24"
+        ],
+        "Requested Product": "dark 85 bars",
+        "Quantity": 24,
+        "Unit Price": 4.8,
+        "Line Total": 115.2,
+        "Match Status": "Matched",
+        "Stock Available": 4
+      }
+    }
+  ]
+}

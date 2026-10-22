@@ -1,0 +1,1915 @@
+{
+  "name": "Batch Inventory Sync: Airtable to Shopify",
+  "nodes": [
+    {
+      "id": "d60e5b02-cae8-5097-8ad3-25f37782efa8",
+      "name": "Schedule: Daily 06:00 UTC",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        150
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 6
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "e912bb8f-901d-5a13-864f-2f8bc8fe5ff4",
+      "name": "Webhook: Run Now",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        450
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "inventory-run-now",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "d09832a1-b276-596f-aae5-f3ab51eb959c"
+    },
+    {
+      "id": "080c2ade-01b0-50fd-b6aa-ed867db2b104",
+      "name": "IF: Run Now Secret OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        260,
+        450
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "031d36e7-9b90-51be-9ff4-054606ddd5da",
+              "leftValue": "={{ $env.RUN_NOW_SECRET || \"\" }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "d52dab71-7840-5f44-bf67-eb85ae757702",
+              "leftValue": "={{ $json.headers['x-run-now-secret'] || '' }}",
+              "rightValue": "={{ $env.RUN_NOW_SECRET || \"\" }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "2b9d99de-a3c8-538c-9475-8fe3d31e54a3",
+      "name": "Respond: 401 Unauthorized",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        630
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ error: \"unauthorized\" }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    },
+    {
+      "id": "4334abc5-aae5-51c2-aa33-05f02c56390b",
+      "name": "Code: Start Run",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        520,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// Settings, trigger and run id. This node never throws, so a Run Now caller always gets a clear answer.\nconst problems = [];\nconst text = v => (v === undefined || v === null) ? '' : String(v).trim();\nconst required = {\n  AIRTABLE_TOKEN: text($env.AIRTABLE_TOKEN),\n  AIRTABLE_BASE_ID: text($env.AIRTABLE_BASE_ID),\n  SHOPIFY_STORE_DOMAIN: text($env.SHOPIFY_STORE_DOMAIN),\n  SHOPIFY_ADMIN_TOKEN: text($env.SHOPIFY_ADMIN_TOKEN),\n  SHOPIFY_LOCATION_ID: text($env.SHOPIFY_LOCATION_ID),\n};\nfor (const [name, value] of Object.entries(required)) if (!value) problems.push(`${name} is empty`);\nif (required.AIRTABLE_BASE_ID && !/^app[A-Za-z0-9]{14}$/.test(required.AIRTABLE_BASE_ID))\n  problems.push('AIRTABLE_BASE_ID does not look like an Airtable base id (app plus 14 letters or digits)');\nif (required.SHOPIFY_STORE_DOMAIN && !/^[a-z0-9][a-z0-9-]*\\.myshopify\\.com$/i.test(required.SHOPIFY_STORE_DOMAIN))\n  problems.push('SHOPIFY_STORE_DOMAIN must be the store domain that ends in .myshopify.com, without the protocol');\nif (required.SHOPIFY_LOCATION_ID && !/^gid:\\/\\/shopify\\/Location\\/\\d+$/.test(required.SHOPIFY_LOCATION_ID))\n  problems.push('SHOPIFY_LOCATION_ID must look like gid://shopify/Location/123456');\nconst apiVersion = text($env.SHOPIFY_API_VERSION) || '2026-10';\nif (!/^\\d{4}-(01|04|07|10)$/.test(apiVersion)) problems.push('SHOPIFY_API_VERSION must look like 2026-10');\nelse if (apiVersion < '2026-04') problems.push('SHOPIFY_API_VERSION must be 2026-04 or newer, because the stock update uses changeFromQuantity and @idempotent');\n\nfunction wholeNumber(name, raw, fallback, min, max) {\n  const t = text(raw);\n  if (t === '') return fallback;\n  const n = Number(t);\n  if (!Number.isInteger(n) || n < min || n > max) {\n    problems.push(`${name} must be a whole number from ${min} to ${max}`);\n    return fallback;\n  }\n  return n;\n}\nconst bufferDays = wholeNumber('SELL_BY_BUFFER_DAYS', $env.SELL_BY_BUFFER_DAYS, 14, 0, 365);\nconst promoDays = wholeNumber('PROMO_WINDOW_DAYS', $env.PROMO_WINDOW_DAYS, 45, 0, 730);\nconst discountPercent = wholeNumber('PROMO_DISCOUNT_PERCENT', $env.PROMO_DISCOUNT_PERCENT, 25, 1, 90);\nif (promoDays !== 0 && promoDays <= bufferDays)\n  problems.push('PROMO_WINDOW_DAYS must be larger than SELL_BY_BUFFER_DAYS (or 0 to switch promos off), otherwise no sellable batch can get a promo');\n\nlet trigger = 'Schedule';\ntry { if ($('Webhook: Run Now').isExecuted) trigger = 'Run Now'; } catch (e) {}\nconst startedAt = new Date().toISOString();\n// The Sync Log Run ID, for example inventory-2026-10-21T06:00:00Z-48213. The n8n execution id keeps it unique, so two\n// runs started in the same second (a double click on Run Now) still get one row each.\nconst runId = 'inventory-' + startedAt.slice(0, 19) + 'Z-' + $execution.id;\n\nreturn [{ json: {\n  ok: problems.length === 0, problems, trigger, runNow: trigger === 'Run Now', runId, startedAt,\n  today: startedAt.slice(0, 10),                              // every date rule works on UTC calendar days\n  bufferDays, promoDays, discountPercent, apiVersion,\n  locationId: required.SHOPIFY_LOCATION_ID,\n  slackEnabled: text($env.SLACK_WEBHOOK_URL) !== '',\n  productsQuery: {\n    pageSize: 100,\n    filterByFormula: \"{Status} = 'Active'\",\n    fields: ['SKU', 'Name', 'Shopify Inventory Item ID', 'Shopify Stock', 'Reorder Point', 'Reorder Quantity'],\n  },\n} }];\n"
+      }
+    },
+    {
+      "id": "2e1dd745-4e6c-5c04-97ea-bcbece069c99",
+      "name": "IF: Config OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        780,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "39461c3e-1e8a-5608-a390-3977e96ff8ec",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d6f23d38-fdc9-5b6b-b3db-592fac29b23a",
+      "name": "IF: Run Now?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "57a73a4f-7a66-5c8d-ad82-b4d41d96cb24",
+              "leftValue": "={{ $json.runNow }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c06ee7c4-d5b7-515e-8ad4-b4526e13106c",
+      "name": "Respond: 202 Started",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        150
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ status: \"started\", runId: $json.runId, trigger: $json.trigger }) }}",
+        "options": {
+          "responseCode": 202
+        }
+      }
+    },
+    {
+      "id": "c86568b2-d5e4-5622-9604-788b3fc8ece7",
+      "name": "IF: Run Now (Bad Config)?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1040,
+        630
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "bcc3db18-32dc-5658-9d25-45b2f3730b39",
+              "leftValue": "={{ $json.runNow }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a8ff3c0b-31b9-555a-b160-851e551f77bb",
+      "name": "Respond: 500 Config Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1300,
+        530
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ error: \"The inventory sync settings are missing or wrong\", problems: $json.problems }) }}",
+        "options": {
+          "responseCode": 500
+        }
+      }
+    },
+    {
+      "id": "e6ebf688-6163-5438-aef1-ae1da682bfa6",
+      "name": "Stop: Bad Config",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        630
+      ],
+      "parameters": {
+        "errorMessage": "={{ 'Inventory sync settings are missing or wrong. ' + $('Code: Start Run').first().json.problems.join('. ') + '.' }}"
+      }
+    },
+    {
+      "id": "6a30d840-299a-5b31-af26-6fa520b6aa07",
+      "name": "Airtable: List Products",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1820,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Products/listRecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Code: Start Run').first().json.productsQuery) }}",
+        "options": {
+          "timeout": 30000,
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": {
+                "parameters": [
+                  {
+                    "type": "body",
+                    "name": "offset",
+                    "value": "={{ $response.body.offset }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.offset }}",
+              "limitPagesFetched": true,
+              "maxRequests": 100,
+              "requestInterval": 500
+            }
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput",
+      "executeOnce": true
+    },
+    {
+      "id": "5b318109-35a1-5f56-b1f7-8e802b94014b",
+      "name": "Code: Index Products",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2080,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));\n// A paginated read stops after maxRequests pages. If the last page still has an offset, the read was cut short:\n// stop before anything changes rather than work with part of a table (fewer batches would mean too little stock).\nfunction allRecords(node, table) {\n  const pages = $(node).all();\n  const last = pages.length ? pages[pages.length - 1].json : {};\n  if (last && last.offset) {\n    throw new Error(`The ${table} read stopped after ${pages.length} page${pages.length === 1 ? '' : 's'} with more records `\n      + `left, so the run stopped before changing anything. Raise maxRequests in ${node.replace(': ', ' ')}`);\n  }\n  return pages.flatMap(page => page.json.records || []);\n}\n\n// One entry per active product. A number that is not set comes back as null (Airtable leaves empty cells out).\nconst num = v => (typeof v === 'number' && Number.isFinite(v)) ? v : null;\nconst products = allRecords('Airtable: List Products', 'Products').map(r => {\n  const f = r.fields || {};\n  return {\n    id: r.id,\n    sku: String(f.SKU || '').trim(),\n    name: f.Name || '',\n    itemId: String(f['Shopify Inventory Item ID'] || '').trim(),\n    airtableStock: num(f['Shopify Stock']),\n    reorderPoint: num(f['Reorder Point']),\n    reorderQuantity: num(f['Reorder Quantity']),\n  };\n});\nawait sleep(500);   // Airtable allows 5 requests per second per base. Every call waits 500 ms after the last one, so even two runs at\n// the same moment (a double click on Run Now) stay at 4 calls per second together\nreturn [{ json: {\n  products,\n  batchesQuery: {\n    pageSize: 100,\n    filterByFormula: \"OR({Status} = 'Released', {Status} = 'Planned')\",\n    fields: ['Batch Code', 'Product', 'Status', 'Produced On', 'Best Before', 'Quantity Made', 'Quantity Reserved', 'Quantity Sold', 'Promos'],\n  },\n} }];\n"
+      }
+    },
+    {
+      "id": "fd234803-ef9b-5430-a029-b650a8e925f6",
+      "name": "Airtable: List Batches",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2340,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Production%20Batches/listRecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.batchesQuery) }}",
+        "options": {
+          "timeout": 30000,
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": {
+                "parameters": [
+                  {
+                    "type": "body",
+                    "name": "offset",
+                    "value": "={{ $response.body.offset }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.offset }}",
+              "limitPagesFetched": true,
+              "maxRequests": 100,
+              "requestInterval": 500
+            }
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput",
+      "executeOnce": true
+    },
+    {
+      "id": "4253b367-9201-51dc-bdc2-daadf01f837b",
+      "name": "Code: Compute Sellable",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2600,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));\n// A paginated read stops after maxRequests pages. If the last page still has an offset, the read was cut short:\n// stop before anything changes rather than work with part of a table (fewer batches would mean too little stock).\nfunction allRecords(node, table) {\n  const pages = $(node).all();\n  const last = pages.length ? pages[pages.length - 1].json : {};\n  if (last && last.offset) {\n    throw new Error(`The ${table} read stopped after ${pages.length} page${pages.length === 1 ? '' : 's'} with more records `\n      + `left, so the run stopped before changing anything. Raise maxRequests in ${node.replace(': ', ' ')}`);\n  }\n  return pages.flatMap(page => page.json.records || []);\n}\n\n// Sellable stock per SKU, worked out from the production batches (Airtable is the source of truth).\n// A batch counts when it is Released, was produced on or before today and has MORE than SELL_BY_BUFFER_DAYS left\n// before its best before date. Its units are Quantity Made minus Quantity Reserved minus Quantity Sold (never below 0).\n// Batches are kept in FIFO order (earliest best before first): that is the order the packing team should ship them.\nconst run = $('Code: Start Run').first().json;\nconst products = $('Code: Index Products').first().json.products;\nconst batches = allRecords('Airtable: List Batches', 'Production Batches');\nconst DAY = 86400000;\nconst dayNumber = s => /^\\d{4}-\\d{2}-\\d{2}$/.test(String(s || ''))\n  ? Math.round(Date.UTC(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)) / DAY) : null;\nconst today = dayNumber(run.today);\nconst isNum = v => typeof v === 'number' && Number.isFinite(v);\nconst attention = [];   // something a person has to fix in Airtable or Shopify (goes to Slack)\nconst heldBack = [];    // units kept off sale because the batch is inside the sell-by buffer (Sync Log only)\n\nconst bySku = new Map(), byId = new Map();\nfor (const p of products) {\n  if (!p.sku) { attention.push(`An active product (${p.id}) has no SKU`); continue; }\n  if (bySku.has(p.sku)) { attention.push(`SKU ${p.sku} is on more than one active product, only the first one is used`); continue; }\n  const entry = { ...p, sellable: 0, fifo: [], planned: [] };\n  bySku.set(p.sku, entry);\n  byId.set(p.id, entry);\n}\n\nconst promoCandidates = [];\nfor (const b of batches) {\n  const f = b.fields || {};\n  const code = String(f['Batch Code'] || '').trim() || b.id;\n  const links = f.Product || [];\n  const product = byId.get(links[0]);\n  if (!product) {\n    if (links.length === 0) attention.push(`Batch ${code} is not linked to a product`);\n    continue;   // linked to a Draft or Discontinued product: not for sale\n  }\n  if (links.length > 1) attention.push(`Batch ${code} is linked to ${links.length} products, it is counted for ${product.sku} only`);\n  const made = f['Quantity Made'];\n  if (f.Status === 'Planned') {\n    const plannedDay = dayNumber(f['Produced On']);\n    if (plannedDay !== null && plannedDay < today)\n      attention.push(`Batch ${code} (${product.sku}) is still Planned although its Produced On date (${f['Produced On']}) has passed. Release it or move the date`);\n    else if (isNum(made) && made > 0 && plannedDay !== null)\n      product.planned.push({ code, units: made, producedOn: f['Produced On'] });\n    continue;\n  }\n  if (!isNum(made)) { attention.push(`Batch ${code} (${product.sku}) has no Quantity Made, so it is not counted`); continue; }\n  const reserved = isNum(f['Quantity Reserved']) ? f['Quantity Reserved'] : 0;\n  const sold = isNum(f['Quantity Sold']) ? f['Quantity Sold'] : 0;\n  if (made - reserved - sold < 0)\n    attention.push(`Batch ${code} (${product.sku}) has more units reserved and sold (${reserved + sold}) than made (${made}), so it counts as 0`);\n  const units = Math.max(made - reserved - sold, 0);\n  if (units === 0) continue;\n  const produced = dayNumber(f['Produced On']);\n  const bestBefore = dayNumber(f['Best Before']);\n  if (produced === null || bestBefore === null) {\n    attention.push(`Batch ${code} (${product.sku}) has no Produced On or Best Before date, so its ${units} units are not counted`);\n    continue;\n  }\n  const daysLeft = bestBefore - today;\n  if (produced > today) {\n    attention.push(`Batch ${code} (${product.sku}) is Released but its Produced On date (${f['Produced On']}) is in the future, so its ${units} units are not counted`);\n    continue;\n  }\n  if (daysLeft < 0) {\n    attention.push(`Batch ${code} (${product.sku}) is past its best before date (${f['Best Before']}) but still marked Released, ${units} units`);\n    continue;\n  }\n  if (daysLeft <= run.bufferDays) {\n    heldBack.push({ code, sku: product.sku, units, daysLeft, bestBefore: f['Best Before'] });\n    continue;\n  }\n  const lot = { code, recordId: b.id, units, daysLeft, bestBefore: f['Best Before'], producedOn: f['Produced On'] };\n  product.sellable += units;\n  product.fifo.push(lot);\n  if (run.promoDays > 0 && daysLeft <= run.promoDays)\n    promoCandidates.push({ ...lot, sku: product.sku, productId: product.id, name: 'PROMO-' + code, linked: (f.Promos || []).length > 0 });\n}\n\nconst fifoOrder = (a, b) => a.bestBefore.localeCompare(b.bestBefore) || String(a.producedOn).localeCompare(String(b.producedOn)) || a.code.localeCompare(b.code);\nconst all = [...bySku.values()];\nfor (const s of all) {\n  s.fifo.sort(fifoOrder);\n  s.planned.sort((a, b) => a.producedOn.localeCompare(b.producedOn));\n  s.fifoText = s.fifo.map(l => `${l.code} ${l.units}`).join(', ');\n}\n\n// Only Active products that have a Shopify Inventory Item ID are pushed to Shopify. Others (wholesale only, drafts)\n// are left alone, so their Shopify stock is never set to 0 by mistake.\nconst LIMIT = 250;   // nodes(ids:) reads at most 250 inventory items in one query\nconst sync = [], notOnShopify = [];\nfor (const s of all) {\n  if (!s.itemId) { notOnShopify.push(s.sku); continue; }\n  if (!/^gid:\\/\\/shopify\\/InventoryItem\\/\\d+$/.test(s.itemId)) {\n    attention.push(`${s.sku} has a Shopify Inventory Item ID that is not a Shopify inventory item id (${s.itemId}), so it was not synced`);\n    continue;\n  }\n  sync.push({ sku: s.sku, productId: s.id, itemId: s.itemId, sellable: s.sellable, airtableStock: s.airtableStock, fifoText: s.fifoText });\n}\nsync.sort((a, b) => a.sku.localeCompare(b.sku));\nif (sync.length > LIMIT) {\n  attention.push(`${sync.length} products have a Shopify Inventory Item ID, only the first ${LIMIT} by SKU were synced`);\n  sync.length = LIMIT;\n}\n\n// Purchasing Requests: sellable stock strictly below the reorder point\nconst reorder = all.filter(s => isNum(s.reorderPoint) && s.sellable < s.reorderPoint).map(s => ({\n  sku: s.sku, productId: s.id, sellable: s.sellable, reorderPoint: s.reorderPoint, reorderQuantity: s.reorderQuantity, planned: s.planned,\n}));\n\npromoCandidates.sort((a, b) => a.daysLeft - b.daysLeft || a.code.localeCompare(b.code));\nawait sleep(500);\nreturn [{ json: {\n  sync, notOnShopify, promoCandidates, reorder, attention, heldBack,\n  sellableBySku: Object.fromEntries(all.map(s => [s.sku, s.sellable])),\n  // A request stays in progress while it is Open or Scheduled (the kitchen planned the batch, the stock is still low)\n  openRequestsQuery: { pageSize: 100, filterByFormula: \"OR({Status} = 'Open', {Status} = 'Scheduled')\",\n                       fields: ['Request ID', 'SKU', 'Product', 'Status'] },\n} }];\n"
+      }
+    },
+    {
+      "id": "c30fd149-1db3-57f6-93b4-80407cd29148",
+      "name": "Airtable: List Open Requests",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2860,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Purchasing%20Requests/listRecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.openRequestsQuery) }}",
+        "options": {
+          "timeout": 30000,
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": {
+                "parameters": [
+                  {
+                    "type": "body",
+                    "name": "offset",
+                    "value": "={{ $response.body.offset }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.offset }}",
+              "limitPagesFetched": true,
+              "maxRequests": 100,
+              "requestInterval": 500
+            }
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput",
+      "executeOnce": true
+    },
+    {
+      "id": "df43a8c9-ea58-5d91-9d66-2d0191048861",
+      "name": "Code: Plan Promos And Requests",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3120,
+        300
+      ],
+      "parameters": {
+        "jsCode": "const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));\n// A paginated read stops after maxRequests pages. If the last page still has an offset, the read was cut short:\n// stop before anything changes rather than work with part of a table (fewer batches would mean too little stock).\nfunction allRecords(node, table) {\n  const pages = $(node).all();\n  const last = pages.length ? pages[pages.length - 1].json : {};\n  if (last && last.offset) {\n    throw new Error(`The ${table} read stopped after ${pages.length} page${pages.length === 1 ? '' : 's'} with more records `\n      + `left, so the run stopped before changing anything. Raise maxRequests in ${node.replace(': ', ' ')}`);\n  }\n  return pages.flatMap(page => page.json.records || []);\n}\n\n// Skip SKUs that already have a purchasing request in progress (Open or Scheduled), and batches whose promo exists.\nconst c = $('Code: Compute Sellable').first().json;\nconst open = allRecords('Airtable: List Open Requests', 'Purchasing Requests');\nconst statusBySku = new Map(), statusByProduct = new Map();\nfor (const r of open) {\n  const f = r.fields || {};\n  if (f.SKU) statusBySku.set(String(f.SKU).trim(), f.Status);\n  for (const id of f.Product || []) statusByProduct.set(id, f.Status);\n}\nconst statusOf = x => statusBySku.get(x.sku) || statusByProduct.get(x.productId);\nconst newRequests = c.reorder.filter(x => !statusOf(x));\nconst requestsAlreadyOpen = c.reorder.filter(x => statusOf(x)).map(x => `${x.sku} (${statusOf(x)})`);\n\n// A batch that already links to a promo is done. The rest are looked up by Promo Name (PROMO-<batch code>), in case a\n// promo was made by hand without the link. The match ignores case and spaces around the name, because a hand typed\n// name may differ there. Text in a formula is quoted and escaped.\nconst promoToCheck = c.promoCandidates.filter(p => !p.linked);\nconst promosAlreadyLinked = c.promoCandidates.filter(p => p.linked).map(p => p.name);\nconst quote = s => \"'\" + String(s).replace(/\\\\/g, '\\\\\\\\').replace(/'/g, \"\\\\'\") + \"'\";\nconst formula = promoToCheck.length\n  ? 'OR(' + promoToCheck.map(p => 'LOWER(TRIM({Promo Name})) = ' + quote(p.name.toLowerCase())).join(', ') + ')'\n  : 'FALSE()';\nawait sleep(500);\nreturn [{ json: {\n  newRequests, requestsAlreadyOpen, promoToCheck, promosAlreadyLinked,\n  promosQuery: { pageSize: 100, filterByFormula: formula, fields: ['Promo Name', 'Status'] },\n} }];\n"
+      }
+    },
+    {
+      "id": "9e55a09c-ab08-53a4-9a88-aa5d03ad6a26",
+      "name": "Airtable: Find Existing Promos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3380,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Promos/listRecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.promosQuery) }}",
+        "options": {
+          "timeout": 30000,
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": {
+                "parameters": [
+                  {
+                    "type": "body",
+                    "name": "offset",
+                    "value": "={{ $response.body.offset }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.offset }}",
+              "limitPagesFetched": true,
+              "maxRequests": 100,
+              "requestInterval": 500
+            }
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput",
+      "executeOnce": true
+    },
+    {
+      "id": "a023d39f-0d9a-5ca1-8902-8eda77bba983",
+      "name": "Code: Airtable Read Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2860,
+        630
+      ],
+      "parameters": {
+        "jsCode": "const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));\n// The error item of an HTTP Request node (checked on n8n 2.19.5) comes in two shapes:\n//   no pagination: error.status, and error.message = '<status> - \"<response body as JSON text>\"' (for a 429 n8n\n//                  replaces the message, so the status decides)\n//   pagination on: error.statusCode and error.response.status, and error.error = the response body as JSON text\nfunction httpErrorText(e) {\n  if (!e) return 'unknown error';\n  const status = e.status || e.statusCode || (e.response && e.response.status) || '';\n  const m = String(e.message || '');\n  let body = null;\n  try { body = JSON.parse(JSON.parse(m.slice(m.indexOf(' - ') + 3))); } catch (x) {}\n  if (!body && typeof e.error === 'string') { try { body = JSON.parse(e.error); } catch (x) {} }\n  let detail = '';\n  if (body && typeof body === 'object') {\n    if (typeof body.error === 'string') detail = body.error;\n    else if (body.error && typeof body.error === 'object') detail = [body.error.type, body.error.message].filter(Boolean).join(' ');\n    else if (typeof body.errors === 'string') detail = body.errors;\n    else if (Array.isArray(body.errors)) detail = body.errors.map(x => x.message || x.code).join(', ');\n  }\n  if (String(status) === '429' && !detail) detail = 'rate limit reached';\n  if (!detail) detail = m.replace(/^\\d{3} - /, '').slice(0, 200) || 'no details';\n  return [status, detail].filter(Boolean).join(' ');\n}\n\n// One of the Airtable reads failed after its retries. Nothing has been changed yet, so the run stops here. It still\n// tries to leave a Failed row in the Sync Log: the usual cause is a renamed field or table (422), and then Airtable\n// takes the write. If Airtable is down the write fails as well and the alert says so.\nconst run = $('Code: Start Run').first().json;\nconst order = ['Airtable: Find Existing Promos', 'Airtable: List Open Requests', 'Airtable: List Batches', 'Airtable: List Products'];\nlet failed = 'Airtable';\nfor (const name of order) {\n  try { if ($(name).isExecuted) { failed = name; break; } } catch (e) {}\n}\nconst what = failed.replace('Airtable: ', '');\nconst message = `Airtable read failed at ${what} (${httpErrorText($input.first().json.error)}). Nothing was changed, run the sync again once Airtable answers.`;\nconst fields = {\n  'Run ID': run.runId, Automation: '02 Inventory Sync', Trigger: run.trigger, 'Started At': run.startedAt,\n  'Finished At': new Date().toISOString(), Status: 'Failed', 'Items Checked': 0, 'Items Changed': 0, 'Shopify Updates': 0,\n  'Promos Created': 0, 'Purchasing Requests Created': 0, Errors: 1,\n  Details: `${run.trigger} run, started ${run.startedAt}.\\n${message}`,\n};\nawait sleep(500);\nreturn [{ json: { message, syncLogBody: { performUpsert: { fieldsToMergeOn: ['Run ID'] }, typecast: false, records: [{ fields }] } } }];\n"
+      }
+    },
+    {
+      "id": "5c36cb32-bcdd-59eb-8611-2442024fda88",
+      "name": "Airtable: Log Failed Run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3120,
+        630
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Sync%20Log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.syncLogBody) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "856ddf5c-fbf8-51b0-8602-961adcc0b6fc",
+      "name": "Stop: Airtable Read Failed",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        3380,
+        630
+      ],
+      "parameters": {
+        "errorMessage": "={{ $('Code: Airtable Read Failed').first().json.message + ($json.error ? ' The Sync Log row could not be saved either.' : '') }}"
+      }
+    },
+    {
+      "id": "18d475dd-1283-50ec-b7dd-b8b3d675d1df",
+      "name": "Code: Build Stock Query",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3640,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// A paginated read stops after maxRequests pages. If the last page still has an offset, the read was cut short:\n// stop before anything changes rather than work with part of a table (fewer batches would mean too little stock).\nfunction allRecords(node, table) {\n  const pages = $(node).all();\n  const last = pages.length ? pages[pages.length - 1].json : {};\n  if (last && last.offset) {\n    throw new Error(`The ${table} read stopped after ${pages.length} page${pages.length === 1 ? '' : 's'} with more records `\n      + `left, so the run stopped before changing anything. Raise maxRequests in ${node.replace(': ', ' ')}`);\n  }\n  return pages.flatMap(page => page.json.records || []);\n}\n\n// One Shopify query reads the location and, for every synced SKU, its inventory item and the available and\n// committed quantities at that location. committed = units in orders that are placed but not fulfilled yet.\nallRecords('Airtable: Find Existing Promos', 'Promos');   // the last read: refuse it here if it was cut short\nconst run = $('Code: Start Run').first().json;\nconst c = $('Code: Compute Sellable').first().json;\nconst query = `query StockLevels($ids: [ID!]!, $locationId: ID!) {\n  location(id: $locationId) { id name isActive }\n  nodes(ids: $ids) {\n    ... on InventoryItem {\n      id\n      sku\n      tracked\n      inventoryLevel(locationId: $locationId) {\n        quantities(names: [\"available\", \"committed\"]) { name quantity }\n      }\n    }\n  }\n}`;\nreturn [{ json: { body: { query, operationName: 'StockLevels', variables: { ids: c.sync.map(s => s.itemId), locationId: run.locationId } } } }];\n"
+      }
+    },
+    {
+      "id": "16830165-c694-53b2-9100-683fa9746aa3",
+      "name": "Shopify: Read Stock",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3900,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://{{ $env.SHOPIFY_STORE_DOMAIN }}/admin/api/{{ $env.SHOPIFY_API_VERSION || '2026-10' }}/graphql.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Shopify-Access-Token",
+              "value": "={{ $env.SHOPIFY_ADMIN_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Code: Build Stock Query').first().json.body) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "e9c0b21b-a6ca-50ba-acfb-f85147d50493",
+      "name": "IF: Read Throttled?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        4160,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "75693f98-aaf8-5dcb-a03d-e47e95bf2016",
+              "leftValue": "={{ $runIndex === 0 && JSON.stringify($json.errors || []).includes('\"THROTTLED\"') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "05c5ce0e-80df-55e8-87ba-23e88b126776",
+      "name": "Wait: Shopify Read 2 s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4030,
+        550
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "seconds"
+      },
+      "webhookId": "ca65630d-5c97-5019-9e47-bfbe21360a9f"
+    },
+    {
+      "id": "01a8cc97-8ddc-5358-8883-5c2a8ced6df2",
+      "name": "Code: Plan Stock Changes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4420,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// The error item of an HTTP Request node (checked on n8n 2.19.5) comes in two shapes:\n//   no pagination: error.status, and error.message = '<status> - \"<response body as JSON text>\"' (for a 429 n8n\n//                  replaces the message, so the status decides)\n//   pagination on: error.statusCode and error.response.status, and error.error = the response body as JSON text\nfunction httpErrorText(e) {\n  if (!e) return 'unknown error';\n  const status = e.status || e.statusCode || (e.response && e.response.status) || '';\n  const m = String(e.message || '');\n  let body = null;\n  try { body = JSON.parse(JSON.parse(m.slice(m.indexOf(' - ') + 3))); } catch (x) {}\n  if (!body && typeof e.error === 'string') { try { body = JSON.parse(e.error); } catch (x) {} }\n  let detail = '';\n  if (body && typeof body === 'object') {\n    if (typeof body.error === 'string') detail = body.error;\n    else if (body.error && typeof body.error === 'object') detail = [body.error.type, body.error.message].filter(Boolean).join(' ');\n    else if (typeof body.errors === 'string') detail = body.errors;\n    else if (Array.isArray(body.errors)) detail = body.errors.map(x => x.message || x.code).join(', ');\n  }\n  if (String(status) === '429' && !detail) detail = 'rate limit reached';\n  if (!detail) detail = m.replace(/^\\d{3} - /, '').slice(0, 200) || 'no details';\n  return [status, detail].filter(Boolean).join(' ');\n}\n\nfunction gqlErrorText(errors) {\n  if (typeof errors === 'string') return errors.slice(0, 300);\n  return (errors || []).map(e => {\n    const code = e && e.extensions && e.extensions.code;\n    const msg = (e && e.message) || '';\n    return code && msg && msg !== code ? code + ' ' + msg : (code || msg);\n  }).join(', ').slice(0, 300) || 'unknown GraphQL error';\n}\n\n// Compare what Shopify shows with what Airtable says is sellable, and plan one inventorySetQuantities call per SKU\n// that differs. Target = sellable minus committed: units already promised to unshipped Shopify orders stay out of\n// \"available\", otherwise they could be sold twice. changeFromQuantity is the available quantity Shopify returned a\n// moment ago, so a sale that lands in between makes Shopify refuse the change instead of overwriting it.\nconst run = $('Code: Start Run').first().json;\nconst c = $('Code: Compute Sellable').first().json;\nconst res = $input.first().json;\nconst MUTATION = `mutation SetStock($input: InventorySetQuantitiesInput!, $key: String!) {\n  inventorySetQuantities(input: $input) @idempotent(key: $key) {\n    inventoryAdjustmentGroup { id reason referenceDocumentUri changes { name delta quantityAfterChange } }\n    userErrors { code field message }\n  }\n}`;\n\nlet readError = null, location = null, found = [];\nif (res.error) readError = `Shopify stock could not be read (${httpErrorText(res.error)})`;\nelse if (res.errors) readError = `Shopify refused the stock query (${gqlErrorText(res.errors)})`;\nelse if (!res.data) readError = 'Shopify answered the stock query without data';\nelse {\n  location = res.data.location;\n  if (!location) readError = `Shopify has no location ${run.locationId}, check SHOPIFY_LOCATION_ID`;\n  else if (!location.isActive) readError = `The Shopify location ${location.name} is not active, so its stock cannot be set (check SHOPIFY_LOCATION_ID)`;\n  else found = (res.data.nodes || []).filter(Boolean);\n}\n\nconst byItem = new Map(found.map(n => [n.id, n]));\nconst changes = [], inSync = [], skipped = [];\nif (!readError) {\n  for (const s of c.sync) {\n    const n = byItem.get(s.itemId);\n    const skip = reason => skipped.push({ sku: s.sku, reason });\n    if (!n) { skip(`its Shopify Inventory Item ID ${s.itemId} was not found in Shopify`); continue; }\n    if (String(n.sku || '').trim() !== s.sku) { skip(`its Shopify Inventory Item ID belongs to SKU ${n.sku || '(no SKU)'} in Shopify`); continue; }\n    if (!n.tracked) { skip('Shopify does not track inventory for it'); continue; }\n    if (!n.inventoryLevel) { skip(`it is not stocked at ${location.name} in Shopify`); continue; }\n    const q = {};\n    for (const x of n.inventoryLevel.quantities || []) q[x.name] = x.quantity;\n    const live = q.available;\n    if (!Number.isInteger(live)) { skip('Shopify did not return an available quantity'); continue; }\n    const committed = Math.max(Number(q.committed) || 0, 0);\n    const target = Math.max(s.sellable - committed, 0);\n    const base = { sku: s.sku, productId: s.productId, itemId: s.itemId, live, target, committed, sellable: s.sellable,\n                   airtableStock: s.airtableStock, fifoText: s.fifoText };\n    if (target === live) { inSync.push(base); continue; }\n    // Same key on a retry (so Shopify replays the first answer), a new key for every new run or start value. The run\n    // id already holds the n8n execution id, so two runs in the same second never share a key.\n    const key = `${run.runId}-${s.sku}-${live}`;\n    changes.push({ ...base, key, body: { query: MUTATION, operationName: 'SetStock', variables: { key, input: {\n      name: 'available',\n      reason: 'correction',\n      referenceDocumentUri: `gid://airtable-inventory-sync/SyncRun/${run.runId}`,\n      quantities: [{ inventoryItemId: s.itemId, locationId: run.locationId, quantity: target, changeFromQuantity: live }],\n    } } } });\n  }\n}\nconst plan = { readError, locationName: location ? location.name : null, checked: readError ? 0 : c.sync.length,\n               inSync, skipped, changeCount: changes.length };\nif (!changes.length) return [{ json: { noChanges: true, plan }, pairedItem: { item: 0 } }];\nreturn changes.map(ch => ({ json: { ...ch, plan }, pairedItem: { item: 0 } }));\n"
+      }
+    },
+    {
+      "id": "55ea8fff-fb24-56f9-8ddd-8eb2ca038e82",
+      "name": "IF: No Stock Changes?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        4680,
+        300
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "8dd57691-4500-5e0b-88fc-9fb0492cafd7",
+              "leftValue": "={{ $json.noChanges === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "ea4d4766-d069-5410-bbc7-cd2ad957f34f",
+      "name": "Loop: Each Stock Change",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        4940,
+        500
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "46185bc6-e4e7-5eb2-981d-83260d5e12a3",
+      "name": "Shopify: Set Stock",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5200,
+        630
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://{{ $env.SHOPIFY_STORE_DOMAIN }}/admin/api/{{ $env.SHOPIFY_API_VERSION || '2026-10' }}/graphql.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Shopify-Access-Token",
+              "value": "={{ $env.SHOPIFY_ADMIN_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "96e0fec6-5bd7-50e6-8aa2-a8f68c208962",
+      "name": "IF: Set Stock Throttled?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        5460,
+        630
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "12d19379-3230-5f1f-baca-ba041a516d4e",
+              "leftValue": "={{ JSON.stringify($json.errors || []).includes('\"THROTTLED\"') || JSON.stringify((($json.data || {}).inventorySetQuantities || {}).userErrors || []).includes('\"IDEMPOTENCY_CONCURRENT_REQUEST\"') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "f47ae875-0da9-576b-91a0-2249a6bc1a82",
+      "name": "Wait: Shopify 2 s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        5460,
+        860
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "seconds"
+      },
+      "webhookId": "7e2d67a2-62d0-53a1-a15f-b759cfbc28dd"
+    },
+    {
+      "id": "534a6d57-2a52-5eaf-99d4-a95802cbd38e",
+      "name": "Shopify: Set Stock Again",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5720,
+        860
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://{{ $env.SHOPIFY_STORE_DOMAIN }}/admin/api/{{ $env.SHOPIFY_API_VERSION || '2026-10' }}/graphql.json",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Shopify-Access-Token",
+              "value": "={{ $env.SHOPIFY_ADMIN_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('Loop: Each Stock Change').item.json.body) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "2d669a60-382d-5bad-a15e-d6352a00ad6e",
+      "name": "Code: Check Stock Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5980,
+        630
+      ],
+      "parameters": {
+        "jsCode": "// The error item of an HTTP Request node (checked on n8n 2.19.5) comes in two shapes:\n//   no pagination: error.status, and error.message = '<status> - \"<response body as JSON text>\"' (for a 429 n8n\n//                  replaces the message, so the status decides)\n//   pagination on: error.statusCode and error.response.status, and error.error = the response body as JSON text\nfunction httpErrorText(e) {\n  if (!e) return 'unknown error';\n  const status = e.status || e.statusCode || (e.response && e.response.status) || '';\n  const m = String(e.message || '');\n  let body = null;\n  try { body = JSON.parse(JSON.parse(m.slice(m.indexOf(' - ') + 3))); } catch (x) {}\n  if (!body && typeof e.error === 'string') { try { body = JSON.parse(e.error); } catch (x) {} }\n  let detail = '';\n  if (body && typeof body === 'object') {\n    if (typeof body.error === 'string') detail = body.error;\n    else if (body.error && typeof body.error === 'object') detail = [body.error.type, body.error.message].filter(Boolean).join(' ');\n    else if (typeof body.errors === 'string') detail = body.errors;\n    else if (Array.isArray(body.errors)) detail = body.errors.map(x => x.message || x.code).join(', ');\n  }\n  if (String(status) === '429' && !detail) detail = 'rate limit reached';\n  if (!detail) detail = m.replace(/^\\d{3} - /, '').slice(0, 200) || 'no details';\n  return [status, detail].filter(Boolean).join(' ');\n}\n\nfunction gqlErrorText(errors) {\n  if (typeof errors === 'string') return errors.slice(0, 300);\n  return (errors || []).map(e => {\n    const code = e && e.extensions && e.extensions.code;\n    const msg = (e && e.message) || '';\n    return code && msg && msg !== code ? code + ' ' + msg : (code || msg);\n  }).join(', ').slice(0, 300) || 'unknown GraphQL error';\n}\n\n// One SKU per pass. The error output keeps the input fields; the success output is Shopify's answer only.\nconst r = $input.first().json;\nconst change = r.sku ? r : $('Loop: Each Stock Change').itemMatching(0).json;\nlet ok = false, after = null, error = null;\nif (r.error) error = `Shopify call failed (${httpErrorText(r.error)})`;\nelse if (r.errors) error = `Shopify refused the update (${gqlErrorText(r.errors)})`;\nelse {\n  const p = r.data && r.data.inventorySetQuantities;\n  const userErrors = (p && p.userErrors) || [];\n  if (!p) error = 'Shopify answered without a result';\n  else if (userErrors.length) error = userErrors.map(e => e.code === 'CHANGE_FROM_QUANTITY_STALE'\n    ? 'CHANGE_FROM_QUANTITY_STALE, the stock changed in Shopify during the run (a sale or an edit), the next run sets it again'\n    : `${e.code || 'ERROR'} ${e.message || ''}`.trim()).join('; ');\n  else if (!p.inventoryAdjustmentGroup) error = 'Shopify returned no inventory adjustment';\n  else {\n    ok = true;\n    const avail = (p.inventoryAdjustmentGroup.changes || []).find(x => x.name === 'available');\n    after = avail && Number.isInteger(avail.quantityAfterChange) ? avail.quantityAfterChange : change.target;\n  }\n}\nconst { body, plan, ...rest } = change;\nreturn [{ json: { ...rest, ok, after, error }, pairedItem: { item: 0 } }];\n"
+      }
+    },
+    {
+      "id": "a668accf-d329-5746-b4a1-3801e50f6143",
+      "name": "Code: Plan Airtable Writes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4940,
+        920
+      ],
+      "parameters": {
+        "jsCode": "const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));\n// Everything that goes back to Airtable, 10 records per call (Airtable's limit), in this order:\n// Products (the stock Shopify now shows), new Promos (upsert on Promo Name), new Purchasing Requests (upsert on SKU\n// and Status, so two runs at the same moment still cannot open two requests for one SKU).\nconst run = $('Code: Start Run').first().json;\nconst pp = $('Code: Plan Promos And Requests').first().json;\nconst plan = $('Code: Plan Stock Changes').first().json.plan;\nconst stockResults = $input.all().map(i => i.json).filter(j => typeof j.ok === 'boolean');\nconst existing = new Set($('Airtable: Find Existing Promos').all().flatMap(page => page.json.records || [])\n  .map(r => String((r.fields || {})['Promo Name'] || '').trim().toLowerCase()));\nconst isNum = v => typeof v === 'number' && Number.isFinite(v);\nconst now = new Date().toISOString();\nconst chunk = list => { const out = []; for (let i = 0; i < list.length; i += 10) out.push(list.slice(i, i + 10)); return out; };\nconst writes = [];\n\n// 1. Products. Pushed SKUs get the new number and Stock Synced At. A SKU that was already right in Shopify but shows a\n//    different Shopify Stock in Airtable (for example after a failed write last run) is corrected without a push.\nconst productRecords = [];\nfor (const r of stockResults) if (r.ok) productRecords.push({ sku: r.sku, record: { id: r.productId, fields: { 'Shopify Stock': r.after, 'Stock Synced At': now } } });\nfor (const s of plan.inSync) if (s.airtableStock !== s.live) productRecords.push({ sku: s.sku, record: { id: s.productId, fields: { 'Shopify Stock': s.live } } });\nfor (const part of chunk(productRecords))\n  writes.push({ kind: 'products', table: 'Products', method: 'PATCH', labels: part.map(p => p.sku),\n                body: { records: part.map(p => p.record), typecast: false } });\n\n// 2. Promos, one per short dated batch\nconst newPromos = pp.promoToCheck.filter(p => !existing.has(p.name.toLowerCase()));\nconst promosFoundByName = pp.promoToCheck.filter(p => existing.has(p.name.toLowerCase())).map(p => p.name);\nfor (const part of chunk(newPromos))\n  writes.push({ kind: 'promos', table: 'Promos', method: 'PATCH', labels: part.map(p => p.name), body: {\n    performUpsert: { fieldsToMergeOn: ['Promo Name'] }, typecast: false,\n    records: part.map(p => ({ fields: {\n      'Promo Name': p.name, Batch: [p.recordId], Product: [p.productId], 'Best Before': p.bestBefore,\n      'Units Available': p.units, 'Discount Percent': run.discountPercent, Status: 'Proposed', 'Created At': now,\n    } })),\n  } });\n\n// 3. Purchasing Requests, one Open request per SKU\nconst requestNote = x => {\n  let note = `Raised by the inventory sync (${run.runId}). Sellable ${x.sellable}, reorder point ${x.reorderPoint}.`;\n  if (x.planned.length) note += ' Already planned ' + x.planned.map(p => `${p.code} (${p.units} units on ${p.producedOn})`).join(', ') + '.';\n  return note;\n};\nfor (const part of chunk(pp.newRequests))\n  writes.push({ kind: 'requests', table: 'Purchasing Requests', method: 'PATCH', labels: part.map(x => x.sku), body: {\n    performUpsert: { fieldsToMergeOn: ['SKU', 'Status'] }, typecast: false,\n    records: part.map(x => {\n      const fields = { 'Request ID': `PR-${x.sku}-${run.today}`, Product: [x.productId], SKU: x.sku, Status: 'Open',\n                       'Sellable Stock': x.sellable, 'Reorder Point': x.reorderPoint, 'Requested At': now, Notes: requestNote(x) };\n      if (isNum(x.reorderQuantity)) fields['Suggested Quantity'] = x.reorderQuantity;\n      return { fields };\n    }),\n  } });\n\nconst context = {\n  stockResults,\n  newPromos: newPromos.map(p => ({ name: p.name, sku: p.sku, units: p.units, bestBefore: p.bestBefore, daysLeft: p.daysLeft })),\n  promosFoundByName,\n  newRequests: pp.newRequests.map(x => ({ sku: x.sku, sellable: x.sellable, reorderPoint: x.reorderPoint, reorderQuantity: x.reorderQuantity,\n                                          requestId: `PR-${x.sku}-${run.today}` })),\n};\nawait sleep(500);\nif (!writes.length) return [{ json: { noWrites: true, context }, pairedItem: { item: 0 } }];\nreturn writes.map((w, i) => ({ json: i === 0 ? { ...w, context } : w, pairedItem: { item: 0 } }));\n"
+      }
+    },
+    {
+      "id": "d910a65a-f154-5210-bdc6-1cf1ef1a5a30",
+      "name": "IF: No Airtable Writes?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1820,
+        1420
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "effb1612-1a1b-5a29-8625-63b4e7e4f146",
+              "leftValue": "={{ $json.noWrites === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "cf22579c-8187-5bc2-9091-696b509e083e",
+      "name": "Loop: Each Airtable Write",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2080,
+        1620
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "f3638bc7-1683-5907-9455-b65610b5c632",
+      "name": "Airtable: Write Batch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2340,
+        1750
+      ],
+      "parameters": {
+        "method": "={{ $json.method }}",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/{{ encodeURIComponent($json.table) }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "7e2a54a4-a76f-594a-9765-10dba2947916",
+      "name": "Code: Check Write Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2600,
+        1750
+      ],
+      "parameters": {
+        "jsCode": "const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));\n// The error item of an HTTP Request node (checked on n8n 2.19.5) comes in two shapes:\n//   no pagination: error.status, and error.message = '<status> - \"<response body as JSON text>\"' (for a 429 n8n\n//                  replaces the message, so the status decides)\n//   pagination on: error.statusCode and error.response.status, and error.error = the response body as JSON text\nfunction httpErrorText(e) {\n  if (!e) return 'unknown error';\n  const status = e.status || e.statusCode || (e.response && e.response.status) || '';\n  const m = String(e.message || '');\n  let body = null;\n  try { body = JSON.parse(JSON.parse(m.slice(m.indexOf(' - ') + 3))); } catch (x) {}\n  if (!body && typeof e.error === 'string') { try { body = JSON.parse(e.error); } catch (x) {} }\n  let detail = '';\n  if (body && typeof body === 'object') {\n    if (typeof body.error === 'string') detail = body.error;\n    else if (body.error && typeof body.error === 'object') detail = [body.error.type, body.error.message].filter(Boolean).join(' ');\n    else if (typeof body.errors === 'string') detail = body.errors;\n    else if (Array.isArray(body.errors)) detail = body.errors.map(x => x.message || x.code).join(', ');\n  }\n  if (String(status) === '429' && !detail) detail = 'rate limit reached';\n  if (!detail) detail = m.replace(/^\\d{3} - /, '').slice(0, 200) || 'no details';\n  return [status, detail].filter(Boolean).join(' ');\n}\n\n// One Airtable write per pass. A 429 means Airtable blocks the base for 30 seconds: wait that long and try once more.\nconst r = $input.first().json;\nconst w = r.kind ? r : $('Loop: Each Airtable Write').itemMatching(0).json;\nconst status = r.error ? Number(r.error.status || r.error.statusCode || (r.error.response && r.error.response.status) || 0) : 200;\nconst retry = !!r.error && status === 429 && !w.rateLimitRetried;\n// An upsert answers which records it created and which it updated. A record that was updated already existed (for\n// example a run at the same moment made it first), so only created ones count as new.\nconst createdIds = new Set(!r.error && Array.isArray(r.createdRecords) ? r.createdRecords : []);\nconst keyField = { promos: 'Promo Name', requests: 'SKU' }[w.kind];\nconst createdLabels = keyField && !r.error && Array.isArray(r.records)\n  ? r.records.filter(x => createdIds.has(x.id)).map(x => String((x.fields || {})[keyField] || '')) : [];\nconst out = {\n  kind: w.kind, table: w.table, method: w.method, body: w.body, labels: w.labels,\n  rateLimitRetried: !!w.rateLimitRetried || retry, retry,\n  ok: !r.error, status, error: r.error ? httpErrorText(r.error) : null, createdLabels,\n};\nif (!retry) await sleep(500);\nreturn [{ json: out, pairedItem: { item: 0 } }];\n"
+      }
+    },
+    {
+      "id": "68802188-bb13-5794-9067-05e9b6bd5921",
+      "name": "IF: Retry After Rate Limit?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2860,
+        1750
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "6ece4abf-9ff1-532b-990b-9795448eff0a",
+              "leftValue": "={{ $json.retry === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "2aa752fe-fa5d-55b2-982c-6fe98d416507",
+      "name": "Wait: Airtable 30 s",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2600,
+        2020
+      ],
+      "parameters": {
+        "amount": 30,
+        "unit": "seconds"
+      },
+      "webhookId": "3690309e-cee9-558a-a191-fe8693a9d2ed"
+    },
+    {
+      "id": "41f0dc32-cb61-59f3-8072-219527f928de",
+      "name": "Code: Summarize Run",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3120,
+        1420
+      ],
+      "parameters": {
+        "jsCode": "const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));\n// The Sync Log row, the Slack note and the final status of the run.\nconst run = $('Code: Start Run').first().json;\nconst c = $('Code: Compute Sellable').first().json;\nconst pp = $('Code: Plan Promos And Requests').first().json;\nconst plan = $('Code: Plan Stock Changes').first().json.plan;\nconst ctx = $('Code: Plan Airtable Writes').first().json.context;\nconst writes = $input.all().map(i => i.json).filter(j => j.kind);\nconst savedLabels = kind => new Set(writes.filter(w => w.kind === kind && w.ok).flatMap(w => w.labels));\nconst createdLabels = kind => new Set(writes.filter(w => w.kind === kind && w.ok).flatMap(w => w.createdLabels || []));\nconst failedWrites = writes.filter(w => !w.ok);\nconst pushed = ctx.stockResults.filter(r => r.ok);\nconst pushFailed = ctx.stockResults.filter(r => !r.ok);\nconst promosSaved = savedLabels('promos'), requestsSaved = savedLabels('requests');\nconst promosNew = createdLabels('promos'), requestsNew = createdLabels('requests');\nconst promosCreated = ctx.newPromos.filter(p => promosNew.has(p.name));\nconst requestsCreated = ctx.newRequests.filter(x => requestsNew.has(x.sku));\n// saved but not created: another run made the same promo or request a moment earlier, the upsert matched it\nconst promosMatched = ctx.newPromos.filter(p => promosSaved.has(p.name) && !promosNew.has(p.name)).map(p => p.name);\nconst requestsMatched = ctx.newRequests.filter(x => requestsSaved.has(x.sku) && !requestsNew.has(x.sku)).map(x => `${x.sku} (Open)`);\n\nconst errorLines = [];\nif (plan.readError) errorLines.push(plan.readError);\nfor (const r of pushFailed) errorLines.push(`${r.sku} was not updated in Shopify (${r.error})`);\nconst writeWhat = { products: 'Shopify Stock in Products', promos: 'promos', requests: 'purchasing requests' };\nfor (const w of failedWrites) errorLines.push(`Airtable did not save ${writeWhat[w.kind]} for ${w.labels.join(', ')} (${w.error})`);\nconst errors = errorLines.length;\nconst status = plan.readError ? 'Failed' : (errors ? 'Partial' : 'Success');\n\nconst where = plan.locationName ? ` at ${plan.locationName}` : '';\nconst stockText = r => {\n  const extra = r.committed ? `, ${r.sellable} sellable minus ${r.committed} in unshipped Shopify orders` : '';\n  return `${r.sku} ${r.live} to ${r.after ?? r.target}${extra}`;\n};\nconst details = [];\ndetails.push(`${run.trigger} run, started ${run.startedAt}.`);\nif (plan.readError) details.push(`Shopify stock was not synced. ${plan.readError}.`);\nelse details.push(`Checked ${plan.checked} Shopify SKUs${where}. ${pushed.length} changed, ${plan.inSync.length} already correct.`);\nif (pushed.length) details.push('Set in Shopify (FIFO batches in brackets): ' + pushed.map(r => `${stockText(r)} [${r.fifoText || 'no sellable batch'}]`).join('; ') + '.');\nif (plan.skipped.length) details.push('Skipped: ' + plan.skipped.map(s => `${s.sku} (${s.reason})`).join('; ') + '.');\nif (c.notOnShopify.length) details.push('Not on Shopify, Airtable only: ' + c.notOnShopify.join(', ') + '.');\nif (c.heldBack.length) details.push(`Held back, inside the ${run.bufferDays} day sell-by buffer: ` + c.heldBack.map(h => `${h.code} ${h.sku} ${h.units} units (${h.daysLeft} days left)`).join('; ') + '.');\nif (promosCreated.length) details.push(`Promos created (${run.discountPercent}% suggested): ` + promosCreated.map(p => p.name).join(', ') + '.');\nconst promosThere = [...pp.promosAlreadyLinked, ...ctx.promosFoundByName, ...promosMatched];\nif (promosThere.length) details.push('Promos already there: ' + promosThere.join(', ') + '.');\nif (requestsCreated.length) details.push('Purchasing requests created: ' + requestsCreated.map(x => x.sku).join(', ') + '.');\nconst requestsThere = [...pp.requestsAlreadyOpen, ...requestsMatched];\nif (requestsThere.length) details.push('Purchasing requests already in progress: ' + requestsThere.join(', ') + '.');\nif (c.attention.length) details.push('Needs attention: ' + c.attention.join('; ') + '.');\nif (errors) details.push('Errors: ' + errorLines.join('; ') + '.');\n\nlet detailText = details.join('\\n');\nif (detailText.length > 90000) detailText = detailText.slice(0, 90000) + '\\n(cut at 90,000 characters, Airtable long text holds 100,000)';\nconst fields = {\n  'Run ID': run.runId, Automation: '02 Inventory Sync', Trigger: run.trigger, 'Started At': run.startedAt,\n  'Finished At': new Date().toISOString(), Status: status, 'Items Checked': plan.checked, 'Items Changed': pushed.length,\n  'Shopify Updates': pushed.length, 'Promos Created': promosCreated.length,\n  'Purchasing Requests Created': requestsCreated.length, Errors: errors, Details: detailText,\n};\n\n// Slack: only when a person has something to do or know. Long lists are cut (Slack allows 40,000 characters, and a\n// note nobody can read helps nobody); the Sync Log row has everything.\nconst MAX_LINES = 15;\nconst bullet = s => '\\u2022 ' + s;\nconst bullets = (list, render) => {\n  const out = list.slice(0, MAX_LINES).map(x => bullet(render(x)));\n  if (list.length > MAX_LINES) out.push(bullet(`and ${list.length - MAX_LINES} more, see the Sync Log row ${run.runId}`));\n  return out;\n};\nconst lines = [`*Inventory sync* ${run.runId} (${run.trigger}), ${status}`];\nif (pushed.length) {\n  const shown = pushed.slice(0, 20).map(stockText).join(', ') + (pushed.length > 20 ? `, and ${pushed.length - 20} more` : '');\n  lines.push(`Shopify stock set for ${pushed.length} SKU${pushed.length === 1 ? '' : 's'}${where}: ` + shown);\n}\nif (promosCreated.length) {\n  lines.push('', `*New promos (${promosCreated.length})*, ${run.discountPercent}% off suggested, Status Proposed in Airtable:`);\n  lines.push(...bullets(promosCreated, p => `${p.name} for ${p.sku}, ${p.units} units, best before ${p.bestBefore} (${p.daysLeft} days left)`));\n}\nif (requestsCreated.length) {\n  lines.push('', `*New purchasing requests (${requestsCreated.length})*:`);\n  lines.push(...bullets(requestsCreated, x => `${x.sku}, ${x.sellable} sellable, reorder point ${x.reorderPoint}` + (x.reorderQuantity ? `, suggested batch ${x.reorderQuantity}` : '')));\n}\nconst attentionLines = [...c.attention, ...plan.skipped.map(s => `${s.sku} was not synced because ${s.reason}`)];\nif (attentionLines.length) {\n  lines.push('', `*Needs attention (${attentionLines.length})*:`);\n  lines.push(...bullets(attentionLines, a => a));\n}\nif (errors) {\n  lines.push('', `*Errors (${errors})*:`);\n  lines.push(...bullets(errorLines, e => e));\n}\nconst sendSlack = run.slackEnabled && (promosCreated.length > 0 || requestsCreated.length > 0 || attentionLines.length > 0 || errors > 0);\nconst failMessage = errors\n  ? `Inventory sync ${run.runId} finished with ${errors} error${errors === 1 ? '' : 's'}. ${errorLines.slice(0, 3).join('. ')}. Details are in the Sync Log.`\n  : '';\nawait sleep(500);\nreturn [{ json: {\n  runId: run.runId, status, errors, sendSlack, slackEnabled: run.slackEnabled, slackText: lines.join('\\n'), failMessage,\n  syncLogBody: { performUpsert: { fieldsToMergeOn: ['Run ID'] }, typecast: false, records: [{ fields }] },\n} }];\n"
+      }
+    },
+    {
+      "id": "ae3bb42b-76c7-5cb2-986d-3b7e50fcfb78",
+      "name": "Airtable: Upsert Sync Log",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3380,
+        1420
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Sync%20Log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.syncLogBody) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "fc513163-f5c6-54d0-9905-fd2caf2f3e27",
+      "name": "Code: Finish Run",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3640,
+        1420
+      ],
+      "parameters": {
+        "jsCode": "// The error item of an HTTP Request node (checked on n8n 2.19.5) comes in two shapes:\n//   no pagination: error.status, and error.message = '<status> - \"<response body as JSON text>\"' (for a 429 n8n\n//                  replaces the message, so the status decides)\n//   pagination on: error.statusCode and error.response.status, and error.error = the response body as JSON text\nfunction httpErrorText(e) {\n  if (!e) return 'unknown error';\n  const status = e.status || e.statusCode || (e.response && e.response.status) || '';\n  const m = String(e.message || '');\n  let body = null;\n  try { body = JSON.parse(JSON.parse(m.slice(m.indexOf(' - ') + 3))); } catch (x) {}\n  if (!body && typeof e.error === 'string') { try { body = JSON.parse(e.error); } catch (x) {} }\n  let detail = '';\n  if (body && typeof body === 'object') {\n    if (typeof body.error === 'string') detail = body.error;\n    else if (body.error && typeof body.error === 'object') detail = [body.error.type, body.error.message].filter(Boolean).join(' ');\n    else if (typeof body.errors === 'string') detail = body.errors;\n    else if (Array.isArray(body.errors)) detail = body.errors.map(x => x.message || x.code).join(', ');\n  }\n  if (String(status) === '429' && !detail) detail = 'rate limit reached';\n  if (!detail) detail = m.replace(/^\\d{3} - /, '').slice(0, 200) || 'no details';\n  return [status, detail].filter(Boolean).join(' ');\n}\n\nconst s = $('Code: Summarize Run').first().json;\nconst r = $input.first().json;\nconst logError = r.error ? httpErrorText(r.error) : null;\nlet { slackText, sendSlack, failMessage } = s;\nif (logError) {\n  slackText += `\\n\\nThe Sync Log row ${s.runId} could not be saved (${logError}).`;\n  sendSlack = s.slackEnabled;\n  failMessage = (failMessage ? failMessage + ' ' : `Inventory sync ${s.runId} finished. `) + `The Sync Log row could not be saved (${logError}).`;\n}\nreturn [{ json: { runId: s.runId, status: s.status, sendSlack, slackText, failed: !!failMessage, failMessage } }];\n"
+      }
+    },
+    {
+      "id": "808dc41f-0ede-5f08-bcea-0cd0a5d08498",
+      "name": "IF: Send Slack Note?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3900,
+        1420
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "c3310575-0509-5ca5-a507-0bd0a154db4d",
+              "leftValue": "={{ $json.sendSlack === true }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "a830b06e-b623-5443-be49-7f53f2057332",
+      "name": "Slack: Ops Note",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4160,
+        1270
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_WEBHOOK_URL }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: $('Code: Finish Run').first().json.slackText }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "db4e71c3-2807-53dd-b8d5-b22bc1b1f0e6",
+      "name": "IF: Run Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        4420,
+        1420
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "8656f551-5afa-5b27-ad34-95fd60984ccb",
+              "leftValue": "={{ $('Code: Finish Run').first().json.failed === true || !!$json.error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "e37280bb-542a-5d77-b22c-80fbf78ab298",
+      "name": "Stop: Sync Failed",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        4680,
+        1420
+      ],
+      "parameters": {
+        "errorMessage": "={{ $('Code: Finish Run').first().json.failMessage || ('Inventory sync ' + $('Code: Finish Run').first().json.runId + ' finished, but the Slack note could not be sent.') }}"
+      }
+    },
+    {
+      "id": "d2dc2413-b3cb-56bb-b2da-d8b85d3a33ad",
+      "name": "Note: Start",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -80
+      ],
+      "parameters": {
+        "content": "## 1. Start\nEvery day at 06:00 UTC, or on demand: POST to the Run Now webhook with the header `X-Run-Now-Secret`. A wrong or missing secret gets 401.\nThe settings are checked first. A Run Now call gets 500 with the problems when one is missing or wrong, otherwise 202 and the run id right away.",
+        "width": 1780,
+        "height": 1100,
+        "color": 7
+      }
+    },
+    {
+      "id": "cbad37e1-9c09-5818-a52f-73136653cd69",
+      "name": "Note: Read Airtable",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        -80
+      ],
+      "parameters": {
+        "content": "## 2. Read Airtable\nActive products, Released and Planned batches, Open and Scheduled purchasing requests and existing promos.\nSellable per SKU = units left (made minus reserved minus sold) in Released batches produced on or before today with more than SELL_BY_BUFFER_DAYS to best before, kept in FIFO order. Every Airtable call waits 500 ms after the last one, so even two runs at once stay under 5 requests per second per base. A failed read stops the run before anything changes and leaves a Failed row in the Sync Log when Airtable takes it.",
+        "width": 1780,
+        "height": 1100,
+        "color": 5
+      }
+    },
+    {
+      "id": "bf85ea63-848b-5160-910c-3d843a7c2089",
+      "name": "Note: Shopify",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3580,
+        -80
+      ],
+      "parameters": {
+        "content": "## 3. Shopify\nOne query reads `available` and `committed` for every synced SKU. Target = sellable minus committed (units in orders that have not shipped yet). Only SKUs that differ get `inventorySetQuantities`, one call per SKU, with `changeFromQuantity` = what Shopify just showed and an `@idempotent` key, so a retry never applies twice and a sale in between is not overwritten. A call that Shopify throttles (or that finds its key still in progress) is sent once more after 2 seconds. Plan Airtable Writes then collects the results.",
+        "width": 2560,
+        "height": 1100,
+        "color": 4
+      }
+    },
+    {
+      "id": "c2c25080-8cf4-5f8d-bab4-60feb3072301",
+      "name": "Note: Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        1100
+      ],
+      "parameters": {
+        "content": "## Batch inventory sync\nAirtable Production Batches are the source of truth for stock. Once a day this workflow works out the sellable stock of every SKU, sets it in Shopify where the number changed, proposes one promo per short dated batch, opens one purchasing request per SKU below its reorder point and writes a Sync Log row.\n\n**Settings** (`$env`): AIRTABLE_TOKEN, AIRTABLE_BASE_ID, SHOPIFY_STORE_DOMAIN, SHOPIFY_ADMIN_TOKEN, SHOPIFY_API_VERSION, SHOPIFY_LOCATION_ID, SLACK_WEBHOOK_URL, RUN_NOW_SECRET, SELL_BY_BUFFER_DAYS (14), PROMO_WINDOW_DAYS (45), PROMO_DISCOUNT_PERCENT (25).\n\n**Run it now**: POST to `/webhook/inventory-run-now` with the header `X-Run-Now-Secret`. It answers 202 with the run id; the results land in the Sync Log and in Slack.\n\n**Errors** go to the error workflow: import shared/error-alert-slack.json, activate it and pick it as this workflow's Error Workflow.",
+        "width": 1780,
+        "height": 1160,
+        "color": 7
+      }
+    },
+    {
+      "id": "9dd2aaa3-1762-578a-b4ff-d95ae4504c08",
+      "name": "Note: Write Airtable",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        1100
+      ],
+      "parameters": {
+        "content": "## 4. Write Airtable\nNew Shopify Stock on Products, one Promo per short dated batch (upsert on Promo Name) and one Open Purchasing Request per SKU below its reorder point (upsert on SKU and Status). 10 records per call, one call per pass. A 429 waits 30 seconds and tries once more.",
+        "width": 1260,
+        "height": 1160,
+        "color": 6
+      }
+    },
+    {
+      "id": "5c717528-2e7a-5b3f-b727-317cbb466d5c",
+      "name": "Note: Log and Notify",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3060,
+        1100
+      ],
+      "parameters": {
+        "content": "## 5. Log and notify\nOne Sync Log row per run (upsert on Run ID). A Slack note goes out when there are new promos, new purchasing requests, something to fix or errors. A run with errors ends at Stop: Sync Failed, so the error workflow alerts you.",
+        "width": 1800,
+        "height": 1160,
+        "color": 3
+      }
+    }
+  ],
+  "connections": {
+    "Schedule: Daily 06:00 UTC": {
+      "main": [
+        [
+          {
+            "node": "Code: Start Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: Run Now": {
+      "main": [
+        [
+          {
+            "node": "IF: Run Now Secret OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Run Now Secret OK?": {
+      "main": [
+        [
+          {
+            "node": "Code: Start Run",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond: 401 Unauthorized",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Start Run": {
+      "main": [
+        [
+          {
+            "node": "IF: Config OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Config OK?": {
+      "main": [
+        [
+          {
+            "node": "IF: Run Now?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: Run Now (Bad Config)?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Run Now?": {
+      "main": [
+        [
+          {
+            "node": "Respond: 202 Started",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Airtable: List Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond: 202 Started": {
+      "main": [
+        [
+          {
+            "node": "Airtable: List Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Run Now (Bad Config)?": {
+      "main": [
+        [
+          {
+            "node": "Respond: 500 Config Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop: Bad Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond: 500 Config Error": {
+      "main": [
+        [
+          {
+            "node": "Stop: Bad Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: List Products": {
+      "main": [
+        [
+          {
+            "node": "Code: Index Products",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Airtable Read Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Index Products": {
+      "main": [
+        [
+          {
+            "node": "Airtable: List Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: List Batches": {
+      "main": [
+        [
+          {
+            "node": "Code: Compute Sellable",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Airtable Read Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Compute Sellable": {
+      "main": [
+        [
+          {
+            "node": "Airtable: List Open Requests",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: List Open Requests": {
+      "main": [
+        [
+          {
+            "node": "Code: Plan Promos And Requests",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Airtable Read Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Plan Promos And Requests": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Find Existing Promos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Find Existing Promos": {
+      "main": [
+        [
+          {
+            "node": "Code: Build Stock Query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Airtable Read Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Airtable Read Failed": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Log Failed Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Log Failed Run": {
+      "main": [
+        [
+          {
+            "node": "Stop: Airtable Read Failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop: Airtable Read Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Build Stock Query": {
+      "main": [
+        [
+          {
+            "node": "Shopify: Read Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify: Read Stock": {
+      "main": [
+        [
+          {
+            "node": "IF: Read Throttled?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Plan Stock Changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Read Throttled?": {
+      "main": [
+        [
+          {
+            "node": "Wait: Shopify Read 2 s",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Plan Stock Changes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Shopify Read 2 s": {
+      "main": [
+        [
+          {
+            "node": "Shopify: Read Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Plan Stock Changes": {
+      "main": [
+        [
+          {
+            "node": "IF: No Stock Changes?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: No Stock Changes?": {
+      "main": [
+        [
+          {
+            "node": "Code: Plan Airtable Writes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop: Each Stock Change",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop: Each Stock Change": {
+      "main": [
+        [
+          {
+            "node": "Code: Plan Airtable Writes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Shopify: Set Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify: Set Stock": {
+      "main": [
+        [
+          {
+            "node": "IF: Set Stock Throttled?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Check Stock Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Set Stock Throttled?": {
+      "main": [
+        [
+          {
+            "node": "Wait: Shopify 2 s",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Check Stock Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Shopify 2 s": {
+      "main": [
+        [
+          {
+            "node": "Shopify: Set Stock Again",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify: Set Stock Again": {
+      "main": [
+        [
+          {
+            "node": "Code: Check Stock Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Check Stock Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Check Stock Result": {
+      "main": [
+        [
+          {
+            "node": "Loop: Each Stock Change",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Plan Airtable Writes": {
+      "main": [
+        [
+          {
+            "node": "IF: No Airtable Writes?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: No Airtable Writes?": {
+      "main": [
+        [
+          {
+            "node": "Code: Summarize Run",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop: Each Airtable Write",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop: Each Airtable Write": {
+      "main": [
+        [
+          {
+            "node": "Code: Summarize Run",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Airtable: Write Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Write Batch": {
+      "main": [
+        [
+          {
+            "node": "Code: Check Write Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Check Write Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Check Write Result": {
+      "main": [
+        [
+          {
+            "node": "IF: Retry After Rate Limit?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Retry After Rate Limit?": {
+      "main": [
+        [
+          {
+            "node": "Wait: Airtable 30 s",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop: Each Airtable Write",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Airtable 30 s": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Write Batch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Summarize Run": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Upsert Sync Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Upsert Sync Log": {
+      "main": [
+        [
+          {
+            "node": "Code: Finish Run",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Finish Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Finish Run": {
+      "main": [
+        [
+          {
+            "node": "IF: Send Slack Note?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Send Slack Note?": {
+      "main": [
+        [
+          {
+            "node": "Slack: Ops Note",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: Run Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Ops Note": {
+      "main": [
+        [
+          {
+            "node": "IF: Run Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: Run Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Run Failed?": {
+      "main": [
+        [
+          {
+            "node": "Stop: Sync Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "UTC",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true
+  }
+}

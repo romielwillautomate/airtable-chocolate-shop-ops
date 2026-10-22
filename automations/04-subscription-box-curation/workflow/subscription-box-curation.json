@@ -1,0 +1,2915 @@
+{
+  "name": "Monthly Chocolate Subscription Box Curation",
+  "nodes": [
+    {
+      "id": "48d7a8ff-d288-5b81-b4f5-b75b1c2e8fff",
+      "name": "Note: Start",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -160
+      ],
+      "parameters": {
+        "content": "## Start\nRuns at 08:00 on the 20th of each month and plans next month's boxes. **Run Now** does the same on demand: POST with the header `X-Run-Now-Secret` and an optional `month` (this month or next, `YYYY-MM`). A wrong secret gets 401, a bad month 400, missing settings 500 plus an alert. A good call gets 202 right away.",
+        "width": 1540,
+        "height": 980,
+        "color": 7
+      }
+    },
+    {
+      "id": "63fa2b4e-94e9-5bde-893f-0b2cf2e359a2",
+      "name": "Note: One Run At A Time",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1520,
+        -160
+      ],
+      "parameters": {
+        "content": "## 1. One run at a time\nThe run writes its Sync Log row, waits 2 seconds and lists the curation runs that are still open. If another one started first (a double click, Run Now during the monthly run), this run stops before reading anything, so stock is never reserved twice.",
+        "width": 1190,
+        "height": 980,
+        "color": 2
+      }
+    },
+    {
+      "id": "9b81ac36-74b8-5582-933c-e6da84817c21",
+      "name": "Note: Read",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2710,
+        -160
+      ],
+      "parameters": {
+        "content": "## 2. Read the base\nFive reads, 500 ms apart: Active subscribers, every bar, Released batches, and 13 months of Box History and Box Shipments. Each read names its fields, so a renamed allergen field stops the run instead of looking empty. A rate limit (429) is waited out for 31 seconds and the run starts again, at most twice.",
+        "width": 2000,
+        "height": 980,
+        "color": 4
+      }
+    },
+    {
+      "id": "4f0b687c-756d-5da0-9381-0524d1d97166",
+      "name": "Note: Plan",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4710,
+        -160
+      ],
+      "parameters": {
+        "content": "## 3. Plan every box\nLongest tenure first. Bars must suit every dietary need (allergen fields, cross-checked with the ingredients, name, flavor notes and chocolate type), avoid dislikes and the last REPEAT_WINDOW boxes, and have stock with more than SELL_BY_BUFFER_DAYS left at ship date. Flavor families are balanced. A last check reads every chosen bar's allergen fields again. Subscribers who already have a box this month are skipped, but its bars are checked against their needs again.",
+        "width": 630,
+        "height": 980,
+        "color": 5
+      }
+    },
+    {
+      "id": "aaf57e2b-2777-59bf-abbc-f70d1a0c56a9",
+      "name": "Note: Write",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        900
+      ],
+      "parameters": {
+        "content": "## 4. Write one box at a time\nFor each box: reserve the stock on its batches, upsert the Box Shipment on Shipment ID, then upsert one Box History row per bar. One box per pass, so a retry can never double anything. A rate limit (429) waits 31 seconds and repeats the pass, which is safe because every step is. If a box cannot be saved, the run first asks Airtable whether it was saved after all, and only then gives its stock back. The next run skips saved boxes and carries on.",
+        "width": 3390,
+        "height": 920,
+        "color": 6
+      }
+    },
+    {
+      "id": "97d8cf9d-4d93-5a31-be5f-3d0d6d547a48",
+      "name": "Note: Failure",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        4770,
+        900
+      ],
+      "parameters": {
+        "content": "## When the run stops\nEvery failure after the start closes the Sync Log row as Failed (so the next run is not held back), then stops the run. The error workflow posts the reason to the ops channel.",
+        "width": 830,
+        "height": 920,
+        "color": 3
+      }
+    },
+    {
+      "id": "a254cb46-2443-5086-bc26-3d9e3eb98538",
+      "name": "Note: Report",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        5380,
+        -160
+      ],
+      "parameters": {
+        "content": "## 5. Report\nOne Slack message to the packing channel: first any bar to take out of a box planned before, then the counts and every box of the month that is not full, and why. Then the Sync Log row gets its counts and a Finished At. If either fails, the boxes stay saved and the run ends with an alert.",
+        "width": 1420,
+        "height": 980,
+        "color": 3
+      }
+    },
+    {
+      "id": "1c908dde-a8b6-5846-9fb5-5e84262c8f80",
+      "name": "Schedule: Monthly On The 20th",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months",
+              "monthsInterval": 1,
+              "triggerAtDayOfMonth": 20,
+              "triggerAtHour": 8,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "070c5b09-5d8a-50be-84db-8a42a7467bda",
+      "name": "Code: Scheduled Run Settings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "// Run settings for one curation run: which month, the rules from the environment, the dates\n// that decide which batches can go in a box, and the Airtable formulas for the reads.\nfunction readSettings(trigger, env, askedMonth, now, executionId) {\n  const problems = [];\n  for (const name of ['AIRTABLE_TOKEN', 'AIRTABLE_BASE_ID', 'SLACK_PACKING_WEBHOOK_URL']) {\n    if (!String(env[name] == null ? '' : env[name]).trim()) problems.push(`${name} is not set`);\n  }\n  const whole = (name, fallback, min, max) => {\n    const raw = String(env[name] == null ? '' : env[name]).trim();\n    if (raw === '') return fallback;\n    if (!/^\\d+$/.test(raw) || Number(raw) < min || Number(raw) > max) {\n      problems.push(`${name} must be a whole number from ${min} to ${max}`);\n      return fallback;\n    }\n    return Number(raw);\n  };\n  const repeatWindow = whole('REPEAT_WINDOW', 1, 0, 12);\n  const sellByBufferDays = whole('SELL_BY_BUFFER_DAYS', 14, 0, 365);\n\n  const pad = n => String(n).padStart(2, '0');\n  const shift = (ym, by) => {\n    const [y, m] = ym.split('-').map(Number);\n    const total = y * 12 + (m - 1) + by;\n    return `${Math.floor(total / 12)}-${pad((total % 12) + 1)}`;\n  };\n  const today = now.toISOString().slice(0, 10);\n  const thisMonth = today.slice(0, 7);\n  const nextMonth = shift(thisMonth, 1);\n  let month = nextMonth;\n  let requestError = '';\n  const asked = askedMonth == null ? '' : String(askedMonth).trim();\n  if (asked) {\n    if (!/^\\d{4}-(0[1-9]|1[0-2])$/.test(asked)) requestError = `month \"${asked.slice(0, 20)}\" is not in the form YYYY-MM, for example ${nextMonth}`;\n    else if (asked !== thisMonth && asked !== nextMonth) requestError = `month ${asked} cannot be curated now. Use this month (${thisMonth}) or next month (${nextMonth}), in UTC`;\n    else month = asked;\n  }\n\n  // Boxes ship from the first day of the month (or today, when curating the current month).\n  // A bar must still have more than SELL_BY_BUFFER_DAYS days to its best before date then.\n  const monthStart = `${month}-01`;\n  const shipDate = today > monthStart ? today : monthStart;\n  const cutoff = new Date(shipDate + 'T00:00:00Z');\n  cutoff.setUTCDate(cutoff.getUTCDate() + sellByBufferDays);\n  const shelfLifeCutoff = cutoff.toISOString().slice(0, 10);\n\n  // Box History and Box Shipments are read for this month and the 12 before it.\n  const lookbackMonths = Array.from({ length: 13 }, (_, i) => shift(month, -i));\n  const monthFormula = 'OR(' + lookbackMonths.map(m => `{Box Month} = '${m}'`).join(', ') + ')';\n  const startedAt = now.toISOString().replace(/\\.\\d{3}Z$/, 'Z');\n  // The n8n execution id makes the Run ID unique, also for two runs started in the same second.\n  const runId = `boxes-${month}-${startedAt}` + (executionId ? `-${executionId}` : '');\n\n  // Only one curation run may write at a time. Each run writes its Sync Log row first (no Status, no\n  // Finished At) and then lists the rows of runs that are still open. Rows older than lockMinutes are\n  // taken to be from a run that died without closing its row.\n  const openRunsFormula = \"AND({Automation} = '04 Subscription Boxes', {Finished At} = BLANK())\";\n\n  return {\n    ok: !problems.length && !requestError,\n    httpStatus: problems.length ? 500 : requestError ? 400 : 202,\n    error: problems.length ? 'Settings problem. ' + problems.join('. ') + '.' : requestError,\n    trigger, month, today, monthStart, shipDate, shelfLifeCutoff, repeatWindow, sellByBufferDays,\n    lookbackMonths, monthFormula, openRunsFormula, lockMinutes: 60, startedAt, runId,\n  };\n}\n\nconst env = {\n  AIRTABLE_TOKEN: $env.AIRTABLE_TOKEN,\n  AIRTABLE_BASE_ID: $env.AIRTABLE_BASE_ID,\n  SLACK_PACKING_WEBHOOK_URL: $env.SLACK_PACKING_WEBHOOK_URL,\n  REPEAT_WINDOW: $env.REPEAT_WINDOW,\n  SELL_BY_BUFFER_DAYS: $env.SELL_BY_BUFFER_DAYS,\n};\nreturn [{ json: readSettings('Schedule', env, null, new Date(), $execution.id) }];\n"
+      }
+    },
+    {
+      "id": "5bed7a87-5390-5041-be57-eab5b8440f55",
+      "name": "IF: Scheduled Settings OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "e63ca1a9-1fe5-50e1-8a72-99101192d200",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c017f867-91f1-586f-a8c6-2ea239d7f7c5",
+      "name": "Stop: Bad Settings",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        660,
+        160
+      ],
+      "parameters": {
+        "errorMessage": "={{ $json.error }}"
+      }
+    },
+    {
+      "id": "aceaeb3d-87a8-5783-a52f-a35687268a2e",
+      "name": "Webhook: Run Now",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        340
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "subscription-box-run-now",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "63fe92d8-db06-50b7-97bb-6800314dff87"
+    },
+    {
+      "id": "e7197dcb-845a-50fa-9fcb-2cf3ecc8ece4",
+      "name": "IF: Run Now Secret OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        220,
+        340
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "0a3d3a77-e4a9-53b1-bcd6-e6e8691c104e",
+              "leftValue": "={{ $env.RUN_NOW_SECRET }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "356f11b0-d9a7-50b1-9179-c736f904e065",
+              "leftValue": "={{ String($json.headers['x-run-now-secret'] || '') }}",
+              "rightValue": "={{ $env.RUN_NOW_SECRET }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "0af58d4c-aab9-57cd-87e9-5890d32af71f",
+      "name": "Respond: 401 Unauthorized",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        540
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ accepted: false, error: \"Missing or wrong X-Run-Now-Secret header.\" }) }}",
+        "options": {
+          "responseCode": 401
+        }
+      }
+    },
+    {
+      "id": "b0cd198a-9b9f-5a19-9ba9-d985fa1aa7bf",
+      "name": "Code: Run Now Settings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        340
+      ],
+      "parameters": {
+        "jsCode": "// Run settings for one curation run: which month, the rules from the environment, the dates\n// that decide which batches can go in a box, and the Airtable formulas for the reads.\nfunction readSettings(trigger, env, askedMonth, now, executionId) {\n  const problems = [];\n  for (const name of ['AIRTABLE_TOKEN', 'AIRTABLE_BASE_ID', 'SLACK_PACKING_WEBHOOK_URL']) {\n    if (!String(env[name] == null ? '' : env[name]).trim()) problems.push(`${name} is not set`);\n  }\n  const whole = (name, fallback, min, max) => {\n    const raw = String(env[name] == null ? '' : env[name]).trim();\n    if (raw === '') return fallback;\n    if (!/^\\d+$/.test(raw) || Number(raw) < min || Number(raw) > max) {\n      problems.push(`${name} must be a whole number from ${min} to ${max}`);\n      return fallback;\n    }\n    return Number(raw);\n  };\n  const repeatWindow = whole('REPEAT_WINDOW', 1, 0, 12);\n  const sellByBufferDays = whole('SELL_BY_BUFFER_DAYS', 14, 0, 365);\n\n  const pad = n => String(n).padStart(2, '0');\n  const shift = (ym, by) => {\n    const [y, m] = ym.split('-').map(Number);\n    const total = y * 12 + (m - 1) + by;\n    return `${Math.floor(total / 12)}-${pad((total % 12) + 1)}`;\n  };\n  const today = now.toISOString().slice(0, 10);\n  const thisMonth = today.slice(0, 7);\n  const nextMonth = shift(thisMonth, 1);\n  let month = nextMonth;\n  let requestError = '';\n  const asked = askedMonth == null ? '' : String(askedMonth).trim();\n  if (asked) {\n    if (!/^\\d{4}-(0[1-9]|1[0-2])$/.test(asked)) requestError = `month \"${asked.slice(0, 20)}\" is not in the form YYYY-MM, for example ${nextMonth}`;\n    else if (asked !== thisMonth && asked !== nextMonth) requestError = `month ${asked} cannot be curated now. Use this month (${thisMonth}) or next month (${nextMonth}), in UTC`;\n    else month = asked;\n  }\n\n  // Boxes ship from the first day of the month (or today, when curating the current month).\n  // A bar must still have more than SELL_BY_BUFFER_DAYS days to its best before date then.\n  const monthStart = `${month}-01`;\n  const shipDate = today > monthStart ? today : monthStart;\n  const cutoff = new Date(shipDate + 'T00:00:00Z');\n  cutoff.setUTCDate(cutoff.getUTCDate() + sellByBufferDays);\n  const shelfLifeCutoff = cutoff.toISOString().slice(0, 10);\n\n  // Box History and Box Shipments are read for this month and the 12 before it.\n  const lookbackMonths = Array.from({ length: 13 }, (_, i) => shift(month, -i));\n  const monthFormula = 'OR(' + lookbackMonths.map(m => `{Box Month} = '${m}'`).join(', ') + ')';\n  const startedAt = now.toISOString().replace(/\\.\\d{3}Z$/, 'Z');\n  // The n8n execution id makes the Run ID unique, also for two runs started in the same second.\n  const runId = `boxes-${month}-${startedAt}` + (executionId ? `-${executionId}` : '');\n\n  // Only one curation run may write at a time. Each run writes its Sync Log row first (no Status, no\n  // Finished At) and then lists the rows of runs that are still open. Rows older than lockMinutes are\n  // taken to be from a run that died without closing its row.\n  const openRunsFormula = \"AND({Automation} = '04 Subscription Boxes', {Finished At} = BLANK())\";\n\n  return {\n    ok: !problems.length && !requestError,\n    httpStatus: problems.length ? 500 : requestError ? 400 : 202,\n    error: problems.length ? 'Settings problem. ' + problems.join('. ') + '.' : requestError,\n    trigger, month, today, monthStart, shipDate, shelfLifeCutoff, repeatWindow, sellByBufferDays,\n    lookbackMonths, monthFormula, openRunsFormula, lockMinutes: 60, startedAt, runId,\n  };\n}\n\nconst env = {\n  AIRTABLE_TOKEN: $env.AIRTABLE_TOKEN,\n  AIRTABLE_BASE_ID: $env.AIRTABLE_BASE_ID,\n  SLACK_PACKING_WEBHOOK_URL: $env.SLACK_PACKING_WEBHOOK_URL,\n  REPEAT_WINDOW: $env.REPEAT_WINDOW,\n  SELL_BY_BUFFER_DAYS: $env.SELL_BY_BUFFER_DAYS,\n};\nconst req = $input.first().json;\nconst body = req.body && typeof req.body === 'object' && !Array.isArray(req.body) ? req.body : {};\nconst query = req.query && typeof req.query === 'object' ? req.query : {};\nconst asked = body.month != null && body.month !== '' ? body.month : query.month;\nreturn [{ json: readSettings('Run Now', env, asked, new Date(), $execution.id) }];\n"
+      }
+    },
+    {
+      "id": "77d8f84f-6ad8-5090-a21a-c77c14daf57a",
+      "name": "IF: Run Now Settings OK?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        660,
+        340
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "e63ca1a9-1fe5-50e1-8a72-99101192d200",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b88570b9-4f3e-5972-88c4-6acb5a4bb959",
+      "name": "Respond: 202 Accepted",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        340
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ accepted: true, month: $json.month, runId: $json.runId, message: 'Planning the subscription boxes for ' + $json.month + '. The summary goes to Slack when the run is done.' }) }}",
+        "options": {
+          "responseCode": 202
+        }
+      }
+    },
+    {
+      "id": "714b414e-dac5-53e5-86bb-f2c868ce6517",
+      "name": "Respond: Request Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        540
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ accepted: false, error: $json.error }) }}",
+        "options": {
+          "responseCode": "={{ $json.httpStatus }}"
+        }
+      }
+    },
+    {
+      "id": "31cf75e8-1d1b-548f-b275-efe37cab996e",
+      "name": "IF: Settings Problem?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        540
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "1f2f3342-d6a0-5121-a31d-2878654b3a57",
+              "leftValue": "={{ $json.httpStatus }}",
+              "rightValue": 500,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "3f0af826-1a42-5150-95cd-3dd9864708d9",
+      "name": "Stop: Bad Run Now Settings",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        540
+      ],
+      "parameters": {
+        "errorMessage": "={{ $json.error }}"
+      }
+    },
+    {
+      "id": "b5358104-b4c5-5119-9fe4-d7b3a264b4da",
+      "name": "Start: Curation Run",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        340
+      ],
+      "parameters": {}
+    },
+    {
+      "id": "f662ebe0-d6dc-561f-9483-32638b53f5a4",
+      "name": "Wait: Before Claim",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1580,
+        340
+      ],
+      "parameters": {
+        "amount": 0.5,
+        "unit": "seconds"
+      },
+      "webhookId": "f6427df8-e045-5165-ac17-a3b9b32e7f07"
+    },
+    {
+      "id": "6dc26671-bea6-5b0b-ba03-b96895127cd0",
+      "name": "Airtable: Claim Run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1780,
+        340
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Sync%20Log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ performUpsert: { fieldsToMergeOn: ['Run ID'] }, records: [{ fields: { 'Run ID': $('Start: Curation Run').first().json.runId, 'Automation': '04 Subscription Boxes', 'Trigger': $('Start: Curation Run').first().json.trigger, 'Started At': $('Start: Curation Run').first().json.startedAt, 'Details': 'Running. Planning the boxes for ' + $('Start: Curation Run').first().json.month + '.' } }], typecast: false }) }}",
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "0c292104-05a3-5bc9-880f-b9742a713081",
+      "name": "Wait: Lock Settle",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1980,
+        340
+      ],
+      "parameters": {
+        "amount": 2,
+        "unit": "seconds"
+      },
+      "webhookId": "6547f3ac-350a-54cf-b9bb-fc47e08012d4"
+    },
+    {
+      "id": "8a40c5ab-c2f2-59d8-9246-51be9268e0e0",
+      "name": "Airtable: List Open Runs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2180,
+        340
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Sync%20Log/listRecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pageSize: 100, filterByFormula: $('Start: Curation Run').first().json.openRunsFormula, fields: [\"Run ID\", \"Status\", \"Started At\", \"Trigger\"] }) }}",
+        "options": {
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": {
+                "parameters": [
+                  {
+                    "type": "body",
+                    "name": "offset",
+                    "value": "={{ $response.body.offset }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.offset }}",
+              "limitPagesFetched": true,
+              "maxRequests": 100,
+              "requestInterval": 500
+            }
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput",
+      "executeOnce": true
+    },
+    {
+      "id": "38eb608f-9479-5118-842b-e8c966528377",
+      "name": "Code: Check Open Runs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2380,
+        340
+      ],
+      "parameters": {
+        "jsCode": "// Only one curation run may write at a time: two runs planning the same month would reserve the\n// same stock twice. Every run writes its own Sync Log row first, waits 2 seconds, then lists the rows of\n// curation runs that are still open (no Finished At). It goes on only when no other open row was created\n// before its own; on a tie, the lower Run ID goes on. A row with a Status, or older than lockMinutes,\n// is from a run that is not running any more.\nconst ctx = $('Start: Curation Run').first().json;\nconst pages = $('Airtable: List Open Runs').all().map(i => i.json || {});\nconst rows = pages.flatMap(p => p.records || []);\nconst mine = rows.find(r => (r.fields || {})['Run ID'] === ctx.runId);\nif (!mine || (pages.length && pages[pages.length - 1].offset)) {\n  return [{ json: { clear: false, saved: 0, message: `The Sync Log row ${ctx.runId} could not be checked against other curation runs, so this run stopped before reading anything. Run again.` } }];\n}\nconst key = r => [Date.parse(r.createdTime), String((r.fields || {})['Run ID'] || r.id)];\nconst earlier = (a, b) => a[0] < b[0] || (a[0] === b[0] && a[1] < b[1]);\nconst now = Date.now();\nconst blockers = rows.filter(r => r !== mine && !(r.fields || {})['Status']\n  && now - Date.parse(r.createdTime) < ctx.lockMinutes * 60000 && earlier(key(r), key(mine)))\n  .sort((a, b) => (earlier(key(a), key(b)) ? -1 : 1));\nif (blockers.length) {\n  const b = blockers[0];\n  const started = String((b.fields || {})['Started At'] || b.createdTime).slice(0, 16).replace('T', ' ');\n  return [{ json: { clear: false, saved: 0, message: `Another curation run (${b.fields['Run ID']}, started ${started} UTC) is still running, so this run stopped before reading anything. Its summary goes to Slack when it is done. If it is not running in n8n any more, set a Status on its Sync Log row, then run again.` } }];\n}\nreturn [{ json: { clear: true, openRuns: rows.length } }];\n"
+      }
+    },
+    {
+      "id": "73180c6f-74aa-53fa-9e8e-3080194dbdd2",
+      "name": "IF: Clear To Run?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2580,
+        340
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "51f409d2-6516-55ff-b468-11c12b24e5d5",
+              "leftValue": "={{ $json.clear }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "00592b80-de6a-5a84-a521-ef2d62e24532",
+      "name": "Wait: Pace Read 1",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2780,
+        340
+      ],
+      "parameters": {
+        "amount": 0.5,
+        "unit": "seconds"
+      },
+      "webhookId": "ba6ab9dd-cdf8-5366-a32c-5c5c2aef4add"
+    },
+    {
+      "id": "a66f55cc-7d1d-5c9e-bd6f-be3def134419",
+      "name": "Airtable: List Subscribers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2980,
+        340
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Subscribers/listRecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pageSize: 100, filterByFormula: \"{Status} = 'Active'\", fields: [\"Subscriber ID\", \"Name\", \"Email\", \"Status\", \"Plan\", \"Dietary Needs\", \"Flavor Dislikes\", \"Started On\"] }) }}",
+        "options": {
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": {
+                "parameters": [
+                  {
+                    "type": "body",
+                    "name": "offset",
+                    "value": "={{ $response.body.offset }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.offset }}",
+              "limitPagesFetched": true,
+              "maxRequests": 100,
+              "requestInterval": 500
+            }
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput",
+      "executeOnce": true
+    },
+    {
+      "id": "2219dba3-76a5-58b3-b13b-ced302393a5c",
+      "name": "Wait: Pace Read 2",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3180,
+        340
+      ],
+      "parameters": {
+        "amount": 0.5,
+        "unit": "seconds"
+      },
+      "webhookId": "30cfaaba-b794-5148-a50b-8246bc94283b"
+    },
+    {
+      "id": "5e69d753-68cb-55ea-94e4-a5cda344c65f",
+      "name": "Airtable: List Products",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3380,
+        340
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Products/listRecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pageSize: 100, filterByFormula: \"{Category} = 'Bar'\", fields: [\"SKU\", \"Name\", \"Status\", \"Category\", \"Chocolate Type\", \"Flavor Family\", \"Flavor Notes\", \"Contains Allergens\", \"May Contain Traces\", \"Diet Labels\", \"Ingredients\", \"Subscription Eligible\"] }) }}",
+        "options": {
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": {
+                "parameters": [
+                  {
+                    "type": "body",
+                    "name": "offset",
+                    "value": "={{ $response.body.offset }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.offset }}",
+              "limitPagesFetched": true,
+              "maxRequests": 100,
+              "requestInterval": 500
+            }
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput",
+      "executeOnce": true
+    },
+    {
+      "id": "6563010f-406e-59a5-83e3-75559b4daff2",
+      "name": "Wait: Pace Read 3",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3580,
+        340
+      ],
+      "parameters": {
+        "amount": 0.5,
+        "unit": "seconds"
+      },
+      "webhookId": "98ca1af3-91e3-541e-b584-e104aab451e3"
+    },
+    {
+      "id": "e701b64d-fd14-5c4b-8ab0-806449f8a4ff",
+      "name": "Airtable: List Batches",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3780,
+        340
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Production%20Batches/listRecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pageSize: 100, filterByFormula: \"{Status} = 'Released'\", fields: [\"Batch Code\", \"Product\", \"Status\", \"Produced On\", \"Best Before\", \"Quantity Made\", \"Quantity Reserved\", \"Quantity Sold\"] }) }}",
+        "options": {
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": {
+                "parameters": [
+                  {
+                    "type": "body",
+                    "name": "offset",
+                    "value": "={{ $response.body.offset }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.offset }}",
+              "limitPagesFetched": true,
+              "maxRequests": 100,
+              "requestInterval": 500
+            }
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput",
+      "executeOnce": true
+    },
+    {
+      "id": "d5de9084-2cfd-5dc1-a0f6-cb700e34c613",
+      "name": "Wait: Pace Read 4",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3980,
+        340
+      ],
+      "parameters": {
+        "amount": 0.5,
+        "unit": "seconds"
+      },
+      "webhookId": "a7e4ffba-3f0e-51cd-9e3e-5a90b526f1b9"
+    },
+    {
+      "id": "75b01a78-766d-5a64-88e4-7417f1306cf0",
+      "name": "Airtable: List Box History",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4180,
+        340
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Box%20History/listRecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pageSize: 100, filterByFormula: $('Start: Curation Run').first().json.monthFormula, fields: [\"History ID\", \"Subscriber\", \"Product\", \"Box Month\", \"Box Shipment\"] }) }}",
+        "options": {
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": {
+                "parameters": [
+                  {
+                    "type": "body",
+                    "name": "offset",
+                    "value": "={{ $response.body.offset }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.offset }}",
+              "limitPagesFetched": true,
+              "maxRequests": 100,
+              "requestInterval": 500
+            }
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput",
+      "executeOnce": true
+    },
+    {
+      "id": "e07d3959-4ea9-541d-8447-6fda5cac7d8b",
+      "name": "Wait: Pace Read 5",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4380,
+        340
+      ],
+      "parameters": {
+        "amount": 0.5,
+        "unit": "seconds"
+      },
+      "webhookId": "d5eb5f3b-fcd8-5b54-ab73-178f672fd226"
+    },
+    {
+      "id": "10718405-3ace-5ecc-966d-b6cc3c1a1f6e",
+      "name": "Airtable: List Box Shipments",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4580,
+        340
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Box%20Shipments/listRecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pageSize: 100, filterByFormula: $('Start: Curation Run').first().json.monthFormula, fields: [\"Shipment ID\", \"Subscriber\", \"Box Month\", \"Products\", \"Status\", \"Fill Status\", \"Bars Planned\", \"Bars Packed\", \"Shortfall Reason\"] }) }}",
+        "options": {
+          "pagination": {
+            "pagination": {
+              "paginationMode": "updateAParameterInEachRequest",
+              "parameters": {
+                "parameters": [
+                  {
+                    "type": "body",
+                    "name": "offset",
+                    "value": "={{ $response.body.offset }}"
+                  }
+                ]
+              },
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.offset }}",
+              "limitPagesFetched": true,
+              "maxRequests": 100,
+              "requestInterval": 500
+            }
+          }
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput",
+      "executeOnce": true
+    },
+    {
+      "id": "65570c34-7e6a-5265-b934-54b40159acf8",
+      "name": "Code: Read Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2780,
+        580
+      ],
+      "parameters": {
+        "jsCode": "// A read failed after 3 tries. A rate limit (HTTP 429) is waited out (Airtable asks for 30 seconds)\n// and the run starts again from its Sync Log row, at most twice per run. Anything else stops the run.\n// Messages avoid ': ' (n8n keeps only the text after the last ': ' of a Code node error).\nconst steps = {\n  'Airtable: Claim Run': 'Writing the Sync Log row for this run',\n  'Airtable: List Open Runs': 'Reading Sync Log from Airtable',\n  'Airtable: List Subscribers': 'Reading Subscribers from Airtable',\n  'Airtable: List Products': 'Reading Products from Airtable',\n  'Airtable: List Batches': 'Reading Production Batches from Airtable',\n  'Airtable: List Box History': 'Reading Box History from Airtable',\n  'Airtable: List Box Shipments': 'Reading Box Shipments from Airtable',\n};\nconst err = $input.first().json.error || {};\nconst status = err.statusCode || err.status || (err.response && err.response.status) || 'unknown';\nconst found = JSON.stringify(err).match(/type\\\\*\"\\s*:\\s*\\\\*\"([A-Z][A-Z_]+)/);\nconst type = found ? ' ' + found[1] : '';\nconst step = steps[$prevNode.name] || 'An Airtable read';\nconst limited = Number(status) === 429;\nconst message = limited\n  ? `${step} kept hitting the rate limit (HTTP 429${type}), also after waiting out the 30 second penalty twice. ` +\n    \"No box or stock was changed. Another app is using up this base's 5 requests a second, run again later.\"\n  : `${step} failed with HTTP ${status}${type}. No box or stock was changed. ` +\n    'Check AIRTABLE_TOKEN, AIRTABLE_BASE_ID and that the field names match base/schema.json, then run again.';\nreturn [{ json: { retry: limited && $runIndex < 2, message, rateLimited: limited, saved: 0 } }];\n"
+      }
+    },
+    {
+      "id": "a95ce5f3-da83-5c6a-93b7-570c028d66df",
+      "name": "IF: Wait Out Read Limit?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2980,
+        580
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "4da4f678-5b03-5468-bd84-ad12cfa11fdd",
+              "leftValue": "={{ $json.retry }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "1dd02985-3fff-5fe1-9909-5da9d999bd35",
+      "name": "Wait: Read Penalty",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3180,
+        520
+      ],
+      "parameters": {
+        "amount": 31,
+        "unit": "seconds"
+      },
+      "webhookId": "ff0800ad-a729-5ffc-993e-1ac292b7ead9"
+    },
+    {
+      "id": "9cfa0836-5d5d-5345-8db0-301cc70a54fd",
+      "name": "Code: Plan Boxes",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4780,
+        340
+      ],
+      "parameters": {
+        "jsCode": "// Subscription box planner. Pure functions: no n8n globals, so the same code runs in the\n// \"Code: Plan Boxes\" node and in a plain Node.js harness.\n\nconst KNOWN_NEEDS = ['Nut-Free', 'Dairy-Free', 'Vegan', 'Gluten-Free'];\n\n// Ingredient words that point to an allergen. They cross-check the allergen fields: when the\n// ingredient list mentions an allergen that Contains Allergens and May Contain Traces do not list,\n// the bar is treated as containing it and the product is reported for a person to fix.\nconst SCANS = {\n  'Tree Nuts': {\n    ignore: /\\b(tree )?nut[- ]free\\b/g,\n    find: /\\b(almonds?|hazelnuts?|walnuts?|pecans?|cashews?|pistachios?|macadamias?|brazil nuts?|pine nuts?|chestnuts?|praline|marzipan|nougat|gianduja|frangipane|tree nuts?|nuts?)\\b/,\n  },\n  Peanuts: {\n    ignore: /\\bpeanut[- ]free\\b/g,\n    find: /\\b(peanuts?|groundnuts?|arachis)\\b/,\n  },\n  Milk: {\n    // Plant milks are not dairy. A nut \"cream\" (hazelnut cream, a spread) often is, so only coconut cream is ignored.\n    ignore: /\\b(cocoa|shea|peanut|nut|almond|cashew|hazelnut|seed|sunflower) butter\\b|\\b(oat|soy|rice|almond|coconut|cashew|hazelnut) (milk|drink)\\b|\\bcoconut cream\\b|\\bcream of tartar\\b|\\b(milk|dairy|lactose)[- ]free\\b/g,\n    find: /\\b(milk|cream|butter|buttermilk|whey|casein|caseinates?|lactose|yogh?urt|ghee|cheese|curds?|dairy)\\b/,\n  },\n  Wheat: {\n    ignore: /\\b(gluten|wheat)[- ]free\\b|\\b(rice|almond|coconut|oat|corn|chickpea|tapioca|potato|buckwheat|cassava) flour\\b|\\bbuckwheat\\b/g,\n    find: /\\b(wheat|gluten|barley|rye|spelt|malt|malted|semolina|farina|couscous|bulgur|flour|breadcrumbs?)\\b/,\n  },\n};\n// Animal ingredients for the Vegan check. Only the ingredient sentences count, not the\n// \"made on shared equipment\" sentences, because a vegan bar may carry a milk trace warning.\nconst ANIMAL = /\\b(milk|cream|butter|buttermilk|whey|casein|caseinates?|lactose|yogh?urt|ghee|cheese|curds?|dairy|eggs?|albumen|honey|gelatine?|beeswax|carmine|cochineal|shellac|lard|collagen)\\b/;\nconst ADVISORY = /\\b(may contain|shared equipment|same equipment|same line|facility|factory|traces?)\\b/;\n// Structured fields that also point to an allergen. A Hazelnut flavor note or a Milk chocolate type\n// without the allergen listed is a data error, and the bar is treated as containing it. Ruby chocolate is\n// made with milk powder, so it counts as milk too.\nconst NOTE_SIGNALS = { Hazelnut: 'Tree Nuts', Almond: 'Tree Nuts', Peanut: 'Peanuts' };\nconst TYPE_SIGNALS = { Milk: 'Milk', White: 'Milk', Ruby: 'Milk' };\n\nfunction list(v) { return Array.isArray(v) ? v : []; }\nfunction text(v) { return typeof v === 'string' ? v.trim() : ''; }\nfunction num(v) { return typeof v === 'number' && Number.isFinite(v) ? v : 0; }\nfunction addDays(isoDate, days) {\n  const d = new Date(isoDate + 'T00:00:00Z');\n  d.setUTCDate(d.getUTCDate() + days);\n  return d.toISOString().slice(0, 10);\n}\nfunction plural(n, one, many) { return n === 1 ? one : many; }\n\n// What a product contains: its allergen fields, plus anything the ingredients, the name, the flavor\n// notes or the chocolate type point to (reported as a mismatch for a person to fix).\nfunction describeProduct(rec) {\n  const f = rec.fields || {};\n  const contains = list(f['Contains Allergens']);\n  const traces = list(f['May Contain Traces']);\n  const labels = list(f['Diet Labels']);\n  const ingredients = text(f['Ingredients']);\n  const lower = ingredients.toLowerCase();\n  const name = text(f['Name']);\n  const type = text(f['Chocolate Type']);\n  const notes = list(f['Flavor Notes']);\n  const listed = new Set([...contains, ...traces]);\n  const has = {};\n  const mismatches = [];\n  // The allergen fields are the source of truth; the ingredients, the name, the flavor notes and the\n  // chocolate type can only add an allergen, never remove one.\n  const sources = [['ingredients mention', lower], ['name mentions', name.toLowerCase()]];\n  for (const [allergen, scan] of Object.entries(SCANS)) {\n    let why = '';\n    for (const [where, words] of sources) {\n      const hit = words.replace(scan.ignore, ' ').match(scan.find);\n      if (hit) { why = `the ${where} \"${hit[0]}\"`; break; }\n    }\n    const note = notes.find(n => NOTE_SIGNALS[n] === allergen);\n    if (!why && note) why = `it has the flavor note ${note}`;\n    if (!why && TYPE_SIGNALS[type] === allergen) why = `it is ${type} chocolate`;\n    has[allergen] = listed.has(allergen) || Boolean(why);\n    if (why && !listed.has(allergen)) mismatches.push(`${why} but ${allergen} is not listed`);\n  }\n  const ingredientPart = lower.split(/[.;]/).filter(s => !ADVISORY.test(s)).join('.')\n    .replace(SCANS.Milk.ignore, ' ');\n  const animal = ingredientPart.match(ANIMAL) || name.toLowerCase().replace(SCANS.Milk.ignore, ' ').match(ANIMAL);\n  let vegan = labels.includes('Vegan') && !contains.includes('Milk') && !contains.includes('Eggs');\n  if (vegan && animal) {\n    vegan = false;\n    mismatches.push(`it is labelled Vegan but the ${ingredientPart.match(ANIMAL) ? 'ingredients mention' : 'name mentions'} \"${animal[0]}\"`);\n  } else if (vegan && (notes.includes('Honey') || TYPE_SIGNALS[type])) {\n    vegan = false;\n    mismatches.push(`it is labelled Vegan but ${notes.includes('Honey') ? 'it has the flavor note Honey' : `it is ${type} chocolate`}`);\n  }\n  return {\n    id: rec.id,\n    sku: text(f['SKU']),\n    name,\n    family: text(f['Flavor Family']) || 'Unknown',\n    type: type || 'Unknown',\n    notes,\n    hasIngredients: ingredients.length > 0,\n    has,\n    vegan,\n    mismatches,\n    eligible: f['Status'] === 'Active' && f['Subscription Eligible'] === true && f['Category'] === 'Bar',\n  };\n}\n\n// The first dietary need a product breaks, or null when it suits every need.\nfunction brokenNeed(product, needs) {\n  for (const need of needs) {\n    if (need === 'Nut-Free' && (product.has['Tree Nuts'] || product.has.Peanuts)) return need;\n    if (need === 'Dairy-Free' && product.has.Milk) return need;\n    if (need === 'Gluten-Free' && product.has.Wheat) return need;\n    if (need === 'Vegan' && !product.vegan) return need;\n  }\n  return null;\n}\n\nfunction planBoxes(input) {\n  const ctx = input.ctx;\n  const month = ctx.month;\n  const warnings = [];\n  const notPlanned = [];\n\n  // Products: every bar is read, so a box planned earlier can be checked again even when its bar is no\n  // longer an Active subscription bar (for example after a recall). Only Active, Subscription Eligible\n  // bars go in new boxes. A bar without a SKU, or two records with the same SKU, cannot be told apart in\n  // Box History, so they are left out and reported.\n  const described = input.products.map(describeProduct);\n  const describedById = new Map(described.map(p => [p.id, p]));\n  const rawById = new Map(input.products.map(r => [r.id, r.fields || {}]));\n  const candidates = described.filter(p => p.eligible);\n  const perSku = new Map();\n  for (const p of candidates) perSku.set(p.sku, (perSku.get(p.sku) || 0) + 1);\n  for (const [sku, n] of [...perSku].sort()) {\n    if (!sku) warnings.push(`${n} subscription ${plural(n, 'bar has', 'bars have')} no SKU, so ${plural(n, 'it does', 'they do')} not go in a box until the SKU is filled in.`);\n    else if (n > 1) warnings.push(`${sku}: ${n} product records have this SKU, so none of them goes in a box until the duplicate is removed.`);\n  }\n  const products = candidates.filter(p => p.sku && perSku.get(p.sku) === 1)\n    .sort((a, b) => (a.sku < b.sku ? -1 : 1));\n  const productById = new Map(products.map(p => [p.id, p]));\n  for (const p of products) {\n    for (const m of p.mismatches) warnings.push(`${p.sku}: ${m}. It is kept out of boxes for that need until the record is fixed.`);\n    if (!p.hasIngredients) warnings.push(`${p.sku}: no ingredient list, so it only goes to subscribers without dietary needs.`);\n  }\n\n  // Stock: Released batches made on or before today with best before after the cutoff.\n  const batchesByProduct = new Map();\n  const batchById = new Map();\n  for (const rec of input.batches) {\n    const f = rec.fields || {};\n    const links = list(f['Product']);\n    if (f['Status'] !== 'Released' || links.length !== 1 || !productById.has(links[0])) continue;\n    const producedOn = text(f['Produced On']);\n    const bestBefore = text(f['Best Before']);\n    if (!producedOn || producedOn > ctx.today || !bestBefore || bestBefore <= ctx.shelfLifeCutoff) continue;\n    const reserved = num(f['Quantity Reserved']);\n    const available = Math.max(num(f['Quantity Made']) - reserved - num(f['Quantity Sold']), 0);\n    if (available <= 0) continue;\n    const b = { id: rec.id, code: text(f['Batch Code']) || rec.id, productId: links[0], bestBefore, reserved,\n                reservedNow: reserved, left: available };\n    batchById.set(b.id, b);\n    if (!batchesByProduct.has(b.productId)) batchesByProduct.set(b.productId, []);\n    batchesByProduct.get(b.productId).push(b);\n  }\n  for (const arr of batchesByProduct.values()) {\n    arr.sort((a, b) => (a.bestBefore !== b.bestBefore ? (a.bestBefore < b.bestBefore ? -1 : 1) : (a.code < b.code ? -1 : 1)));\n  }\n  const remaining = new Map(products.map(p => [p.id, (batchesByProduct.get(p.id) || []).reduce((s, b) => s + b.left, 0)]));\n  const initialStock = new Map(remaining);\n\n  // Subscribers: Active only, longest tenure first (Started On, then Subscriber ID).\n  const subs = [];\n  const seenIds = new Set();\n  const active = input.subscribers.filter(r => (r.fields || {})['Status'] === 'Active').map(r => {\n    const f = r.fields;\n    return { id: r.id, subId: text(f['Subscriber ID']), name: text(f['Name']) || '(no name)', plan: text(f['Plan']),\n             startedOn: text(f['Started On']), needs: list(f['Dietary Needs']), dislikes: list(f['Flavor Dislikes']) };\n  }).sort((a, b) => {\n    const sa = a.startedOn || '9999-12-31';\n    const sb = b.startedOn || '9999-12-31';\n    if (sa !== sb) return sa < sb ? -1 : 1;\n    return a.subId < b.subId ? -1 : a.subId > b.subId ? 1 : (a.id < b.id ? -1 : 1);\n  });\n  for (const s of active) {\n    const size = /^(\\d+) Bars?$/.exec(s.plan);\n    const unknown = s.needs.filter(n => !KNOWN_NEEDS.includes(n));\n    if (!s.subId) notPlanned.push({ subscriberId: '(none)', recordId: s.id, name: s.name, reason: 'the record has no Subscriber ID' });\n    else if (seenIds.has(s.subId)) notPlanned.push({ subscriberId: s.subId, recordId: s.id, name: s.name, reason: 'another Active record has the same Subscriber ID' });\n    else if (!size || Number(size[1]) < 1) notPlanned.push({ subscriberId: s.subId, recordId: s.id, name: s.name, reason: s.plan ? `the plan \"${s.plan}\" is not a number of bars` : 'no plan is set' });\n    // One box is written with at most 10 records per request (Airtable's limit), one per bar.\n    else if (Number(size[1]) > 10) notPlanned.push({ subscriberId: s.subId, recordId: s.id, name: s.name, reason: `the plan \"${s.plan}\" has more than 10 bars, which this workflow does not plan` });\n    else if (unknown.length) notPlanned.push({ subscriberId: s.subId, recordId: s.id, name: s.name, reason: `the dietary need ${unknown.map(n => '\"' + n + '\"').join(', ')} has no safety rule yet, so a person must pick these bars` });\n    else {\n      s.planSize = Number(size[1]);\n      s.shipmentId = `BOX-${month}-${s.subId}`;\n      subs.push(s);\n    }\n    if (s.subId) seenIds.add(s.subId);\n  }\n\n  // Earlier boxes: Box History rows plus the Products of earlier Box Shipments (not Cancelled).\n  const monthsBySub = new Map();\n  const add = (subRec, m, productId) => {\n    if (!monthsBySub.has(subRec)) monthsBySub.set(subRec, new Map());\n    const byMonth = monthsBySub.get(subRec);\n    if (!byMonth.has(m)) byMonth.set(m, new Set());\n    if (productId) byMonth.get(m).add(productId);\n  };\n  // The bars of a cancelled box never reached the subscriber, so its Box History rows do not count.\n  const cancelledBoxes = new Set(input.shipments.filter(r => (r.fields || {})['Status'] === 'Cancelled').map(r => r.id));\n  const historyIds = new Set();\n  // Box History rows for this month, per subscriber: bars recorded by a person or by an older process.\n  const recordedThisMonth = new Map();\n  for (const rec of input.history) {\n    const f = rec.fields || {};\n    const m = text(f['Box Month']);\n    if (text(f['History ID'])) historyIds.add(text(f['History ID']));\n    if (list(f['Box Shipment']).some(id => cancelledBoxes.has(id))) continue;\n    if (m === month) {\n      for (const subRec of list(f['Subscriber'])) {\n        if (!recordedThisMonth.has(subRec)) recordedThisMonth.set(subRec, { rows: 0, products: [] });\n        const r = recordedThisMonth.get(subRec);\n        r.rows += 1;\n        r.products.push(...list(f['Product']));\n      }\n      continue;\n    }\n    if (!/^\\d{4}-\\d{2}$/.test(m) || m > month) continue;\n    for (const subRec of list(f['Subscriber'])) for (const pid of list(f['Product'])) add(subRec, m, pid);\n  }\n  const existingBoxes = new Map();\n  for (const rec of input.shipments) {\n    const f = rec.fields || {};\n    const m = text(f['Box Month']);\n    if (m === month) {\n      existingBoxes.set(text(f['Shipment ID']), rec);\n      for (const subRec of list(f['Subscriber'])) existingBoxes.set('sub:' + subRec, rec);\n      continue;\n    }\n    if (!/^\\d{4}-\\d{2}$/.test(m) || m > month || f['Status'] === 'Cancelled') continue;\n    for (const subRec of list(f['Subscriber'])) for (const pid of list(f['Products'])) add(subRec, m, pid);\n  }\n  const lastBoxProducts = s => {\n    const byMonth = monthsBySub.get(s.id);\n    if (!byMonth || ctx.repeatWindow < 1) return { months: [], ids: new Set() };\n    const months = [...byMonth.keys()].sort().reverse().slice(0, ctx.repeatWindow);\n    const ids = new Set();\n    for (const m of months) for (const pid of byMonth.get(m)) ids.add(pid);\n    return { months, ids };\n  };\n\n  // Split subscribers into those that already have a box this month and those that need one.\n  const alreadyPlanned = [];\n  const recordedOnly = [];\n  const repairs = [];\n  const toPlan = [];\n  // A box planned (or recorded) before this run is never changed, but its bars are checked again against the\n  // subscriber's needs today: product data or the needs may have changed since. Every bar that no longer suits\n  // is reported so a person takes it out before packing.\n  const conflicts = [];\n  const recheck = (s, where, productIds, advice) => {\n    for (const pid of [...new Set(productIds)]) {\n      const p = describedById.get(pid);\n      if (!p) {\n        if (s.needs.length) conflicts.push(`${where} has a product that is no longer a bar in Products (record ${pid}), so it cannot be checked against ${s.needs.join(', ')}. ${advice}`);\n        continue;\n      }\n      const need = brokenNeed(p, s.needs);\n      if (need) conflicts.push(`${where} has ${p.sku || pid}, which does not suit ${need}. ${advice}`);\n      else if (s.needs.length && !p.hasIngredients) conflicts.push(`${where} has ${p.sku || pid}, which has no ingredient list to check against ${s.needs.join(', ')}. ${advice}`);\n    }\n  };\n  for (const s of subs) {\n    const existing = existingBoxes.get(s.shipmentId) || existingBoxes.get('sub:' + s.id);\n    if (!existing) {\n      // Bars for this month already in Box History without a Box Shipment: a box was recorded outside this\n      // workflow (this workflow saves the box before its history rows). Never plan a second box on top.\n      const recorded = recordedThisMonth.get(s.id);\n      if (recorded) {\n        recordedOnly.push({ subscriberId: s.subId, name: s.name, bars: recorded.rows });\n        recheck(s, `${s.subId} ${s.name} (${month} bars in Box History)`, recorded.products,\n          'If it has not shipped, take it out by hand; if it has, tell the subscriber.');\n      } else {\n        toPlan.push(s);\n      }\n      continue;\n    }\n    const f = existing.fields || {};\n    alreadyPlanned.push({ shipmentId: text(f['Shipment ID']) || s.shipmentId, subscriberId: s.subId, name: s.name,\n                          fill: text(f['Fill Status']), status: text(f['Status']), reason: text(f['Shortfall Reason']),\n                          planned: num(f['Bars Planned']), packed: num(f['Bars Packed']) });\n    if (f['Status'] === 'Cancelled') continue;\n    recheck(s, `${text(f['Shipment ID']) || s.shipmentId} for ${s.subId} ${s.name}`, list(f['Products']),\n      f['Status'] === 'Shipped' ? 'The box is marked Shipped, so tell the subscriber.' : 'Take it out by hand before packing.');\n    // Box History rows a failed run did not write yet (the next run adds them).\n    const missing = [];\n    for (const pid of list(f['Products'])) {\n      const p = productById.get(pid);\n      if (!p) continue;\n      const hid = `${month} / ${s.subId} / ${p.sku}`;\n      if (!historyIds.has(hid)) missing.push({ 'History ID': hid, 'Subscriber': [s.id], 'Product': [pid], 'Box Month': month });\n    }\n    if (missing.length) repairs.push({ shipmentId: text(f['Shipment ID']) || s.shipmentId, subscriberId: s.subId, boxRecordId: existing.id, history: missing });\n  }\n\n  // Which bars each subscriber could take, ignoring stock: diet, dislikes and the repeat window.\n  const verdict = (s, p, window) => {\n    if (brokenNeed(p, s.needs)) return 'diet';\n    if (s.needs.length && !p.hasIngredients) return 'unverified';\n    if (p.notes.some(n => s.dislikes.includes(n))) return 'dislike';\n    if (window.ids.has(p.id)) return 'repeat';\n    return 'ok';\n  };\n  for (const s of toPlan) {\n    s.window = lastBoxProducts(s);\n    s.verdicts = new Map(products.map(p => [p.id, verdict(s, p, s.window)]));\n    s.need = products.filter(p => s.verdicts.get(p.id) === 'ok' && initialStock.get(p.id) > 0).map(p => p.id);\n    s.tight = s.need.length <= s.planSize;\n  }\n\n  // Allocate in tenure order, reserving stock as we go.\n  const boxes = [];\n  const writes = [];\n  const usedBatches = new Map();\n  toPlan.forEach((s, index) => {\n    const later = toPlan.slice(index + 1).filter(t => t.tight);\n    const demand = pid => later.filter(t => t.need.includes(pid)).length;\n    let pool = products.filter(p => s.verdicts.get(p.id) === 'ok' && remaining.get(p.id) > 0);\n    const picked = [];\n    const families = new Map();\n    const types = new Map();\n    while (picked.length < s.planSize && pool.length) {\n      // Rank: 1. leave alone a bar that a later subscriber with no alternatives needs, when stock is\n      // too short for both; 2. the flavor family with the fewest bars in the box so far; 3. the same\n      // for chocolate type; 4. the most spare stock; 5. SKU, so every run gives the same answer.\n      const scored = pool.map(p => {\n        const d = demand(p.id);\n        const left = remaining.get(p.id);\n        return { p, key: [left <= d ? 1 : 0, families.get(p.family) || 0, types.get(p.type) || 0, -(left - d)] };\n      });\n      scored.sort((a, b) => {\n        for (let i = 0; i < a.key.length; i++) if (a.key[i] !== b.key[i]) return a.key[i] - b.key[i];\n        return a.p.sku < b.p.sku ? -1 : 1;\n      });\n      const best = scored[0].p;\n      picked.push(best);\n      families.set(best.family, (families.get(best.family) || 0) + 1);\n      types.set(best.type, (types.get(best.type) || 0) + 1);\n      remaining.set(best.id, remaining.get(best.id) - 1);\n      pool = pool.filter(p => p.id !== best.id);\n    }\n\n    // One unit per bar from the batch with the earliest best before date.\n    const bars = picked.sort((a, b) => (a.sku < b.sku ? -1 : 1)).map(p => {\n      const batch = batchesByProduct.get(p.id).find(b => b.left > 0);\n      batch.left -= 1;\n      return { product: p, batch };\n    });\n    const reserve = [];\n    const release = [];\n    const touched = new Map();\n    for (const { batch } of bars) touched.set(batch.id, (touched.get(batch.id) || 0) + 1);\n    for (const [bid, units] of touched) {\n      const b = batchById.get(bid);\n      release.push({ id: bid, fields: { 'Quantity Reserved': b.reservedNow } });\n      b.reservedNow += units;\n      reserve.push({ id: bid, fields: { 'Quantity Reserved': b.reservedNow } });\n      usedBatches.set(bid, b);\n    }\n\n    const packed = bars.length;\n    const fill = packed === s.planSize ? 'Full' : packed === 0 ? 'Empty' : 'Partial';\n    const reason = fill === 'Full' ? '' : shortfallReason(s, products, bars, initialStock, remaining, ctx);\n    const header = `Box ${month} for ${s.name} (${s.subId}), ${s.plan} plan.`;\n    const needsLine = `Dietary needs: ${s.needs.length ? s.needs.join(', ') : 'none'}. Dislikes: ${s.dislikes.length ? s.dislikes.join(', ') : 'none'}.`;\n    const lines = bars.map(({ product, batch }, i) => `${i + 1}. ${product.sku}, ${product.name}, batch ${batch.code} (best before ${batch.bestBefore})`);\n    const packingList = [header, needsLine, ...(lines.length ? lines : ['No bars could be planned.']),\n      ...(fill === 'Full' ? [] : [`Short: ${reason}`]),\n      s.needs.length ? 'Every bar was checked against Contains Allergens, May Contain Traces, its ingredients, name, flavor notes and chocolate type.' : ''].filter(Boolean).join('\\n');\n    const fields = {\n      'Shipment ID': s.shipmentId,\n      'Subscriber': [s.id],\n      'Box Month': month,\n      'Packing List': packingList,\n      'Bars Planned': s.planSize,\n      'Bars Packed': packed,\n      'Fill Status': fill,\n      'Status': 'Planned',\n    };\n    if (packed) {\n      fields['Products'] = bars.map(b => b.product.id);\n      fields['Batches'] = [...touched.keys()];\n    }\n    if (reason) fields['Shortfall Reason'] = reason;\n    const batchCodes = [...touched.keys()].map(id => batchById.get(id).code);\n    boxes.push({ shipmentId: s.shipmentId, subscriberId: s.subId, name: s.name, needs: s.needs, planned: s.planSize, packed, fill, reason,\n                 skus: bars.map(b => b.product.sku), batches: batchCodes });\n    writes.push({\n      kind: 'new', shipmentId: s.shipmentId, subscriberId: s.subId, reserve, release, releaseNote: batchCodes.join(', '),\n      box: fields, boxRecordId: null,\n      history: bars.map(b => ({ 'History ID': `${month} / ${s.subId} / ${b.product.sku}`, 'Subscriber': [s.id], 'Product': [b.product.id], 'Box Month': month })),\n    });\n  });\n  for (const r of repairs) writes.push({ kind: 'repair', shipmentId: r.shipmentId, subscriberId: r.subscriberId, reserve: [], release: [], releaseNote: '', box: null, boxRecordId: r.boxRecordId, history: r.history });\n\n  verifyPlan(boxes, writes, products, toPlan, batchById, rawById);\n\n  const soldOut = products.filter(p => initialStock.get(p.id) > 0 && remaining.get(p.id) === 0).map(p => p.sku);\n  return {\n    month, runId: ctx.runId, trigger: ctx.trigger, startedAt: ctx.startedAt, today: ctx.today,\n    shipDate: ctx.shipDate, shelfLifeCutoff: ctx.shelfLifeCutoff, repeatWindow: ctx.repeatWindow,\n    activeSubscribers: active.length, eligibleBars: products.length,\n    boxes, alreadyPlanned, recordedOnly, notPlanned, warnings, soldOut, conflicts,\n    repairRows: repairs.reduce((n, r) => n + r.history.length, 0),\n    barsReserved: boxes.reduce((n, b) => n + b.packed, 0),\n    batchesUsed: usedBatches.size,\n    stockLeft: Object.fromEntries(products.map(p => [p.sku, remaining.get(p.id)])),\n    writes,\n  };\n}\n\n// Why a box is short, counting every subscription bar that was not packed by its first reason.\nfunction shortfallReason(s, products, bars, initialStock, remaining, ctx) {\n  const packedIds = new Set(bars.map(b => b.product.id));\n  const groups = { unverified: [], diet: [], dislike: [], repeat: [], none: [], used: [] };\n  for (const p of products) {\n    if (packedIds.has(p.id)) continue;\n    const v = s.verdicts.get(p.id);\n    if (v !== 'ok') groups[v].push(p.sku);\n    else if (initialStock.get(p.id) > 0) groups.used.push(p.sku);\n    else groups.none.push(p.sku);\n  }\n  const skus = a => ` (${a.join(', ')})`;\n  const parts = [];\n  if (groups.diet.length) parts.push(`${groups.diet.length} not suitable for ${s.needs.join(' and ')}`);\n  if (groups.unverified.length) parts.push(`${groups.unverified.length} with no ingredient list to check${skus(groups.unverified)}`);\n  if (groups.dislike.length) parts.push(`${groups.dislike.length} with a disliked flavor (${s.dislikes.join(', ')})`);\n  if (groups.repeat.length) parts.push(`${groups.repeat.length} in the last ${ctx.repeatWindow === 1 ? 'box' : ctx.repeatWindow + ' boxes'}${skus(groups.repeat)}`);\n  if (groups.none.length) parts.push(`${groups.none.length} out of stock${skus(groups.none)}`);\n  if (groups.used.length) parts.push(`${groups.used.length} used up by longer-standing subscribers${skus(groups.used)}`);\n  const others = products.length - bars.length;\n  return `${bars.length} of ${s.planSize} bars packed. The other ${others} subscription ${plural(others, 'bar', 'bars')}: ${parts.join('; ')}.`;\n}\n\n// A last check before anything is written. It recomputes the rules from the raw plan, so a bug in\n// the allocation above stops the run instead of reaching a subscriber. The allergen part reads the\n// product's own Airtable fields again, so it does not depend on describeProduct either.\nconst LISTED_BREAKS = { 'Nut-Free': ['Tree Nuts', 'Peanuts'], 'Dairy-Free': ['Milk'], 'Gluten-Free': ['Wheat'], 'Vegan': ['Milk', 'Eggs'] };\nfunction verifyPlan(boxes, writes, products, toPlan, batchById, rawById) {\n  const bySku = new Map(products.map(p => [p.sku, p]));\n  const subs = new Map(toPlan.map(s => [s.subId, s]));\n  for (const box of boxes) {\n    const s = subs.get(box.subscriberId);\n    if (new Set(box.skus).size !== box.skus.length) throw new Error(`Safety check failed, ${box.shipmentId} has the same bar twice`);\n    if (box.skus.length > s.planSize) throw new Error(`Safety check failed, ${box.shipmentId} has more bars than the plan`);\n    for (const sku of box.skus) {\n      const p = bySku.get(sku);\n      if (brokenNeed(p, s.needs) || (s.needs.length && !p.hasIngredients)) throw new Error(`Safety check failed, ${sku} does not suit ${s.subId} (${s.needs.join(', ')})`);\n      if (s.window.ids.has(p.id)) throw new Error(`Safety check failed, ${sku} was in a recent box of ${s.subId}`);\n      const raw = rawById.get(p.id) || {};\n      const contains = list(raw['Contains Allergens']);\n      const listed = new Set([...contains, ...list(raw['May Contain Traces'])]);\n      for (const need of s.needs) {\n        const breaks = need === 'Vegan' ? LISTED_BREAKS.Vegan.filter(a => contains.includes(a)) : (LISTED_BREAKS[need] || []).filter(a => listed.has(a));\n        if (breaks.length || (need === 'Vegan' && !list(raw['Diet Labels']).includes('Vegan')) || !text(raw['Ingredients'])) {\n          throw new Error(`Safety check failed, ${sku} does not suit ${s.subId} (${need})`);\n        }\n      }\n    }\n  }\n  for (const b of batchById.values()) {\n    if (b.left < 0) throw new Error(`Safety check failed, batch ${b.code} would be over-reserved`);\n  }\n  for (const w of writes) {\n    if (w.reserve.length > 10 || w.history.length > 10) throw new Error(`Safety check failed, ${w.shipmentId} needs more than 10 records in one write`);\n  }\n}\n\n// ---- n8n glue: every read node gives one item per page. A problem never throws here: the run goes to\n// the failure path, which closes its Sync Log row and raises the alert.\nlet plan;\ntry {\n  const ctx = $('Start: Curation Run').first().json;\n  // A read that stopped at the page limit would hide records (an earlier box, a batch), so it stops the run.\n  const records = name => {\n    const pages = $(name).all().map(i => i.json || {});\n    if (pages.length && pages[pages.length - 1].offset) {\n      throw new Error(`${name.replace('Airtable: List ', '')} has more records than one run reads. Raise maxRequests on its read node, then run again.`);\n    }\n    return pages.flatMap(p => p.records || []);\n  };\n  plan = planBoxes({\n    ctx,\n    subscribers: records('Airtable: List Subscribers'),\n    products: records('Airtable: List Products'),\n    batches: records('Airtable: List Batches'),\n    history: records('Airtable: List Box History'),\n    shipments: records('Airtable: List Box Shipments'),\n  });\n} catch (e) {\n  return [{ json: { failed: true, saved: 0, message: `The plan was not made, no box or stock was changed. ${String((e && e.message) || e)}` } }];\n}\nreturn [{ json: Object.assign({ failed: false }, plan) }];\n"
+      }
+    },
+    {
+      "id": "a1698b4c-d658-5c72-9c20-d3ce0c28e6b8",
+      "name": "IF: Plan Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        4980,
+        340
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "5f5f7d18-0c45-565b-9ba8-a0cdc427c827",
+              "leftValue": "={{ $json.failed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "38622a6d-2d1a-5efc-9539-b0fad7df1056",
+      "name": "IF: Nothing To Write?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        5180,
+        340
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "bc493ad9-ab8c-5fe4-893c-2b13fe1cae67",
+              "leftValue": "={{ $json.writes.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "6dd86ea9-37c8-5345-9529-d040be120384",
+      "name": "Code: One Item Per Box",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        1240
+      ],
+      "parameters": {
+        "jsCode": "// One item per box, so each pass writes one box and a retry can never repeat another box's writes.\nconst writes = $input.first().json.writes;\nreturn writes.map((w, i) => ({ json: Object.assign({}, w, { position: i + 1, total: writes.length }), pairedItem: { item: 0 } }));\n"
+      }
+    },
+    {
+      "id": "c8f8618a-eef7-5beb-9e4e-cc8b85161f85",
+      "name": "Loop: Boxes",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1640,
+        1240
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      }
+    },
+    {
+      "id": "114e20d1-d01f-5b5a-abea-e50d40cd957c",
+      "name": "Wait: Write Penalty",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1640,
+        1660
+      ],
+      "parameters": {
+        "amount": 31,
+        "unit": "seconds"
+      },
+      "webhookId": "d57ef792-98df-586f-8885-5b108a191f0a"
+    },
+    {
+      "id": "b24f138e-0de1-5326-bc02-b6e6cc09e327",
+      "name": "IF: Has Stock To Reserve?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1840,
+        1240
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "6a076aa7-7474-5a25-9150-1e172547b4a9",
+              "leftValue": "={{ $json.reserve.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "10ce7b51-65ae-5204-a497-a3653653821d",
+      "name": "Wait: Before Reserve",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2040,
+        1060
+      ],
+      "parameters": {
+        "amount": 0.5,
+        "unit": "seconds"
+      },
+      "webhookId": "3ca10bb1-ebad-5d6a-b6e0-2a0820c93de8"
+    },
+    {
+      "id": "b0da735e-9af3-5e2c-a6ee-6ee34cd83d97",
+      "name": "Airtable: Reserve Stock",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2240,
+        1060
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Production%20Batches",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ records: $json.reserve, typecast: false }) }}",
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "4f827f95-25b1-5225-9a4c-71c301ce85fc",
+      "name": "Code: Stock Reserved",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        1060
+      ],
+      "parameters": {
+        "jsCode": "// Airtable answers with the updated batches; carry the box on to the next step.\nreturn { json: $('Loop: Boxes').item.json };\n",
+        "mode": "runOnceForEachItem"
+      }
+    },
+    {
+      "id": "83699f80-ead5-5fbb-bbc1-39d4b69fa476",
+      "name": "IF: Reserve Rate Limited?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        1460
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "f6140524-9989-5ea7-b39a-b33d7ec103ae",
+              "leftValue": "={{ Number($json.error && ($json.error.status || $json.error.statusCode || ($json.error.response && $json.error.response.status))) }}",
+              "rightValue": 429,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "87eac088-b445-535c-9254-3385de66b6cf",
+              "leftValue": "={{ $runIndex }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "1f918d4f-cf97-5e8c-89bc-d2457726c568",
+      "name": "Code: Reserve Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2440,
+        1460
+      ],
+      "parameters": {
+        "jsCode": "// The stock for one box could not be reserved. The answer may have been lost after\n// Airtable saved it, so the batches are set back to their numbers from the start of the run. Explain what is saved and what to do, without ': ' (n8n keeps only the text after\n// the last ': ' of a Code node error).\nconst statusOf = err => (err && (err.statusCode || err.status || (err.response && err.response.status))) || 'unknown';\nconst reasonOf = err => {\n  if (!err) return 'no answer';\n  const status = statusOf(err);\n  const found = JSON.stringify(err).match(/type\\\\*\"\\s*:\\s*\\\\*\"([A-Z][A-Z_]+)/);\n  // n8n drops the response body of a 429 when there is no pagination, so say what the status means\n  return `HTTP ${status}${found ? ' ' + found[1] : Number(status) === 429 ? ' rate limit' : ''}`;\n};\nconst limitedBy = err => Number(statusOf(err)) === 429;\nconst box = $('Loop: Boxes').item.json;\nconst month = $('Start: Curation Run').first().json.month;\nconst before = box.position - 1;\nconst newSaved = $('Code: Plan Boxes').first().json.writes.slice(0, before).filter(w => w.kind === 'new').length;\nconst done = `${before} ${before === 1 ? 'box' : 'boxes'} before it ${before === 1 ? 'is' : 'are'} saved.`;\nconst again = `Run again for ${month} to carry on, saved boxes are skipped.`;\nreturn { json: Object.assign({}, box, { stage: 'reserve', reason: reasonOf($json.error), rateLimited: limitedBy($json.error) }) };\n",
+        "mode": "runOnceForEachItem"
+      }
+    },
+    {
+      "id": "3cd984e7-c307-5d56-8fff-0b6fb3ffece4",
+      "name": "IF: New Box?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2640,
+        1240
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "5476391d-29d2-57fc-81d4-c8880272858e",
+              "leftValue": "={{ $json.kind }}",
+              "rightValue": "new",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c1eb95cb-e7a6-5e2f-9a89-7e0283e76161",
+      "name": "Wait: Before Box",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2840,
+        1060
+      ],
+      "parameters": {
+        "amount": 0.5,
+        "unit": "seconds"
+      },
+      "webhookId": "bef01a33-568a-5f86-aeeb-809553514ad4"
+    },
+    {
+      "id": "9f314a06-ddc4-5cdc-acaf-bf7b0aabefcf",
+      "name": "Airtable: Upsert Box",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3040,
+        1060
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Box%20Shipments",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ performUpsert: { fieldsToMergeOn: ['Shipment ID'] }, records: [{ fields: $json.box }], typecast: false }) }}",
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "e2f41649-eb31-5e93-957e-f72a3c72c38f",
+      "name": "Code: Box Saved",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3240,
+        1060
+      ],
+      "parameters": {
+        "jsCode": "// Keep the box record id for the Box History links. Airtable always answers an upsert with the record;\n// if it ever did not, the history write below fails and the run stops through the failure path.\nconst box = $('Loop: Boxes').item.json;\nconst saved = ($json.records || [])[0];\nreturn { json: Object.assign({}, box, { boxRecordId: saved && saved.id ? saved.id : null }) };\n",
+        "mode": "runOnceForEachItem"
+      }
+    },
+    {
+      "id": "2dd4fe35-059d-55b4-9130-368237f97805",
+      "name": "IF: Box Rate Limited?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3040,
+        1460
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "f6140524-9989-5ea7-b39a-b33d7ec103ae",
+              "leftValue": "={{ Number($json.error && ($json.error.status || $json.error.statusCode || ($json.error.response && $json.error.response.status))) }}",
+              "rightValue": 429,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "87eac088-b445-535c-9254-3385de66b6cf",
+              "leftValue": "={{ $runIndex }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "1a29c2bc-984c-54c9-92f5-21191814c2c0",
+      "name": "Code: Box Not Saved",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3240,
+        1460
+      ],
+      "parameters": {
+        "jsCode": "// One box could not be saved. Before its stock is given back, the next nodes ask\n// Airtable whether it was saved after all (an answer lost after the write). Explain what is saved and what to do, without ': ' (n8n keeps only the text after\n// the last ': ' of a Code node error).\nconst statusOf = err => (err && (err.statusCode || err.status || (err.response && err.response.status))) || 'unknown';\nconst reasonOf = err => {\n  if (!err) return 'no answer';\n  const status = statusOf(err);\n  const found = JSON.stringify(err).match(/type\\\\*\"\\s*:\\s*\\\\*\"([A-Z][A-Z_]+)/);\n  // n8n drops the response body of a 429 when there is no pagination, so say what the status means\n  return `HTTP ${status}${found ? ' ' + found[1] : Number(status) === 429 ? ' rate limit' : ''}`;\n};\nconst limitedBy = err => Number(statusOf(err)) === 429;\nconst box = $('Loop: Boxes').item.json;\nconst month = $('Start: Curation Run').first().json.month;\nconst before = box.position - 1;\nconst newSaved = $('Code: Plan Boxes').first().json.writes.slice(0, before).filter(w => w.kind === 'new').length;\nconst done = `${before} ${before === 1 ? 'box' : 'boxes'} before it ${before === 1 ? 'is' : 'are'} saved.`;\nconst again = `Run again for ${month} to carry on, saved boxes are skipped.`;\nreturn { json: Object.assign({}, box, { stage: 'box', reason: reasonOf($json.error), rateLimited: limitedBy($json.error) }) };\n",
+        "mode": "runOnceForEachItem"
+      }
+    },
+    {
+      "id": "2e8c10cd-741e-52eb-b4a2-8a589ce7afa0",
+      "name": "IF: History To Write?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3440,
+        1240
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "0d02a773-101e-53d8-9dae-7761110f7041",
+              "leftValue": "={{ $json.history.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "128ae2c7-dd72-5c79-84ed-0efd1c59ff4a",
+      "name": "Wait: Before History",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3640,
+        1060
+      ],
+      "parameters": {
+        "amount": 0.5,
+        "unit": "seconds"
+      },
+      "webhookId": "d2a4cb41-69e5-5fa4-997d-a70bec23524d"
+    },
+    {
+      "id": "2c85fd18-22e4-5921-98c9-38cd3f51fc35",
+      "name": "Airtable: Upsert History",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3840,
+        1060
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Box%20History",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ performUpsert: { fieldsToMergeOn: ['History ID'] }, records: $json.history.map(h => ({ fields: Object.assign({}, h, { 'Box Shipment': [$json.boxRecordId] }) })), typecast: false }) }}",
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "06569c50-2709-5301-9d90-6bb59344e8e0",
+      "name": "IF: History Rate Limited?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        4040,
+        1240
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "f6140524-9989-5ea7-b39a-b33d7ec103ae",
+              "leftValue": "={{ Number($json.error && ($json.error.status || $json.error.statusCode || ($json.error.response && $json.error.response.status))) }}",
+              "rightValue": 429,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "87eac088-b445-535c-9254-3385de66b6cf",
+              "leftValue": "={{ $runIndex }}",
+              "rightValue": 2,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "920e8846-6bbb-5d6f-aff3-648c4a41f16e",
+      "name": "Code: History Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4240,
+        1240
+      ],
+      "parameters": {
+        "jsCode": "// The Box History rows of one box could not be saved. Explain what is saved and what to do, without ': ' (n8n keeps only the text after\n// the last ': ' of a Code node error).\nconst statusOf = err => (err && (err.statusCode || err.status || (err.response && err.response.status))) || 'unknown';\nconst reasonOf = err => {\n  if (!err) return 'no answer';\n  const status = statusOf(err);\n  const found = JSON.stringify(err).match(/type\\\\*\"\\s*:\\s*\\\\*\"([A-Z][A-Z_]+)/);\n  // n8n drops the response body of a 429 when there is no pagination, so say what the status means\n  return `HTTP ${status}${found ? ' ' + found[1] : Number(status) === 429 ? ' rate limit' : ''}`;\n};\nconst limitedBy = err => Number(statusOf(err)) === 429;\nconst box = $('Loop: Boxes').item.json;\nconst month = $('Start: Curation Run').first().json.month;\nconst before = box.position - 1;\nconst newSaved = $('Code: Plan Boxes').first().json.writes.slice(0, before).filter(w => w.kind === 'new').length;\nconst done = `${before} ${before === 1 ? 'box' : 'boxes'} before it ${before === 1 ? 'is' : 'are'} saved.`;\nconst again = `Run again for ${month} to carry on, saved boxes are skipped.`;\nreturn { json: { message: `Box History rows for ${box.shipmentId} could not be saved (${reasonOf($json.error)}). The box and its stock reservation are saved, and the next run adds the missing rows. ${done} ${again}`, saved: newSaved + (box.kind === 'new' ? 1 : 0), rateLimited: limitedBy($json.error) } };\n",
+        "mode": "runOnceForEachItem"
+      }
+    },
+    {
+      "id": "5a348510-b521-5ee0-aebd-69baf10fe142",
+      "name": "Wait: Before Box Check",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3240,
+        1660
+      ],
+      "parameters": {
+        "amount": "={{ $json.rateLimited ? 31 : 0.5 }}",
+        "unit": "seconds"
+      },
+      "webhookId": "fa66f932-deff-5097-8fe7-9ecc90249e24"
+    },
+    {
+      "id": "d252ae1a-a140-5b5c-8933-d5f3006d7c7e",
+      "name": "Airtable: Find Box",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3440,
+        1660
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Box%20Shipments/listRecords",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ pageSize: 10, filterByFormula: '{Shipment ID} = ' + JSON.stringify($json.shipmentId), fields: ['Shipment ID', 'Box Month'] }) }}",
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "e945a45a-d2ac-5959-9f8c-e2c63e04c24f",
+      "name": "Code: Box Check",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3640,
+        1660
+      ],
+      "parameters": {
+        "jsCode": "// Is the box in Airtable after all? Then its answer was lost and the pass carries on with its history rows.\nconst box = $('Wait: Before Box Check').item.json;\nconst found = ($json.records || []).find(r => (r.fields || {})['Shipment ID'] === box.shipmentId);\nreturn { json: Object.assign({}, box, { checked: true, rateLimited: false, savedAfterAll: Boolean(found), boxRecordId: found ? found.id : null }) };\n",
+        "mode": "runOnceForEachItem"
+      }
+    },
+    {
+      "id": "a5263c52-055c-5cf3-9a72-1473009557ee",
+      "name": "IF: Box Saved After All?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3840,
+        1660
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "7157d048-ba47-58f6-b5a6-e5649ba2e430",
+              "leftValue": "={{ $json.savedAfterAll }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "40d81678-f7d4-5705-91f2-378471fbdf5b",
+      "name": "IF: Stock To Undo?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        4040,
+        1660
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "6a076aa7-7474-5a25-9150-1e172547b4a9",
+              "leftValue": "={{ $json.reserve.length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "5511bedd-d4da-595f-8b07-ae5563f8c6a4",
+      "name": "Wait: Before Undo",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4240,
+        1660
+      ],
+      "parameters": {
+        "amount": "={{ $json.rateLimited ? 31 : 0.5 }}",
+        "unit": "seconds"
+      },
+      "webhookId": "c64213c9-2513-5ed6-baf7-db036b14b5b3"
+    },
+    {
+      "id": "0d7c35be-e479-5e85-8f25-315d68c12d1f",
+      "name": "Airtable: Release Stock",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4440,
+        1660
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Production%20Batches",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ records: $json.release, typecast: false }) }}",
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "c83c654e-dc2d-5f21-b384-e0989117d704",
+      "name": "Code: Write Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4640,
+        1460
+      ],
+      "parameters": {
+        "jsCode": "// A box could not be reserved or saved. Explain what is saved and what to do, without ': ' (n8n keeps only the text after\n// the last ': ' of a Code node error).\nconst statusOf = err => (err && (err.statusCode || err.status || (err.response && err.response.status))) || 'unknown';\nconst reasonOf = err => {\n  if (!err) return 'no answer';\n  const status = statusOf(err);\n  const found = JSON.stringify(err).match(/type\\\\*\"\\s*:\\s*\\\\*\"([A-Z][A-Z_]+)/);\n  // n8n drops the response body of a 429 when there is no pagination, so say what the status means\n  return `HTTP ${status}${found ? ' ' + found[1] : Number(status) === 429 ? ' rate limit' : ''}`;\n};\nconst limitedBy = err => Number(statusOf(err)) === 429;\nconst box = $('Loop: Boxes').item.json;\nconst month = $('Start: Curation Run').first().json.month;\nconst before = box.position - 1;\nconst newSaved = $('Code: Plan Boxes').first().json.writes.slice(0, before).filter(w => w.kind === 'new').length;\nconst done = `${before} ${before === 1 ? 'box' : 'boxes'} before it ${before === 1 ? 'is' : 'are'} saved.`;\nconst again = `Run again for ${month} to carry on, saved boxes are skipped.`;\nconst undone = Array.isArray($json.records);\nconst item = undone ? $('Wait: Before Undo').item.json : $json;\nconst fixNote = `Lower Quantity Reserved by 1 on ${item.releaseNote} by hand`;\nlet message;\nif (item.stage === 'reserve') {\n  message = undone\n    ? `Stock could not be reserved for ${item.shipmentId} (${item.reason}). Nothing is saved for this box. ${done} ${again}`\n    : `Stock could not be reserved for ${item.shipmentId} (${item.reason}), and setting its batches back failed too ` +\n      `(${reasonOf(item.error)}). If Quantity Reserved went up on ${item.releaseNote}, lower it by 1 by hand, then run again. ${done}`;\n} else if (!item.reserve.length) {\n  message = `${item.shipmentId} could not be saved (${item.reason}). It held no stock. ${done} ${again}`;\n} else if (!item.checked) {\n  message = `${item.shipmentId} could not be saved (${item.reason}), and Airtable could not be asked whether it was saved after all ` +\n    `(${reasonOf(item.error)}), so its stock stays reserved. If ${item.shipmentId} is not in Box Shipments, ${fixNote.charAt(0).toLowerCase() + fixNote.slice(1)}. Then run again. ${done}`;\n} else if (undone) {\n  message = `${item.shipmentId} could not be saved (${item.reason}). Its stock reservation was undone. ${done} ${again}`;\n} else {\n  message = `${item.shipmentId} could not be saved (${item.reason}) and its stock reservation could not be undone ` +\n    `(${reasonOf(item.error)}). ${fixNote}, then run again. ${done}`;\n}\nreturn { json: { message, saved: newSaved, rateLimited: !undone && Boolean(item.error) && limitedBy(item.error) } };\n",
+        "mode": "runOnceForEachItem"
+      }
+    },
+    {
+      "id": "5452957f-73db-5c3c-8068-9f5d19ab3267",
+      "name": "Code: Failed Run Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4840,
+        1460
+      ],
+      "parameters": {
+        "jsCode": "// The run stops. Its Sync Log row is closed as Failed first, so the next run is not held back by it.\nconst ctx = $('Start: Curation Run').first().json;\nconst f = $input.first().json;\nlet checked = 0;\ntry { checked = $('Code: Plan Boxes').first().json.activeSubscribers || 0; } catch (e) { checked = 0; }\nlet claimed = false;\ntry { claimed = $('Airtable: Claim Run').all().some(i => Array.isArray((i.json || {}).records)); } catch (e) { claimed = false; }\nconst fields = {\n  'Run ID': ctx.runId,\n  'Automation': '04 Subscription Boxes',\n  'Trigger': ctx.trigger,\n  'Started At': ctx.startedAt,\n  'Finished At': new Date().toISOString(),\n  'Status': 'Failed',\n  'Items Checked': checked,\n  'Items Changed': f.saved || 0,\n  'Errors': 1,\n  'Details': f.message,\n};\nconst closeNote = claimed\n  ? ` The Sync Log row ${ctx.runId} could not be closed either, so new curation runs wait for it for up to ${ctx.lockMinutes} minutes. Set its Status by hand to run sooner.`\n  : ' The Sync Log row for this run could not be written either.';\nreturn [{ json: { fields, message: f.message, closeNote, rateLimited: Boolean(f.rateLimited) } }];\n"
+      }
+    },
+    {
+      "id": "4975a7f2-cdac-5ffb-b8eb-3b0178b0a374",
+      "name": "Wait: Before Failed Log",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        5040,
+        1460
+      ],
+      "parameters": {
+        "amount": "={{ $json.rateLimited ? 31 : 0.5 }}",
+        "unit": "seconds"
+      },
+      "webhookId": "f1d79fee-a647-570b-93d2-644486abf3b9"
+    },
+    {
+      "id": "e6d1abce-bcca-5f59-9aad-b5373fc2336e",
+      "name": "Airtable: Log Failed Run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5240,
+        1460
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Sync%20Log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ performUpsert: { fieldsToMergeOn: ['Run ID'] }, records: [{ fields: $json.fields }], typecast: false }) }}",
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "7c9f3808-6ed7-535b-aa02-dce2093898f1",
+      "name": "Stop: Run Failed",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        5440,
+        1460
+      ],
+      "parameters": {
+        "errorMessage": "={{ $('Code: Failed Run Fields').item.json.message + ($json.error ? $('Code: Failed Run Fields').item.json.closeNote : '') }}"
+      }
+    },
+    {
+      "id": "970538de-83f9-5af8-8d85-cb9d5563b97f",
+      "name": "Code: Build Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5440,
+        340
+      ],
+      "parameters": {
+        "jsCode": "// The Slack summary and the Sync Log text, from the plan (every write succeeded to get here).\nconst plan = $('Code: Plan Boxes').first().json;\nconst count = fill => plan.boxes.filter(b => b.fill === fill).length;\nconst full = count('Full');\nconst partial = count('Partial');\nconst empty = count('Empty');\nconst short = plan.boxes.filter(b => b.fill !== 'Full');\n// Boxes planned by an earlier run of this month that are not full are listed again: that run may have\n// stopped before its summary went out.\nconst shortBefore = plan.alreadyPlanned.filter(b => b.fill && b.fill !== 'Full' && b.status !== 'Cancelled');\nconst notFullBefore = shortBefore.length;\nconst n = (k, one, many) => `${k} ${k === 1 ? one : many}`;\nconst lines = [`*Subscription boxes for ${plan.month}* (${plan.trigger}, run ${plan.runId})`];\nlines.push(`${n(plan.activeSubscribers, 'active subscriber', 'active subscribers')}. ` +\n  (plan.boxes.length\n    ? `Planned this run: ${n(plan.boxes.length, 'box', 'boxes')} (${full} full, ${partial} partial, ${empty} empty), ` +\n      `${n(plan.barsReserved, 'bar', 'bars')} reserved from ${n(plan.batchesUsed, 'batch', 'batches')}.`\n    : 'Nothing new to plan this run, no stock was reserved.') +\n  ` Planned before: ${n(plan.alreadyPlanned.length, 'box', 'boxes')}` +\n  (notFullBefore ? ` (${notFullBefore} not full).` : '.'));\n// Every subscriber is listed; only a message that would pass Slack's 40,000 characters is cut short.\nlet room = 35000;\nconst section = (title, items) => {\n  if (!items.length) return;\n  lines.push('', `*${title} (${items.length})*`);\n  let shown = 0;\n  for (const t of items) {\n    if (t.length + 3 > room) break;\n    lines.push(`• ${t}`);\n    room -= t.length + 3;\n    shown += 1;\n  }\n  if (shown < items.length) lines.push(`• and ${items.length - shown} more, see Box Shipments and Subscribers in Airtable`);\n};\n// Allergen safety first: a box planned before whose bar no longer suits the subscriber's needs today.\nsection('Bars to take out before packing', plan.conflicts);\nif (plan.conflicts.length) lines.push('This run did not change these boxes. A bar taken out still holds its Quantity Reserved, so lower it by 1 on that batch.');\nsection('Not fully filled', short.map(b => `${b.subscriberId} ${b.name}, ${b.reason}`).concat(\n  shortBefore.map(b => `${b.subscriberId} ${b.name}, ${b.reason || `${b.packed} of ${b.planned} bars packed`} (planned by an earlier run)`)));\nsection('Not planned, the subscriber record needs a person', plan.notPlanned.map(p => `${p.subscriberId} ${p.name}, ${p.reason}.`));\nsection(`Bars for ${plan.month} already in Box History without a Box Shipment, so no new box`,\n  plan.recordedOnly.map(r => `${r.subscriberId} ${r.name} (${n(r.bars, 'bar', 'bars')})`));\nif (plan.recordedOnly.length) {\n  lines.push(`These boxes were recorded outside this workflow. To plan one here instead, delete that subscriber's Box History rows for ${plan.month} and run again.`);\n}\nsection('Product data to check', plan.warnings);\nif (plan.soldOut.length) lines.push('', `*Used up by this run:* ${plan.soldOut.join(', ')}`);\nif (plan.repairRows) lines.push('', `Added ${n(plan.repairRows, 'missing Box History row', 'missing Box History rows')} for boxes planned before.`);\nconst text = lines.join('\\n');\nconst clean = !short.length && !shortBefore.length && !plan.notPlanned.length && !plan.warnings.length\n  && !plan.recordedOnly.length && !plan.conflicts.length;\nreturn [{ json: { text, status: clean ? 'Success' : 'Partial' } }];\n"
+      }
+    },
+    {
+      "id": "e2362d9c-9c94-582a-b807-f707f5a8ad8e",
+      "name": "Slack: Post Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5640,
+        340
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SLACK_PACKING_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: $json.text }) }}",
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "97cf1755-3d53-567c-8f7c-5510a2fdabe4",
+      "name": "Code: Sync Log Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5840,
+        340
+      ],
+      "parameters": {
+        "jsCode": "// The run's Sync Log row gets its counts and a Finished At, which also lets the next run start.\n// Slack's answer (or error) is the input.\nconst plan = $('Code: Plan Boxes').first().json;\nconst summary = $('Code: Build Summary').first().json;\nconst slackError = $input.first().json.error;\nconst fields = {\n  'Run ID': plan.runId,\n  'Automation': '04 Subscription Boxes',\n  'Trigger': plan.trigger,\n  'Started At': plan.startedAt,\n  'Finished At': new Date().toISOString(),\n  // the boxes are saved but the packing team was not told, so the run is not a full success\n  'Status': slackError ? 'Partial' : summary.status,\n  'Items Checked': plan.activeSubscribers,\n  'Items Changed': plan.boxes.length,\n  'Errors': slackError ? 1 : 0,\n  'Details': summary.text.replace(/\\*/g, '') + (slackError ? '\\n\\nThe Slack summary could not be posted.' : ''),\n};\nconst status = slackError ? (slackError.statusCode || slackError.status || 'unknown') : null;\nreturn [{ json: { fields, slackFailed: Boolean(slackError), slackStatus: status } }];\n"
+      }
+    },
+    {
+      "id": "849eb483-56eb-597b-8fb0-ee88e12e8cf0",
+      "name": "Wait: Before Sync Log",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        6040,
+        340
+      ],
+      "parameters": {
+        "amount": 0.5,
+        "unit": "seconds"
+      },
+      "webhookId": "48c3a305-a927-505a-a4ad-d034a45593f2"
+    },
+    {
+      "id": "d4bcfb2d-01bf-591e-bb9a-2bf05b9998e5",
+      "name": "Airtable: Write Sync Log",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        6240,
+        340
+      ],
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://api.airtable.com/v0/{{ $env.AIRTABLE_BASE_ID }}/Sync%20Log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.AIRTABLE_TOKEN }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ performUpsert: { fieldsToMergeOn: ['Run ID'] }, records: [{ fields: $json.fields }], typecast: false }) }}",
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "f511f869-79d4-57ca-a73d-a3bf72e1815c",
+      "name": "IF: Slack Failed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        6440,
+        340
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "36c24d83-7188-5f90-ba63-4312f3e56d2b",
+              "leftValue": "={{ $('Code: Sync Log Fields').item.json.slackFailed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "b220f67b-a1d2-5a4f-a234-2f8333ef8fd1",
+      "name": "Stop: Slack Failed",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        6640,
+        340
+      ],
+      "parameters": {
+        "errorMessage": "={{ 'The Slack summary for ' + $('Code: Plan Boxes').first().json.month + ' could not be posted (HTTP ' + $('Code: Sync Log Fields').item.json.slackStatus + '). The boxes and the Sync Log row are saved. Check SLACK_PACKING_WEBHOOK_URL.' }}"
+      }
+    },
+    {
+      "id": "bd8d8e13-c57f-5ffb-9dac-f1455fd85b59",
+      "name": "Stop: Sync Log Failed",
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        6440,
+        540
+      ],
+      "parameters": {
+        "errorMessage": "={{ 'The Sync Log row ' + $('Code: Plan Boxes').first().json.runId + ' could not be closed (HTTP ' + ($json.error.statusCode || $json.error.status || 'unknown') + '). The boxes are saved' + ($('Code: Sync Log Fields').item.json.slackFailed ? ' but the Slack summary failed too.' : ' and the Slack summary was posted.') + ' New curation runs wait for this row for up to ' + $('Start: Curation Run').first().json.lockMinutes + ' minutes. Set its Status by hand to run sooner.' }}"
+      }
+    }
+  ],
+  "connections": {
+    "Schedule: Monthly On The 20th": {
+      "main": [
+        [
+          {
+            "node": "Code: Scheduled Run Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Scheduled Run Settings": {
+      "main": [
+        [
+          {
+            "node": "IF: Scheduled Settings OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Scheduled Settings OK?": {
+      "main": [
+        [
+          {
+            "node": "Start: Curation Run",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop: Bad Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook: Run Now": {
+      "main": [
+        [
+          {
+            "node": "IF: Run Now Secret OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Run Now Secret OK?": {
+      "main": [
+        [
+          {
+            "node": "Code: Run Now Settings",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond: 401 Unauthorized",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Run Now Settings": {
+      "main": [
+        [
+          {
+            "node": "IF: Run Now Settings OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Run Now Settings OK?": {
+      "main": [
+        [
+          {
+            "node": "Respond: 202 Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond: Request Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond: 202 Accepted": {
+      "main": [
+        [
+          {
+            "node": "Start: Curation Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond: Request Error": {
+      "main": [
+        [
+          {
+            "node": "IF: Settings Problem?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Settings Problem?": {
+      "main": [
+        [
+          {
+            "node": "Stop: Bad Run Now Settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start: Curation Run": {
+      "main": [
+        [
+          {
+            "node": "Wait: Before Claim",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Before Claim": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Claim Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Claim Run": {
+      "main": [
+        [
+          {
+            "node": "Wait: Lock Settle",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Read Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Lock Settle": {
+      "main": [
+        [
+          {
+            "node": "Airtable: List Open Runs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: List Open Runs": {
+      "main": [
+        [
+          {
+            "node": "Code: Check Open Runs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Read Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Check Open Runs": {
+      "main": [
+        [
+          {
+            "node": "IF: Clear To Run?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Clear To Run?": {
+      "main": [
+        [
+          {
+            "node": "Wait: Pace Read 1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Failed Run Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Pace Read 1": {
+      "main": [
+        [
+          {
+            "node": "Airtable: List Subscribers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: List Subscribers": {
+      "main": [
+        [
+          {
+            "node": "Wait: Pace Read 2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Read Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Pace Read 2": {
+      "main": [
+        [
+          {
+            "node": "Airtable: List Products",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: List Products": {
+      "main": [
+        [
+          {
+            "node": "Wait: Pace Read 3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Read Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Pace Read 3": {
+      "main": [
+        [
+          {
+            "node": "Airtable: List Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: List Batches": {
+      "main": [
+        [
+          {
+            "node": "Wait: Pace Read 4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Read Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Pace Read 4": {
+      "main": [
+        [
+          {
+            "node": "Airtable: List Box History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: List Box History": {
+      "main": [
+        [
+          {
+            "node": "Wait: Pace Read 5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Read Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Pace Read 5": {
+      "main": [
+        [
+          {
+            "node": "Airtable: List Box Shipments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: List Box Shipments": {
+      "main": [
+        [
+          {
+            "node": "Code: Plan Boxes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Read Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Read Failed": {
+      "main": [
+        [
+          {
+            "node": "IF: Wait Out Read Limit?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Wait Out Read Limit?": {
+      "main": [
+        [
+          {
+            "node": "Wait: Read Penalty",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Failed Run Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Read Penalty": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Claim Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Plan Boxes": {
+      "main": [
+        [
+          {
+            "node": "IF: Plan Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Plan Failed?": {
+      "main": [
+        [
+          {
+            "node": "Code: Failed Run Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: Nothing To Write?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Nothing To Write?": {
+      "main": [
+        [
+          {
+            "node": "Code: Build Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: One Item Per Box",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: One Item Per Box": {
+      "main": [
+        [
+          {
+            "node": "Loop: Boxes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop: Boxes": {
+      "main": [
+        [
+          {
+            "node": "Code: Build Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: Has Stock To Reserve?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Write Penalty": {
+      "main": [
+        [
+          {
+            "node": "IF: Has Stock To Reserve?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Has Stock To Reserve?": {
+      "main": [
+        [
+          {
+            "node": "Wait: Before Reserve",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: New Box?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Before Reserve": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Reserve Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Reserve Stock": {
+      "main": [
+        [
+          {
+            "node": "Code: Stock Reserved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: Reserve Rate Limited?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Reserve Rate Limited?": {
+      "main": [
+        [
+          {
+            "node": "Wait: Write Penalty",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Reserve Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Stock Reserved": {
+      "main": [
+        [
+          {
+            "node": "IF: New Box?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: New Box?": {
+      "main": [
+        [
+          {
+            "node": "Wait: Before Box",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: History To Write?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Before Box": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Upsert Box",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Upsert Box": {
+      "main": [
+        [
+          {
+            "node": "Code: Box Saved",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: Box Rate Limited?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Box Rate Limited?": {
+      "main": [
+        [
+          {
+            "node": "Wait: Write Penalty",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Box Not Saved",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Box Saved": {
+      "main": [
+        [
+          {
+            "node": "IF: History To Write?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: History To Write?": {
+      "main": [
+        [
+          {
+            "node": "Wait: Before History",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop: Boxes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Before History": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Upsert History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Upsert History": {
+      "main": [
+        [
+          {
+            "node": "Loop: Boxes",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: History Rate Limited?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: History Rate Limited?": {
+      "main": [
+        [
+          {
+            "node": "Wait: Write Penalty",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: History Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: History Failed": {
+      "main": [
+        [
+          {
+            "node": "Code: Failed Run Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Box Not Saved": {
+      "main": [
+        [
+          {
+            "node": "Wait: Before Box Check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Before Box Check": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Find Box",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Find Box": {
+      "main": [
+        [
+          {
+            "node": "Code: Box Check",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Write Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Box Check": {
+      "main": [
+        [
+          {
+            "node": "IF: Box Saved After All?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Box Saved After All?": {
+      "main": [
+        [
+          {
+            "node": "IF: History To Write?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "IF: Stock To Undo?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Stock To Undo?": {
+      "main": [
+        [
+          {
+            "node": "Wait: Before Undo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Write Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Reserve Failed": {
+      "main": [
+        [
+          {
+            "node": "Wait: Before Undo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Before Undo": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Release Stock",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Release Stock": {
+      "main": [
+        [
+          {
+            "node": "Code: Write Failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Write Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Write Failed": {
+      "main": [
+        [
+          {
+            "node": "Code: Failed Run Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Failed Run Fields": {
+      "main": [
+        [
+          {
+            "node": "Wait: Before Failed Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Before Failed Log": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Log Failed Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Log Failed Run": {
+      "main": [
+        [
+          {
+            "node": "Stop: Run Failed",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop: Run Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Build Summary": {
+      "main": [
+        [
+          {
+            "node": "Slack: Post Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack: Post Summary": {
+      "main": [
+        [
+          {
+            "node": "Code: Sync Log Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code: Sync Log Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code: Sync Log Fields": {
+      "main": [
+        [
+          {
+            "node": "Wait: Before Sync Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait: Before Sync Log": {
+      "main": [
+        [
+          {
+            "node": "Airtable: Write Sync Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Airtable: Write Sync Log": {
+      "main": [
+        [
+          {
+            "node": "IF: Slack Failed?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Stop: Sync Log Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF: Slack Failed?": {
+      "main": [
+        [
+          {
+            "node": "Stop: Slack Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

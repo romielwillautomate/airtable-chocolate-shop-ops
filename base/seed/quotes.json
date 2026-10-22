@@ -1,0 +1,115 @@
+{
+  "table": "Quotes",
+  "records": [
+    {
+      "ref": "q41",
+      "fields": {
+        "Quote Number": "Q-2026-0041",
+        "Status": "Sent",
+        "Inquiry ID": "form-7f3a91",
+        "Business Name": "Bluebird Cafe",
+        "Contact Name": "June Park",
+        "Contact Email": "bluebird.cafe@example.com",
+        "Contact Phone": "+15550101031",
+        "Needed By": "2026-11-14",
+        "Inquiry Text": "Hi, we would like 60 classic milk bars and 30 sea salt bars for our counter by mid November.",
+        "Extraction Method": "Claude",
+        "Subtotal": 369.0,
+        "Total": 369.0,
+        "Feasibility": "In Stock",
+        "Feasibility Note": "All items in stock.",
+        "Valid Until": "2026-10-29",
+        "Sent At": "2026-10-15T13:00:00.000Z",
+        "Email Message ID": "1a2b3c4d-0041-4e5f-8a9b-0c1d2e3f4a5b"
+      }
+    },
+    {
+      "ref": "q42",
+      "fields": {
+        "Quote Number": "Q-2026-0042",
+        "Status": "Approved",
+        "Inquiry ID": "form-8c2d10",
+        "Business Name": "Juniper Market",
+        "Contact Name": "Theo Grant",
+        "Contact Email": "juniper.market@example.com",
+        "Contact Phone": "+15550102042",
+        "Needed By": "2026-11-07",
+        "Inquiry Text": "100 dark sea salt bars and 12 tins of drinking chocolate for our holiday shelf.",
+        "Extraction Method": "Claude",
+        "Subtotal": 528.0,
+        "Total": 528.0,
+        "Feasibility": "In Stock",
+        "Feasibility Note": "All items in stock.",
+        "Valid Until": "2026-10-30",
+        "Sent At": "2026-10-16T15:00:00.000Z",
+        "Email Message ID": "1a2b3c4d-0042-4e5f-8a9b-0c1d2e3f4a5b"
+      }
+    },
+    {
+      "ref": "q43",
+      "fields": {
+        "Quote Number": "Q-2026-0043",
+        "Status": "Converted",
+        "Processed": true,
+        "Inquiry ID": "form-1e9b77",
+        "Business Name": "Harbor Books and Coffee",
+        "Contact Name": "Iris Lane",
+        "Contact Email": "harbor.books@example.com",
+        "Needed By": "2026-11-01",
+        "Inquiry Text": "48 hazelnut crunch bars please.",
+        "Extraction Method": "Claude",
+        "Subtotal": 216.0,
+        "Total": 216.0,
+        "Feasibility": "In Stock",
+        "Feasibility Note": "All items in stock.",
+        "Valid Until": "2026-10-24",
+        "Sent At": "2026-10-10T11:00:00.000Z",
+        "Email Message ID": "1a2b3c4d-0043-4e5f-8a9b-0c1d2e3f4a5b",
+        "Draft Order ID": "gid://shopify/DraftOrder/1099999999043",
+        "Draft Order Name": "#D43",
+        "Invoice URL": "https://demo-chocolate.myshopify.com/70000001/invoices/0f43aa0f43aa0f43aa0f43aa0f43aa0f",
+        "Invoice Sent At": "2026-10-12T09:30:00.000Z",
+        "Processed At": "2026-10-12T09:30:00.000Z"
+      }
+    },
+    {
+      "ref": "q44",
+      "fields": {
+        "Quote Number": "Q-2026-0044",
+        "Status": "Needs Review",
+        "Inquiry ID": "form-3b6c55",
+        "Business Name": "Petal and Pine Florist",
+        "Contact Name": "Ana Ruiz",
+        "Contact Email": "petal.pine@example.com",
+        "Needed By": "2026-11-19",
+        "Inquiry Text": "Could you do 200 white chocolate raspberry hearts for Valentines?",
+        "Extraction Method": "Claude",
+        "Subtotal": 0,
+        "Total": 0,
+        "Feasibility": "Unknown",
+        "Needs Review": true,
+        "Review Reason": "No matching product for \"white chocolate raspberry hearts\".",
+        "Valid Until": "2026-11-03"
+      }
+    },
+    {
+      "ref": "q45",
+      "fields": {
+        "Quote Number": "Q-2026-0045",
+        "Status": "Rejected",
+        "Inquiry ID": "form-9d4e21",
+        "Business Name": "Northside Gym",
+        "Contact Name": "Cal Brooks",
+        "Contact Email": "northside.gym@example.com",
+        "Needed By": "2026-10-25",
+        "Inquiry Text": "24 dark 85 bars.",
+        "Extraction Method": "Rule-Based Fallback",
+        "Subtotal": 115.2,
+        "Total": 115.2,
+        "Feasibility": "In Stock",
+        "Valid Until": "2026-10-19",
+        "Sent At": "2026-10-05T10:00:00.000Z"
+      }
+    }
+  ]
+}

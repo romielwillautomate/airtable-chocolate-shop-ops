@@ -1,0 +1,242 @@
+{
+  "table": "Price List",
+  "records": [
+    {
+      "ref": "t-dss-24",
+      "fields": {
+        "Tier Name": "DC-BAR-DARK-SEASALT 24-99",
+        "Product": [
+          "dss"
+        ],
+        "Min Quantity": 24,
+        "Max Quantity": 99,
+        "Unit Price": 4.5,
+        "Active": true
+      }
+    },
+    {
+      "ref": "t-dss-100",
+      "fields": {
+        "Tier Name": "DC-BAR-DARK-SEASALT 100-299",
+        "Product": [
+          "dss"
+        ],
+        "Min Quantity": 100,
+        "Max Quantity": 299,
+        "Unit Price": 4.2,
+        "Active": true
+      }
+    },
+    {
+      "ref": "t-dss-300",
+      "fields": {
+        "Tier Name": "DC-BAR-DARK-SEASALT 300+",
+        "Product": [
+          "dss"
+        ],
+        "Min Quantity": 300,
+        "Unit Price": 3.9,
+        "Active": true
+      }
+    },
+    {
+      "ref": "t-dss-300-old",
+      "fields": {
+        "Tier Name": "DC-BAR-DARK-SEASALT 300+ (old)",
+        "Product": [
+          "dss"
+        ],
+        "Min Quantity": 300,
+        "Unit Price": 3.6
+      }
+    },
+    {
+      "ref": "t-d85-24",
+      "fields": {
+        "Tier Name": "DC-BAR-DARK-85 24-99",
+        "Product": [
+          "d85"
+        ],
+        "Min Quantity": 24,
+        "Max Quantity": 99,
+        "Unit Price": 4.8,
+        "Active": true
+      }
+    },
+    {
+      "ref": "t-d85-100",
+      "fields": {
+        "Tier Name": "DC-BAR-DARK-85 100+",
+        "Product": [
+          "d85"
+        ],
+        "Min Quantity": 100,
+        "Unit Price": 4.5,
+        "Active": true
+      }
+    },
+    {
+      "ref": "t-msc-24",
+      "fields": {
+        "Tier Name": "DC-BAR-MILK-CARAMEL 24-99",
+        "Product": [
+          "msc"
+        ],
+        "Min Quantity": 24,
+        "Max Quantity": 99,
+        "Unit Price": 4.2,
+        "Active": true
+      }
+    },
+    {
+      "ref": "t-msc-100",
+      "fields": {
+        "Tier Name": "DC-BAR-MILK-CARAMEL 100+",
+        "Product": [
+          "msc"
+        ],
+        "Min Quantity": 100,
+        "Unit Price": 3.95,
+        "Active": true
+      }
+    },
+    {
+      "ref": "t-mhz-24",
+      "fields": {
+        "Tier Name": "DC-BAR-MILK-HAZELNUT 24-99",
+        "Product": [
+          "mhz"
+        ],
+        "Min Quantity": 24,
+        "Max Quantity": 99,
+        "Unit Price": 4.5,
+        "Active": true
+      }
+    },
+    {
+      "ref": "t-mhz-100",
+      "fields": {
+        "Tier Name": "DC-BAR-MILK-HAZELNUT 100+",
+        "Product": [
+          "mhz"
+        ],
+        "Min Quantity": 100,
+        "Unit Price": 4.2,
+        "Active": true
+      }
+    },
+    {
+      "ref": "t-mcl-24",
+      "fields": {
+        "Tier Name": "DC-BAR-MILK-CLASSIC 24-99",
+        "Product": [
+          "mcl"
+        ],
+        "Min Quantity": 24,
+        "Max Quantity": 99,
+        "Unit Price": 3.9,
+        "Active": true
+      }
+    },
+    {
+      "ref": "t-mcl-100",
+      "fields": {
+        "Tier Name": "DC-BAR-MILK-CLASSIC 100+",
+        "Product": [
+          "mcl"
+        ],
+        "Min Quantity": 100,
+        "Unit Price": 3.6,
+        "Active": true
+      }
+    },
+    {
+      "ref": "t-prb-6",
+      "fields": {
+        "Tier Name": "DC-BOX-PRALINE-12 6-23",
+        "Product": [
+          "prb"
+        ],
+        "Min Quantity": 6,
+        "Max Quantity": 23,
+        "Unit Price": 15.5,
+        "Active": true
+      }
+    },
+    {
+      "ref": "t-prb-24",
+      "fields": {
+        "Tier Name": "DC-BOX-PRALINE-12 24+",
+        "Product": [
+          "prb"
+        ],
+        "Min Quantity": 24,
+        "Unit Price": 14.5,
+        "Active": true
+      }
+    },
+    {
+      "ref": "t-prl-50",
+      "fields": {
+        "Tier Name": "DC-PRALINE-HAZELNUT 50-199",
+        "Product": [
+          "prl"
+        ],
+        "Min Quantity": 50,
+        "Max Quantity": 199,
+        "Unit Price": 1.1,
+        "Active": true
+      }
+    },
+    {
+      "ref": "t-prl-200",
+      "fields": {
+        "Tier Name": "DC-PRALINE-HAZELNUT 200-999",
+        "Product": [
+          "prl"
+        ],
+        "Min Quantity": 200,
+        "Max Quantity": 999,
+        "Unit Price": 0.98,
+        "Active": true
+      }
+    },
+    {
+      "ref": "t-prl-1000",
+      "fields": {
+        "Tier Name": "DC-PRALINE-HAZELNUT 1000+",
+        "Product": [
+          "prl"
+        ],
+        "Min Quantity": 1000,
+        "Unit Price": 0.9,
+        "Active": true
+      }
+    },
+    {
+      "ref": "t-hot-6",
+      "fields": {
+        "Tier Name": "DC-HOT-COCOA-250 6-23",
+        "Product": [
+          "hot"
+        ],
+        "Min Quantity": 6,
+        "Max Quantity": 23,
+        "Unit Price": 9.0,
+        "Active": true
+      }
+    },
+    {
+      "ref": "t-hot-24",
+      "fields": {
+        "Tier Name": "DC-HOT-COCOA-250 24+",
+        "Product": [
+          "hot"
+        ],
+        "Min Quantity": 24,
+        "Unit Price": 8.25,
+        "Active": true
+      }
+    }
+  ]
+}

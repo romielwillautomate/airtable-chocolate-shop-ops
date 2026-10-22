@@ -1,0 +1,126 @@
+{
+  "table": "Tickets",
+  "records": [
+    {
+      "ref": "t1",
+      "fields": {
+        "Ticket ID": "T-0001",
+        "Message ID": "<help-20260906-0001@help.example.com>",
+        "Received At": "2026-09-11T14:22:00.000Z",
+        "Channel": "Help Form",
+        "Customer Name": "Derek Olsen",
+        "Customer Email": "derek.olsen@example.com",
+        "Customer": [
+          "derek"
+        ],
+        "Order": [
+          "o1005"
+        ],
+        "Order Number Given": "1005",
+        "Email Matches Order": true,
+        "Subject": "Bars arrived soft",
+        "Message": "My order 1005 arrived and the bars had melted into the wrapper.",
+        "Issue Type": "Melted",
+        "Sentiment": "Negative",
+        "Classification Method": "Claude",
+        "Status": "Resolved",
+        "Priority": "Normal",
+        "Resolution": "Replacement Approved",
+        "Routing Reason": "Delivered late (1 day), within the claim window.",
+        "Replacement Draft Order ID": "gid://shopify/DraftOrder/1099999999001",
+        "Replacement Order Name": "#1990",
+        "Reply Sent At": "2026-09-11T14:23:00.000Z",
+        "Reply Message ID": "9f8e7d6c-0001-4b5a-9c8d-7e6f5a4b3c2d",
+        "Action Log": "2026-09-11T14:22:00.000Z Classified as Melted (Claude)\n2026-09-11T14:23:00.000Z Replacement approved\n2026-09-11T14:23:00.000Z Reply sent"
+      }
+    },
+    {
+      "ref": "t2",
+      "fields": {
+        "Ticket ID": "T-0002",
+        "Message ID": "<help-20261006-0002@help.example.com>",
+        "Received At": "2026-10-07T09:05:00.000Z",
+        "Channel": "Email",
+        "Customer Name": "Derek Olsen",
+        "Customer Email": "derek.olsen@example.com",
+        "Customer": [
+          "derek"
+        ],
+        "Order": [
+          "o1016"
+        ],
+        "Order Number Given": "#1016",
+        "Email Matches Order": true,
+        "Subject": "Melted again",
+        "Message": "Second time this happened. Order #1016 was melted when it arrived.",
+        "Issue Type": "Melted",
+        "Sentiment": "Angry",
+        "Classification Method": "Claude",
+        "Status": "Resolved",
+        "Priority": "Normal",
+        "Resolution": "Replacement Approved",
+        "Routing Reason": "Delivered late (1 day), within the claim window.",
+        "Replacement Draft Order ID": "gid://shopify/DraftOrder/1099999999002",
+        "Replacement Order Name": "#1991",
+        "Reply Sent At": "2026-10-07T09:06:00.000Z",
+        "Reply Message ID": "9f8e7d6c-0002-4b5a-9c8d-7e6f5a4b3c2d",
+        "Action Log": "2026-10-07T09:05:00.000Z Classified as Melted (Claude)\n2026-10-07T09:06:00.000Z Replacement approved\n2026-10-07T09:06:00.000Z Reply sent"
+      }
+    },
+    {
+      "ref": "t3",
+      "fields": {
+        "Ticket ID": "T-0003",
+        "Message ID": "<help-20261018-0003@help.example.com>",
+        "Received At": "2026-10-18T18:40:00.000Z",
+        "Channel": "Help Form",
+        "Customer Name": "Rosa Delgado",
+        "Customer Email": "rosa.delgado@example.com",
+        "Customer": [
+          "rosa"
+        ],
+        "Subject": "Nut allergy question",
+        "Message": "My son has a tree nut allergy. Is the raspberry bar safe for him?",
+        "Issue Type": "Allergy Question",
+        "Sentiment": "Neutral",
+        "Classification Method": "Claude",
+        "Status": "Human Queue",
+        "Priority": "High",
+        "Resolution": "Routed to Human",
+        "Routing Reason": "Allergy questions are always answered by a person.",
+        "Action Log": "2026-10-18T18:40:00.000Z Classified as Allergy Question (Claude)\n2026-10-18T18:41:00.000Z Routed to human queue, high priority"
+      }
+    },
+    {
+      "ref": "t4",
+      "fields": {
+        "Ticket ID": "T-0004",
+        "Message ID": "<help-20260926-0004@help.example.com>",
+        "Received At": "2026-09-16T11:15:00.000Z",
+        "Channel": "Email",
+        "Customer Name": "Elena Rossi",
+        "Customer Email": "elena.rossi@example.com",
+        "Customer": [
+          "elena"
+        ],
+        "Order": [
+          "o1006"
+        ],
+        "Order Number Given": "1006",
+        "Email Matches Order": true,
+        "Subject": "Crushed box",
+        "Message": "The praline box was crushed in the mail.",
+        "Issue Type": "Damaged",
+        "Sentiment": "Negative",
+        "Classification Method": "Claude",
+        "Status": "Waiting on Customer",
+        "Priority": "Normal",
+        "Resolution": "Photo Requested",
+        "Routing Reason": "Damaged items need a photo first.",
+        "Reply Sent At": "2026-09-16T11:16:00.000Z",
+        "Reply Message ID": "9f8e7d6c-0004-4b5a-9c8d-7e6f5a4b3c2d",
+        "Action Log": "2026-09-16T11:15:00.000Z Classified as Damaged (Claude)\n2026-09-16T11:16:00.000Z Photo requested"
+      }
+    }
+  ]
+}

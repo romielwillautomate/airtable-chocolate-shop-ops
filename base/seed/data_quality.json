@@ -1,0 +1,19 @@
+{
+  "table": "Data Quality",
+  "records": [
+    {
+      "ref": "dq-old",
+      "fields": {
+        "Finding ID": "2026-W42 / Invalid Email / sam",
+        "Report Week": "2026-W42",
+        "Check": "Invalid Email",
+        "Table": "Customers",
+        "Record Name": "Sam Ortiz",
+        "Details": "Email \"sam.ortiz@example\" has no domain ending.",
+        "Severity": "Medium",
+        "Status": "Open",
+        "Found At": "2026-10-13T07:00:00.000Z"
+      }
+    }
+  ]
+}

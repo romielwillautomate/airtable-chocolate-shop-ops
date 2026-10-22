@@ -1,0 +1,340 @@
+{
+  "table": "Customers",
+  "records": [
+    {
+      "ref": "maya",
+      "fields": {
+        "Name": "Maya Chen",
+        "Email": "maya.chen@example.com",
+        "Phone": "+15550101001",
+        "Shopify Customer ID": "7700000000101",
+        "Created Via": "Shopify",
+        "Accepts Marketing": true,
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "maya-dup",
+      "fields": {
+        "Name": "Maya Chen",
+        "Email": "Maya.Chen@Example.com ",
+        "Phone": "+15550101001",
+        "Created Via": "Import",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "jordan",
+      "fields": {
+        "Name": "Jordan Blake",
+        "Email": "jordan.blake@example.com",
+        "Phone": "+15550101003",
+        "Shopify Customer ID": "7700000000103",
+        "Created Via": "Shopify",
+        "Accepts Marketing": true,
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "jordan-dup",
+      "fields": {
+        "Name": "Jordan Blake",
+        "Email": "jordan.blake@example.com",
+        "Created Via": "Manual",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "priya",
+      "fields": {
+        "Name": "Priya Raman",
+        "Email": "priya.raman@example.com",
+        "Phone": "+15550101005",
+        "Shopify Customer ID": "7700000000105",
+        "Created Via": "Shopify",
+        "Accepts Marketing": true,
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "priya-dup",
+      "fields": {
+        "Name": "P. Raman",
+        "Email": " PRIYA.RAMAN@EXAMPLE.COM",
+        "Created Via": "Import",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "derek",
+      "fields": {
+        "Name": "Derek Olsen",
+        "Email": "derek.olsen@example.com",
+        "Phone": "+15550101007",
+        "Shopify Customer ID": "7700000000107",
+        "Created Via": "Shopify",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "elena",
+      "fields": {
+        "Name": "Elena Rossi",
+        "Email": "elena.rossi@example.com",
+        "Phone": "+15550101008",
+        "Shopify Customer ID": "7700000000108",
+        "Created Via": "Shopify",
+        "Accepts Marketing": true,
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "marcus",
+      "fields": {
+        "Name": "Marcus Webb",
+        "Email": "marcus.webb@example.com",
+        "Phone": "+15550101009",
+        "Shopify Customer ID": "7700000000109",
+        "Created Via": "Shopify",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "hana",
+      "fields": {
+        "Name": "Hana Sato",
+        "Email": "hana.sato@example.com",
+        "Phone": "+15550101010",
+        "Shopify Customer ID": "7700000000110",
+        "Created Via": "Shopify",
+        "Accepts Marketing": true,
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "omar",
+      "fields": {
+        "Name": "Omar Haddad",
+        "Email": "omar.haddad@example.com",
+        "Phone": "+15550101011",
+        "Shopify Customer ID": "7700000000111",
+        "Created Via": "Shopify",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "lucia",
+      "fields": {
+        "Name": "Lucia Gomez",
+        "Email": "lucia.gomez@example.com",
+        "Phone": "+15550101012",
+        "Shopify Customer ID": "7700000000112",
+        "Created Via": "Shopify",
+        "Accepts Marketing": true,
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "tom",
+      "fields": {
+        "Name": "Tom Becker",
+        "Email": "tom.becker@example.com",
+        "Phone": "+15550101013",
+        "Shopify Customer ID": "7700000000113",
+        "Created Via": "Shopify",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "aisha",
+      "fields": {
+        "Name": "Aisha Khan",
+        "Email": "aisha.khan@example.com",
+        "Phone": "+15550101014",
+        "Shopify Customer ID": "7700000000114",
+        "Created Via": "Shopify",
+        "Accepts Marketing": true,
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "ben",
+      "fields": {
+        "Name": "Ben Carter",
+        "Email": "ben.carter@example.com",
+        "Phone": "+15550101015",
+        "Shopify Customer ID": "7700000000115",
+        "Created Via": "Shopify",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "sofia",
+      "fields": {
+        "Name": "Sofia Marino",
+        "Email": "sofia.marino@example.com",
+        "Phone": "+15550101016",
+        "Shopify Customer ID": "7700000000116",
+        "Created Via": "Shopify",
+        "Accepts Marketing": true,
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "grace",
+      "fields": {
+        "Name": "Grace Kim",
+        "Phone": "+15550101017",
+        "Created Via": "Manual",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "nina",
+      "fields": {
+        "Name": "Nina Patel",
+        "Email": "nina.patel@example.com",
+        "Phone": "+15550101018",
+        "Shopify Customer ID": "7700000000118",
+        "Created Via": "Shopify",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "sam",
+      "fields": {
+        "Name": "Sam Ortiz",
+        "Email": "sam.ortiz@example",
+        "Created Via": "Import",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "lena",
+      "fields": {
+        "Name": "Lena Fischer",
+        "Email": "lena.fischer.example.com",
+        "Created Via": "Import",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "tom-n",
+      "fields": {
+        "Name": "Tom Nguyen",
+        "Email": "tom.nguyen@@example.com",
+        "Created Via": "Import",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "kai",
+      "fields": {
+        "Email": "kai.morgan@example.com",
+        "Created Via": "Import",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "rosa",
+      "fields": {
+        "Name": "Rosa Delgado",
+        "Email": "rosa.delgado@example.com",
+        "Phone": "+15550101023",
+        "Shopify Customer ID": "7700000000123",
+        "Created Via": "Shopify",
+        "Accepts Marketing": true,
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "victor",
+      "fields": {
+        "Name": "Victor Hale",
+        "Email": "victor.hale@example.com",
+        "Phone": "+15550101024",
+        "Shopify Customer ID": "7700000000124",
+        "Created Via": "Shopify",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "irene",
+      "fields": {
+        "Name": "Irene Novak",
+        "Email": "irene.novak@example.com",
+        "Phone": "+15550101025",
+        "Shopify Customer ID": "7700000000125",
+        "Created Via": "Shopify",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "felix",
+      "fields": {
+        "Name": "Felix Osei",
+        "Email": "felix.osei@example.com",
+        "Phone": "+15550101026",
+        "Shopify Customer ID": "7700000000126",
+        "Created Via": "Shopify",
+        "Accepts Marketing": true,
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "clara",
+      "fields": {
+        "Name": "Clara Jensen",
+        "Email": "clara.jensen@example.com",
+        "Phone": "+15550101027",
+        "Shopify Customer ID": "7700000000127",
+        "Created Via": "Shopify",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "ahmed",
+      "fields": {
+        "Name": "Ahmed Siddiqui",
+        "Email": "ahmed.siddiqui@example.com",
+        "Phone": "+15550101028",
+        "Shopify Customer ID": "7700000000128",
+        "Created Via": "Shopify",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "mila",
+      "fields": {
+        "Name": "Mila Petrova",
+        "Email": "mila.petrova@example.com",
+        "Phone": "+15550101029",
+        "Shopify Customer ID": "7700000000129",
+        "Created Via": "Shopify",
+        "Accepts Marketing": true,
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "owen",
+      "fields": {
+        "Name": "Owen Price",
+        "Email": "owen.price@example.com",
+        "Phone": "+15550101030",
+        "Shopify Customer ID": "7700000000130",
+        "Created Via": "Shopify",
+        "Record Status": "Active"
+      }
+    },
+    {
+      "ref": "bluebird",
+      "fields": {
+        "Name": "Bluebird Cafe",
+        "Email": "bluebird.cafe@example.com",
+        "Phone": "+15550101031",
+        "Created Via": "Wholesale",
+        "Record Status": "Active"
+      }
+    }
+  ]
+}

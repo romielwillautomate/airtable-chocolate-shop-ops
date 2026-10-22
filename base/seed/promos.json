@@ -1,0 +1,22 @@
+{
+  "table": "Promos",
+  "records": [
+    {
+      "ref": "promo-b-dss-260523",
+      "fields": {
+        "Promo Name": "PROMO-B-DSS-260523",
+        "Batch": [
+          "b-dss-260523"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Best Before": "2026-11-04",
+        "Units Available": 30,
+        "Discount Percent": 25,
+        "Status": "Proposed",
+        "Created At": "2026-10-19T10:01:00.000Z"
+      }
+    }
+  ]
+}

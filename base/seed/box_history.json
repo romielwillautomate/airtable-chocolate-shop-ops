@@ -1,0 +1,2035 @@
+{
+  "table": "Box History",
+  "records": [
+    {
+      "ref": "h-2026-09-s01-dss",
+      "fields": {
+        "History ID": "2026-09 / SUB-0001 / DC-BAR-DARK-SEASALT",
+        "Subscriber": [
+          "s01"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s01-msc",
+      "fields": {
+        "History ID": "2026-09 / SUB-0001 / DC-BAR-MILK-CARAMEL",
+        "Subscriber": [
+          "s01"
+        ],
+        "Product": [
+          "msc"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s01-dor",
+      "fields": {
+        "History ID": "2026-09 / SUB-0001 / DC-BAR-DARK-ORANGE",
+        "Subscriber": [
+          "s01"
+        ],
+        "Product": [
+          "dor"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s01-oat",
+      "fields": {
+        "History ID": "2026-09 / SUB-0001 / DC-BAR-OAT-MILK",
+        "Subscriber": [
+          "s01"
+        ],
+        "Product": [
+          "oat"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s01-wcc",
+      "fields": {
+        "History ID": "2026-09 / SUB-0001 / DC-BAR-WHITE-COOKIE",
+        "Subscriber": [
+          "s01"
+        ],
+        "Product": [
+          "wcc"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s01-rch",
+      "fields": {
+        "History ID": "2026-09 / SUB-0001 / DC-BAR-RUBY-CHERRY",
+        "Subscriber": [
+          "s01"
+        ],
+        "Product": [
+          "rch"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-10-s01-d85",
+      "fields": {
+        "History ID": "2026-10 / SUB-0001 / DC-BAR-DARK-85",
+        "Subscriber": [
+          "s01"
+        ],
+        "Product": [
+          "d85"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s01-mes",
+      "fields": {
+        "History ID": "2026-10 / SUB-0001 / DC-BAR-MILK-ESPRESSO",
+        "Subscriber": [
+          "s01"
+        ],
+        "Product": [
+          "mes"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s01-dcc",
+      "fields": {
+        "History ID": "2026-10 / SUB-0001 / DC-BAR-DARK-CHILI",
+        "Subscriber": [
+          "s01"
+        ],
+        "Product": [
+          "dcc"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s01-mcl",
+      "fields": {
+        "History ID": "2026-10 / SUB-0001 / DC-BAR-MILK-CLASSIC",
+        "Subscriber": [
+          "s01"
+        ],
+        "Product": [
+          "mcl"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s01-wst",
+      "fields": {
+        "History ID": "2026-10 / SUB-0001 / DC-BAR-WHITE-STRAWBERRY",
+        "Subscriber": [
+          "s01"
+        ],
+        "Product": [
+          "wst"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s01-des",
+      "fields": {
+        "History ID": "2026-10 / SUB-0001 / DC-BAR-DARK-ESPRESSO",
+        "Subscriber": [
+          "s01"
+        ],
+        "Product": [
+          "des"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-09-s02-mhz",
+      "fields": {
+        "History ID": "2026-09 / SUB-0002 / DC-BAR-MILK-HAZELNUT",
+        "Subscriber": [
+          "s02"
+        ],
+        "Product": [
+          "mhz"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s02-dal",
+      "fields": {
+        "History ID": "2026-09 / SUB-0002 / DC-BAR-DARK-ALMOND",
+        "Subscriber": [
+          "s02"
+        ],
+        "Product": [
+          "dal"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s02-mpb",
+      "fields": {
+        "History ID": "2026-09 / SUB-0002 / DC-BAR-MILK-PEANUT",
+        "Subscriber": [
+          "s02"
+        ],
+        "Product": [
+          "mpb"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s02-wma",
+      "fields": {
+        "History ID": "2026-09 / SUB-0002 / DC-BAR-WHITE-MATCHA",
+        "Subscriber": [
+          "s02"
+        ],
+        "Product": [
+          "wma"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s02-mlh",
+      "fields": {
+        "History ID": "2026-09 / SUB-0002 / DC-BAR-MILK-LAVENDER",
+        "Subscriber": [
+          "s02"
+        ],
+        "Product": [
+          "mlh"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s02-dmi",
+      "fields": {
+        "History ID": "2026-09 / SUB-0002 / DC-BAR-DARK-MINT",
+        "Subscriber": [
+          "s02"
+        ],
+        "Product": [
+          "dmi"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s02-oat",
+      "fields": {
+        "History ID": "2026-09 / SUB-0002 / DC-BAR-OAT-MILK",
+        "Subscriber": [
+          "s02"
+        ],
+        "Product": [
+          "oat"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s02-rch",
+      "fields": {
+        "History ID": "2026-09 / SUB-0002 / DC-BAR-RUBY-CHERRY",
+        "Subscriber": [
+          "s02"
+        ],
+        "Product": [
+          "rch"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-10-s02-dss",
+      "fields": {
+        "History ID": "2026-10 / SUB-0002 / DC-BAR-DARK-SEASALT",
+        "Subscriber": [
+          "s02"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s02-msc",
+      "fields": {
+        "History ID": "2026-10 / SUB-0002 / DC-BAR-MILK-CARAMEL",
+        "Subscriber": [
+          "s02"
+        ],
+        "Product": [
+          "msc"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s02-drb",
+      "fields": {
+        "History ID": "2026-10 / SUB-0002 / DC-BAR-DARK-RASPBERRY",
+        "Subscriber": [
+          "s02"
+        ],
+        "Product": [
+          "drb"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s02-dor",
+      "fields": {
+        "History ID": "2026-10 / SUB-0002 / DC-BAR-DARK-ORANGE",
+        "Subscriber": [
+          "s02"
+        ],
+        "Product": [
+          "dor"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s02-mes",
+      "fields": {
+        "History ID": "2026-10 / SUB-0002 / DC-BAR-MILK-ESPRESSO",
+        "Subscriber": [
+          "s02"
+        ],
+        "Product": [
+          "mes"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s02-wcc",
+      "fields": {
+        "History ID": "2026-10 / SUB-0002 / DC-BAR-WHITE-COOKIE",
+        "Subscriber": [
+          "s02"
+        ],
+        "Product": [
+          "wcc"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s02-mcl",
+      "fields": {
+        "History ID": "2026-10 / SUB-0002 / DC-BAR-MILK-CLASSIC",
+        "Subscriber": [
+          "s02"
+        ],
+        "Product": [
+          "mcl"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s02-wst",
+      "fields": {
+        "History ID": "2026-10 / SUB-0002 / DC-BAR-WHITE-STRAWBERRY",
+        "Subscriber": [
+          "s02"
+        ],
+        "Product": [
+          "wst"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-09-s03-oat",
+      "fields": {
+        "History ID": "2026-09 / SUB-0003 / DC-BAR-OAT-MILK",
+        "Subscriber": [
+          "s03"
+        ],
+        "Product": [
+          "oat"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s03-dmi",
+      "fields": {
+        "History ID": "2026-09 / SUB-0003 / DC-BAR-DARK-MINT",
+        "Subscriber": [
+          "s03"
+        ],
+        "Product": [
+          "dmi"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s03-des",
+      "fields": {
+        "History ID": "2026-09 / SUB-0003 / DC-BAR-DARK-ESPRESSO",
+        "Subscriber": [
+          "s03"
+        ],
+        "Product": [
+          "des"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s03-drb",
+      "fields": {
+        "History ID": "2026-09 / SUB-0003 / DC-BAR-DARK-RASPBERRY",
+        "Subscriber": [
+          "s03"
+        ],
+        "Product": [
+          "drb"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-10-s03-dss",
+      "fields": {
+        "History ID": "2026-10 / SUB-0003 / DC-BAR-DARK-SEASALT",
+        "Subscriber": [
+          "s03"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s03-d85",
+      "fields": {
+        "History ID": "2026-10 / SUB-0003 / DC-BAR-DARK-85",
+        "Subscriber": [
+          "s03"
+        ],
+        "Product": [
+          "d85"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s03-dor",
+      "fields": {
+        "History ID": "2026-10 / SUB-0003 / DC-BAR-DARK-ORANGE",
+        "Subscriber": [
+          "s03"
+        ],
+        "Product": [
+          "dor"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s03-dcc",
+      "fields": {
+        "History ID": "2026-10 / SUB-0003 / DC-BAR-DARK-CHILI",
+        "Subscriber": [
+          "s03"
+        ],
+        "Product": [
+          "dcc"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-09-s04-dss",
+      "fields": {
+        "History ID": "2026-09 / SUB-0004 / DC-BAR-DARK-SEASALT",
+        "Subscriber": [
+          "s04"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s04-d85",
+      "fields": {
+        "History ID": "2026-09 / SUB-0004 / DC-BAR-DARK-85",
+        "Subscriber": [
+          "s04"
+        ],
+        "Product": [
+          "d85"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s04-oat",
+      "fields": {
+        "History ID": "2026-09 / SUB-0004 / DC-BAR-OAT-MILK",
+        "Subscriber": [
+          "s04"
+        ],
+        "Product": [
+          "oat"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s04-dmi",
+      "fields": {
+        "History ID": "2026-09 / SUB-0004 / DC-BAR-DARK-MINT",
+        "Subscriber": [
+          "s04"
+        ],
+        "Product": [
+          "dmi"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s04-des",
+      "fields": {
+        "History ID": "2026-09 / SUB-0004 / DC-BAR-DARK-ESPRESSO",
+        "Subscriber": [
+          "s04"
+        ],
+        "Product": [
+          "des"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-10-s04-dss",
+      "fields": {
+        "History ID": "2026-10 / SUB-0004 / DC-BAR-DARK-SEASALT",
+        "Subscriber": [
+          "s04"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s04-oat",
+      "fields": {
+        "History ID": "2026-10 / SUB-0004 / DC-BAR-OAT-MILK",
+        "Subscriber": [
+          "s04"
+        ],
+        "Product": [
+          "oat"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s04-dmi",
+      "fields": {
+        "History ID": "2026-10 / SUB-0004 / DC-BAR-DARK-MINT",
+        "Subscriber": [
+          "s04"
+        ],
+        "Product": [
+          "dmi"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s04-des",
+      "fields": {
+        "History ID": "2026-10 / SUB-0004 / DC-BAR-DARK-ESPRESSO",
+        "Subscriber": [
+          "s04"
+        ],
+        "Product": [
+          "des"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-09-s05-dss",
+      "fields": {
+        "History ID": "2026-09 / SUB-0005 / DC-BAR-DARK-SEASALT",
+        "Subscriber": [
+          "s05"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s05-d85",
+      "fields": {
+        "History ID": "2026-09 / SUB-0005 / DC-BAR-DARK-85",
+        "Subscriber": [
+          "s05"
+        ],
+        "Product": [
+          "d85"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s05-mes",
+      "fields": {
+        "History ID": "2026-09 / SUB-0005 / DC-BAR-MILK-ESPRESSO",
+        "Subscriber": [
+          "s05"
+        ],
+        "Product": [
+          "mes"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s05-wst",
+      "fields": {
+        "History ID": "2026-09 / SUB-0005 / DC-BAR-WHITE-STRAWBERRY",
+        "Subscriber": [
+          "s05"
+        ],
+        "Product": [
+          "wst"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-10-s05-dor",
+      "fields": {
+        "History ID": "2026-10 / SUB-0005 / DC-BAR-DARK-ORANGE",
+        "Subscriber": [
+          "s05"
+        ],
+        "Product": [
+          "dor"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s05-mcl",
+      "fields": {
+        "History ID": "2026-10 / SUB-0005 / DC-BAR-MILK-CLASSIC",
+        "Subscriber": [
+          "s05"
+        ],
+        "Product": [
+          "mcl"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s05-rch",
+      "fields": {
+        "History ID": "2026-10 / SUB-0005 / DC-BAR-RUBY-CHERRY",
+        "Subscriber": [
+          "s05"
+        ],
+        "Product": [
+          "rch"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s05-des",
+      "fields": {
+        "History ID": "2026-10 / SUB-0005 / DC-BAR-DARK-ESPRESSO",
+        "Subscriber": [
+          "s05"
+        ],
+        "Product": [
+          "des"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-09-s06-dss",
+      "fields": {
+        "History ID": "2026-09 / SUB-0006 / DC-BAR-DARK-SEASALT",
+        "Subscriber": [
+          "s06"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s06-msc",
+      "fields": {
+        "History ID": "2026-09 / SUB-0006 / DC-BAR-MILK-CARAMEL",
+        "Subscriber": [
+          "s06"
+        ],
+        "Product": [
+          "msc"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s06-mhz",
+      "fields": {
+        "History ID": "2026-09 / SUB-0006 / DC-BAR-MILK-HAZELNUT",
+        "Subscriber": [
+          "s06"
+        ],
+        "Product": [
+          "mhz"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s06-dal",
+      "fields": {
+        "History ID": "2026-09 / SUB-0006 / DC-BAR-DARK-ALMOND",
+        "Subscriber": [
+          "s06"
+        ],
+        "Product": [
+          "dal"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s06-drb",
+      "fields": {
+        "History ID": "2026-09 / SUB-0006 / DC-BAR-DARK-RASPBERRY",
+        "Subscriber": [
+          "s06"
+        ],
+        "Product": [
+          "drb"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s06-dor",
+      "fields": {
+        "History ID": "2026-09 / SUB-0006 / DC-BAR-DARK-ORANGE",
+        "Subscriber": [
+          "s06"
+        ],
+        "Product": [
+          "dor"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s06-mpb",
+      "fields": {
+        "History ID": "2026-09 / SUB-0006 / DC-BAR-MILK-PEANUT",
+        "Subscriber": [
+          "s06"
+        ],
+        "Product": [
+          "mpb"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s06-wcc",
+      "fields": {
+        "History ID": "2026-09 / SUB-0006 / DC-BAR-WHITE-COOKIE",
+        "Subscriber": [
+          "s06"
+        ],
+        "Product": [
+          "wcc"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-10-s06-d85",
+      "fields": {
+        "History ID": "2026-10 / SUB-0006 / DC-BAR-DARK-85",
+        "Subscriber": [
+          "s06"
+        ],
+        "Product": [
+          "d85"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s06-dcc",
+      "fields": {
+        "History ID": "2026-10 / SUB-0006 / DC-BAR-DARK-CHILI",
+        "Subscriber": [
+          "s06"
+        ],
+        "Product": [
+          "dcc"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s06-oat",
+      "fields": {
+        "History ID": "2026-10 / SUB-0006 / DC-BAR-OAT-MILK",
+        "Subscriber": [
+          "s06"
+        ],
+        "Product": [
+          "oat"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s06-mes",
+      "fields": {
+        "History ID": "2026-10 / SUB-0006 / DC-BAR-MILK-ESPRESSO",
+        "Subscriber": [
+          "s06"
+        ],
+        "Product": [
+          "mes"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s06-dmi",
+      "fields": {
+        "History ID": "2026-10 / SUB-0006 / DC-BAR-DARK-MINT",
+        "Subscriber": [
+          "s06"
+        ],
+        "Product": [
+          "dmi"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s06-mcl",
+      "fields": {
+        "History ID": "2026-10 / SUB-0006 / DC-BAR-MILK-CLASSIC",
+        "Subscriber": [
+          "s06"
+        ],
+        "Product": [
+          "mcl"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s06-wst",
+      "fields": {
+        "History ID": "2026-10 / SUB-0006 / DC-BAR-WHITE-STRAWBERRY",
+        "Subscriber": [
+          "s06"
+        ],
+        "Product": [
+          "wst"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s06-rch",
+      "fields": {
+        "History ID": "2026-10 / SUB-0006 / DC-BAR-RUBY-CHERRY",
+        "Subscriber": [
+          "s06"
+        ],
+        "Product": [
+          "rch"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-09-s07-dss",
+      "fields": {
+        "History ID": "2026-09 / SUB-0007 / DC-BAR-DARK-SEASALT",
+        "Subscriber": [
+          "s07"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s07-mhz",
+      "fields": {
+        "History ID": "2026-09 / SUB-0007 / DC-BAR-MILK-HAZELNUT",
+        "Subscriber": [
+          "s07"
+        ],
+        "Product": [
+          "mhz"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s07-dal",
+      "fields": {
+        "History ID": "2026-09 / SUB-0007 / DC-BAR-DARK-ALMOND",
+        "Subscriber": [
+          "s07"
+        ],
+        "Product": [
+          "dal"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s07-drb",
+      "fields": {
+        "History ID": "2026-09 / SUB-0007 / DC-BAR-DARK-RASPBERRY",
+        "Subscriber": [
+          "s07"
+        ],
+        "Product": [
+          "drb"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s07-wma",
+      "fields": {
+        "History ID": "2026-09 / SUB-0007 / DC-BAR-WHITE-MATCHA",
+        "Subscriber": [
+          "s07"
+        ],
+        "Product": [
+          "wma"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s07-mes",
+      "fields": {
+        "History ID": "2026-09 / SUB-0007 / DC-BAR-MILK-ESPRESSO",
+        "Subscriber": [
+          "s07"
+        ],
+        "Product": [
+          "mes"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-10-s07-d85",
+      "fields": {
+        "History ID": "2026-10 / SUB-0007 / DC-BAR-DARK-85",
+        "Subscriber": [
+          "s07"
+        ],
+        "Product": [
+          "d85"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s07-dor",
+      "fields": {
+        "History ID": "2026-10 / SUB-0007 / DC-BAR-DARK-ORANGE",
+        "Subscriber": [
+          "s07"
+        ],
+        "Product": [
+          "dor"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s07-dcc",
+      "fields": {
+        "History ID": "2026-10 / SUB-0007 / DC-BAR-DARK-CHILI",
+        "Subscriber": [
+          "s07"
+        ],
+        "Product": [
+          "dcc"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s07-dmi",
+      "fields": {
+        "History ID": "2026-10 / SUB-0007 / DC-BAR-DARK-MINT",
+        "Subscriber": [
+          "s07"
+        ],
+        "Product": [
+          "dmi"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s07-mpb",
+      "fields": {
+        "History ID": "2026-10 / SUB-0007 / DC-BAR-MILK-PEANUT",
+        "Subscriber": [
+          "s07"
+        ],
+        "Product": [
+          "mpb"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s07-mlh",
+      "fields": {
+        "History ID": "2026-10 / SUB-0007 / DC-BAR-MILK-LAVENDER",
+        "Subscriber": [
+          "s07"
+        ],
+        "Product": [
+          "mlh"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-09-s08-dss",
+      "fields": {
+        "History ID": "2026-09 / SUB-0008 / DC-BAR-DARK-SEASALT",
+        "Subscriber": [
+          "s08"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s08-dor",
+      "fields": {
+        "History ID": "2026-09 / SUB-0008 / DC-BAR-DARK-ORANGE",
+        "Subscriber": [
+          "s08"
+        ],
+        "Product": [
+          "dor"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s08-oat",
+      "fields": {
+        "History ID": "2026-09 / SUB-0008 / DC-BAR-OAT-MILK",
+        "Subscriber": [
+          "s08"
+        ],
+        "Product": [
+          "oat"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s08-mcl",
+      "fields": {
+        "History ID": "2026-09 / SUB-0008 / DC-BAR-MILK-CLASSIC",
+        "Subscriber": [
+          "s08"
+        ],
+        "Product": [
+          "mcl"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-10-s08-d85",
+      "fields": {
+        "History ID": "2026-10 / SUB-0008 / DC-BAR-DARK-85",
+        "Subscriber": [
+          "s08"
+        ],
+        "Product": [
+          "d85"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s08-msc",
+      "fields": {
+        "History ID": "2026-10 / SUB-0008 / DC-BAR-MILK-CARAMEL",
+        "Subscriber": [
+          "s08"
+        ],
+        "Product": [
+          "msc"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s08-wcc",
+      "fields": {
+        "History ID": "2026-10 / SUB-0008 / DC-BAR-WHITE-COOKIE",
+        "Subscriber": [
+          "s08"
+        ],
+        "Product": [
+          "wcc"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s08-wst",
+      "fields": {
+        "History ID": "2026-10 / SUB-0008 / DC-BAR-WHITE-STRAWBERRY",
+        "Subscriber": [
+          "s08"
+        ],
+        "Product": [
+          "wst"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-09-s09-dss",
+      "fields": {
+        "History ID": "2026-09 / SUB-0009 / DC-BAR-DARK-SEASALT",
+        "Subscriber": [
+          "s09"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s09-oat",
+      "fields": {
+        "History ID": "2026-09 / SUB-0009 / DC-BAR-OAT-MILK",
+        "Subscriber": [
+          "s09"
+        ],
+        "Product": [
+          "oat"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s09-dmi",
+      "fields": {
+        "History ID": "2026-09 / SUB-0009 / DC-BAR-DARK-MINT",
+        "Subscriber": [
+          "s09"
+        ],
+        "Product": [
+          "dmi"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s09-des",
+      "fields": {
+        "History ID": "2026-09 / SUB-0009 / DC-BAR-DARK-ESPRESSO",
+        "Subscriber": [
+          "s09"
+        ],
+        "Product": [
+          "des"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-10-s09-d85",
+      "fields": {
+        "History ID": "2026-10 / SUB-0009 / DC-BAR-DARK-85",
+        "Subscriber": [
+          "s09"
+        ],
+        "Product": [
+          "d85"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s09-dor",
+      "fields": {
+        "History ID": "2026-10 / SUB-0009 / DC-BAR-DARK-ORANGE",
+        "Subscriber": [
+          "s09"
+        ],
+        "Product": [
+          "dor"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s09-dcc",
+      "fields": {
+        "History ID": "2026-10 / SUB-0009 / DC-BAR-DARK-CHILI",
+        "Subscriber": [
+          "s09"
+        ],
+        "Product": [
+          "dcc"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s09-oat",
+      "fields": {
+        "History ID": "2026-10 / SUB-0009 / DC-BAR-OAT-MILK",
+        "Subscriber": [
+          "s09"
+        ],
+        "Product": [
+          "oat"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-09-s10-dss",
+      "fields": {
+        "History ID": "2026-09 / SUB-0010 / DC-BAR-DARK-SEASALT",
+        "Subscriber": [
+          "s10"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s10-d85",
+      "fields": {
+        "History ID": "2026-09 / SUB-0010 / DC-BAR-DARK-85",
+        "Subscriber": [
+          "s10"
+        ],
+        "Product": [
+          "d85"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s10-msc",
+      "fields": {
+        "History ID": "2026-09 / SUB-0010 / DC-BAR-MILK-CARAMEL",
+        "Subscriber": [
+          "s10"
+        ],
+        "Product": [
+          "msc"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s10-mhz",
+      "fields": {
+        "History ID": "2026-09 / SUB-0010 / DC-BAR-MILK-HAZELNUT",
+        "Subscriber": [
+          "s10"
+        ],
+        "Product": [
+          "mhz"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s10-dal",
+      "fields": {
+        "History ID": "2026-09 / SUB-0010 / DC-BAR-DARK-ALMOND",
+        "Subscriber": [
+          "s10"
+        ],
+        "Product": [
+          "dal"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s10-drb",
+      "fields": {
+        "History ID": "2026-09 / SUB-0010 / DC-BAR-DARK-RASPBERRY",
+        "Subscriber": [
+          "s10"
+        ],
+        "Product": [
+          "drb"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s10-dor",
+      "fields": {
+        "History ID": "2026-09 / SUB-0010 / DC-BAR-DARK-ORANGE",
+        "Subscriber": [
+          "s10"
+        ],
+        "Product": [
+          "dor"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s10-wma",
+      "fields": {
+        "History ID": "2026-09 / SUB-0010 / DC-BAR-WHITE-MATCHA",
+        "Subscriber": [
+          "s10"
+        ],
+        "Product": [
+          "wma"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-10-s10-oat",
+      "fields": {
+        "History ID": "2026-10 / SUB-0010 / DC-BAR-OAT-MILK",
+        "Subscriber": [
+          "s10"
+        ],
+        "Product": [
+          "oat"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s10-mes",
+      "fields": {
+        "History ID": "2026-10 / SUB-0010 / DC-BAR-MILK-ESPRESSO",
+        "Subscriber": [
+          "s10"
+        ],
+        "Product": [
+          "mes"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s10-mpb",
+      "fields": {
+        "History ID": "2026-10 / SUB-0010 / DC-BAR-MILK-PEANUT",
+        "Subscriber": [
+          "s10"
+        ],
+        "Product": [
+          "mpb"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s10-wcc",
+      "fields": {
+        "History ID": "2026-10 / SUB-0010 / DC-BAR-WHITE-COOKIE",
+        "Subscriber": [
+          "s10"
+        ],
+        "Product": [
+          "wcc"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s10-mlh",
+      "fields": {
+        "History ID": "2026-10 / SUB-0010 / DC-BAR-MILK-LAVENDER",
+        "Subscriber": [
+          "s10"
+        ],
+        "Product": [
+          "mlh"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s10-mcl",
+      "fields": {
+        "History ID": "2026-10 / SUB-0010 / DC-BAR-MILK-CLASSIC",
+        "Subscriber": [
+          "s10"
+        ],
+        "Product": [
+          "mcl"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s10-wst",
+      "fields": {
+        "History ID": "2026-10 / SUB-0010 / DC-BAR-WHITE-STRAWBERRY",
+        "Subscriber": [
+          "s10"
+        ],
+        "Product": [
+          "wst"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s10-rch",
+      "fields": {
+        "History ID": "2026-10 / SUB-0010 / DC-BAR-RUBY-CHERRY",
+        "Subscriber": [
+          "s10"
+        ],
+        "Product": [
+          "rch"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-09-s11-dss",
+      "fields": {
+        "History ID": "2026-09 / SUB-0011 / DC-BAR-DARK-SEASALT",
+        "Subscriber": [
+          "s11"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s11-oat",
+      "fields": {
+        "History ID": "2026-09 / SUB-0011 / DC-BAR-OAT-MILK",
+        "Subscriber": [
+          "s11"
+        ],
+        "Product": [
+          "oat"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s11-des",
+      "fields": {
+        "History ID": "2026-09 / SUB-0011 / DC-BAR-DARK-ESPRESSO",
+        "Subscriber": [
+          "s11"
+        ],
+        "Product": [
+          "des"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-10-s11-d85",
+      "fields": {
+        "History ID": "2026-10 / SUB-0011 / DC-BAR-DARK-85",
+        "Subscriber": [
+          "s11"
+        ],
+        "Product": [
+          "d85"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s11-oat",
+      "fields": {
+        "History ID": "2026-10 / SUB-0011 / DC-BAR-OAT-MILK",
+        "Subscriber": [
+          "s11"
+        ],
+        "Product": [
+          "oat"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s11-des",
+      "fields": {
+        "History ID": "2026-10 / SUB-0011 / DC-BAR-DARK-ESPRESSO",
+        "Subscriber": [
+          "s11"
+        ],
+        "Product": [
+          "des"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-09-s12-msc",
+      "fields": {
+        "History ID": "2026-09 / SUB-0012 / DC-BAR-MILK-CARAMEL",
+        "Subscriber": [
+          "s12"
+        ],
+        "Product": [
+          "msc"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s12-mhz",
+      "fields": {
+        "History ID": "2026-09 / SUB-0012 / DC-BAR-MILK-HAZELNUT",
+        "Subscriber": [
+          "s12"
+        ],
+        "Product": [
+          "mhz"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s12-dor",
+      "fields": {
+        "History ID": "2026-09 / SUB-0012 / DC-BAR-DARK-ORANGE",
+        "Subscriber": [
+          "s12"
+        ],
+        "Product": [
+          "dor"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s12-dmi",
+      "fields": {
+        "History ID": "2026-09 / SUB-0012 / DC-BAR-DARK-MINT",
+        "Subscriber": [
+          "s12"
+        ],
+        "Product": [
+          "dmi"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s12-mcl",
+      "fields": {
+        "History ID": "2026-09 / SUB-0012 / DC-BAR-MILK-CLASSIC",
+        "Subscriber": [
+          "s12"
+        ],
+        "Product": [
+          "mcl"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-09-s12-rch",
+      "fields": {
+        "History ID": "2026-09 / SUB-0012 / DC-BAR-RUBY-CHERRY",
+        "Subscriber": [
+          "s12"
+        ],
+        "Product": [
+          "rch"
+        ],
+        "Box Month": "2026-09",
+        "Shipped On": "2026-09-03"
+      }
+    },
+    {
+      "ref": "h-2026-10-s12-dss",
+      "fields": {
+        "History ID": "2026-10 / SUB-0012 / DC-BAR-DARK-SEASALT",
+        "Subscriber": [
+          "s12"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s12-d85",
+      "fields": {
+        "History ID": "2026-10 / SUB-0012 / DC-BAR-DARK-85",
+        "Subscriber": [
+          "s12"
+        ],
+        "Product": [
+          "d85"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s12-drb",
+      "fields": {
+        "History ID": "2026-10 / SUB-0012 / DC-BAR-DARK-RASPBERRY",
+        "Subscriber": [
+          "s12"
+        ],
+        "Product": [
+          "drb"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s12-oat",
+      "fields": {
+        "History ID": "2026-10 / SUB-0012 / DC-BAR-OAT-MILK",
+        "Subscriber": [
+          "s12"
+        ],
+        "Product": [
+          "oat"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s12-wma",
+      "fields": {
+        "History ID": "2026-10 / SUB-0012 / DC-BAR-WHITE-MATCHA",
+        "Subscriber": [
+          "s12"
+        ],
+        "Product": [
+          "wma"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s12-wst",
+      "fields": {
+        "History ID": "2026-10 / SUB-0012 / DC-BAR-WHITE-STRAWBERRY",
+        "Subscriber": [
+          "s12"
+        ],
+        "Product": [
+          "wst"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s13-dss",
+      "fields": {
+        "History ID": "2026-10 / SUB-0013 / DC-BAR-DARK-SEASALT",
+        "Subscriber": [
+          "s13"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s13-mcl",
+      "fields": {
+        "History ID": "2026-10 / SUB-0013 / DC-BAR-MILK-CLASSIC",
+        "Subscriber": [
+          "s13"
+        ],
+        "Product": [
+          "mcl"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s13-dor",
+      "fields": {
+        "History ID": "2026-10 / SUB-0013 / DC-BAR-DARK-ORANGE",
+        "Subscriber": [
+          "s13"
+        ],
+        "Product": [
+          "dor"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-10-s13-oat",
+      "fields": {
+        "History ID": "2026-10 / SUB-0013 / DC-BAR-OAT-MILK",
+        "Subscriber": [
+          "s13"
+        ],
+        "Product": [
+          "oat"
+        ],
+        "Box Month": "2026-10",
+        "Shipped On": "2026-10-02"
+      }
+    },
+    {
+      "ref": "h-2026-08-s14-dss",
+      "fields": {
+        "History ID": "2026-08 / SUB-0014 / DC-BAR-DARK-SEASALT",
+        "Subscriber": [
+          "s14"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Box Month": "2026-08",
+        "Shipped On": "2026-08-04"
+      }
+    },
+    {
+      "ref": "h-2026-08-s14-msc",
+      "fields": {
+        "History ID": "2026-08 / SUB-0014 / DC-BAR-MILK-CARAMEL",
+        "Subscriber": [
+          "s14"
+        ],
+        "Product": [
+          "msc"
+        ],
+        "Box Month": "2026-08",
+        "Shipped On": "2026-08-04"
+      }
+    },
+    {
+      "ref": "h-2026-08-s14-mhz",
+      "fields": {
+        "History ID": "2026-08 / SUB-0014 / DC-BAR-MILK-HAZELNUT",
+        "Subscriber": [
+          "s14"
+        ],
+        "Product": [
+          "mhz"
+        ],
+        "Box Month": "2026-08",
+        "Shipped On": "2026-08-04"
+      }
+    },
+    {
+      "ref": "h-2026-08-s14-drb",
+      "fields": {
+        "History ID": "2026-08 / SUB-0014 / DC-BAR-DARK-RASPBERRY",
+        "Subscriber": [
+          "s14"
+        ],
+        "Product": [
+          "drb"
+        ],
+        "Box Month": "2026-08",
+        "Shipped On": "2026-08-04"
+      }
+    },
+    {
+      "ref": "h-2026-08-s14-mcl",
+      "fields": {
+        "History ID": "2026-08 / SUB-0014 / DC-BAR-MILK-CLASSIC",
+        "Subscriber": [
+          "s14"
+        ],
+        "Product": [
+          "mcl"
+        ],
+        "Box Month": "2026-08",
+        "Shipped On": "2026-08-04"
+      }
+    },
+    {
+      "ref": "h-2026-08-s14-wst",
+      "fields": {
+        "History ID": "2026-08 / SUB-0014 / DC-BAR-WHITE-STRAWBERRY",
+        "Subscriber": [
+          "s14"
+        ],
+        "Product": [
+          "wst"
+        ],
+        "Box Month": "2026-08",
+        "Shipped On": "2026-08-04"
+      }
+    },
+    {
+      "ref": "h-2026-07-s15-dss",
+      "fields": {
+        "History ID": "2026-07 / SUB-0015 / DC-BAR-DARK-SEASALT",
+        "Subscriber": [
+          "s15"
+        ],
+        "Product": [
+          "dss"
+        ],
+        "Box Month": "2026-07",
+        "Shipped On": "2026-07-03"
+      }
+    },
+    {
+      "ref": "h-2026-07-s15-d85",
+      "fields": {
+        "History ID": "2026-07 / SUB-0015 / DC-BAR-DARK-85",
+        "Subscriber": [
+          "s15"
+        ],
+        "Product": [
+          "d85"
+        ],
+        "Box Month": "2026-07",
+        "Shipped On": "2026-07-03"
+      }
+    },
+    {
+      "ref": "h-2026-07-s15-oat",
+      "fields": {
+        "History ID": "2026-07 / SUB-0015 / DC-BAR-OAT-MILK",
+        "Subscriber": [
+          "s15"
+        ],
+        "Product": [
+          "oat"
+        ],
+        "Box Month": "2026-07",
+        "Shipped On": "2026-07-03"
+      }
+    },
+    {
+      "ref": "h-2026-07-s15-dmi",
+      "fields": {
+        "History ID": "2026-07 / SUB-0015 / DC-BAR-DARK-MINT",
+        "Subscriber": [
+          "s15"
+        ],
+        "Product": [
+          "dmi"
+        ],
+        "Box Month": "2026-07",
+        "Shipped On": "2026-07-03"
+      }
+    }
+  ]
+}

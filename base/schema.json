@@ -1,0 +1,3103 @@
+{
+  "baseName": "Demo Chocolate Co. Operations",
+  "schemaVersion": 1,
+  "notes": [
+    "The first field of each table is its primary field.",
+    "Link fields are listed on both sides. The side with createdAutomatically: true is the inverse that Airtable creates by itself when the other side is created through the API.",
+    "Every field type here can be created through the Metadata API. Derived numbers (stock, totals, lifetime value) are plain fields written by the automations on purpose: each number has one writer that is tested, and the base needs no formula, rollup or lookup fields to work.",
+    "prefersSingleRecordLink: true marks links that should hold one record. The Metadata API cannot set it, so setup/create_base.py creates those links as normal links; switch \"Allow linking to multiple records\" off by hand if you want the UI to enforce it. The Web API always reads and writes links as arrays of record ids either way."
+  ],
+  "tables": [
+    {
+      "name": "Products",
+      "description": "Everything Demo Chocolate Co. makes or sells. The SKU matches the Shopify variant SKU.",
+      "fields": [
+        {
+          "name": "SKU",
+          "type": "singleLineText",
+          "description": "Unique stock keeping unit, same as the Shopify variant SKU. Primary field."
+        },
+        {
+          "name": "Name",
+          "type": "singleLineText",
+          "description": "Product name as shown on the shop."
+        },
+        {
+          "name": "Status",
+          "type": "singleSelect",
+          "description": "Active products are sold. Draft products were created automatically for an unknown SKU and need a person to check them.",
+          "options": {
+            "choices": [
+              {
+                "name": "Active",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Draft",
+                "color": "grayLight2"
+              },
+              {
+                "name": "Discontinued",
+                "color": "redLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Category",
+          "type": "singleSelect",
+          "description": "Product family.",
+          "options": {
+            "choices": [
+              {
+                "name": "Bar",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Praline Box",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Praline",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Drinking Chocolate",
+                "color": "orangeLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Chocolate Type",
+          "type": "singleSelect",
+          "description": "Base chocolate.",
+          "options": {
+            "choices": [
+              {
+                "name": "Dark",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Milk",
+                "color": "greenLight2"
+              },
+              {
+                "name": "White",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Ruby",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Oat Milk",
+                "color": "redLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Flavor Family",
+          "type": "singleSelect",
+          "description": "Used to balance variety in subscription boxes.",
+          "options": {
+            "choices": [
+              {
+                "name": "Classic",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Salty",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Caramel",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Nutty",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Fruity",
+                "color": "redLight2"
+              },
+              {
+                "name": "Spiced",
+                "color": "purpleLight2"
+              },
+              {
+                "name": "Earthy",
+                "color": "cyanLight2"
+              },
+              {
+                "name": "Coffee",
+                "color": "pinkLight2"
+              },
+              {
+                "name": "Fresh",
+                "color": "tealLight2"
+              },
+              {
+                "name": "Floral",
+                "color": "grayLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Flavor Notes",
+          "type": "multipleSelects",
+          "description": "Main flavors. Subscriber dislikes use the same options.",
+          "options": {
+            "choices": [
+              {
+                "name": "Sea Salt",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Red Fruit",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Caramel",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Hazelnut",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Almond",
+                "color": "redLight2"
+              },
+              {
+                "name": "Raspberry",
+                "color": "purpleLight2"
+              },
+              {
+                "name": "Orange",
+                "color": "cyanLight2"
+              },
+              {
+                "name": "Chili",
+                "color": "pinkLight2"
+              },
+              {
+                "name": "Cinnamon",
+                "color": "tealLight2"
+              },
+              {
+                "name": "Matcha",
+                "color": "grayLight2"
+              },
+              {
+                "name": "Vanilla",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Coffee",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Mint",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Peanut",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Cookie",
+                "color": "redLight2"
+              },
+              {
+                "name": "Lavender",
+                "color": "purpleLight2"
+              },
+              {
+                "name": "Honey",
+                "color": "cyanLight2"
+              },
+              {
+                "name": "Strawberry",
+                "color": "pinkLight2"
+              },
+              {
+                "name": "Cherry",
+                "color": "tealLight2"
+              },
+              {
+                "name": "Pumpkin",
+                "color": "grayLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Contains Allergens",
+          "type": "multipleSelects",
+          "description": "Allergens that are ingredients.",
+          "options": {
+            "choices": [
+              {
+                "name": "Milk",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Soy",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Tree Nuts",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Peanuts",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Wheat",
+                "color": "redLight2"
+              },
+              {
+                "name": "Eggs",
+                "color": "purpleLight2"
+              },
+              {
+                "name": "Sesame",
+                "color": "cyanLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "May Contain Traces",
+          "type": "multipleSelects",
+          "description": "Allergens that may be present from shared equipment.",
+          "options": {
+            "choices": [
+              {
+                "name": "Milk",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Soy",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Tree Nuts",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Peanuts",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Wheat",
+                "color": "redLight2"
+              },
+              {
+                "name": "Eggs",
+                "color": "purpleLight2"
+              },
+              {
+                "name": "Sesame",
+                "color": "cyanLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Diet Labels",
+          "type": "multipleSelects",
+          "description": "Claims printed on the label. Vegan means no animal ingredients; it can still carry a milk trace warning.",
+          "options": {
+            "choices": [
+              {
+                "name": "Vegan",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Dairy-Free",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Gluten-Free",
+                "color": "yellowLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Ingredients",
+          "type": "multilineText",
+          "description": "Full ingredient list from the label."
+        },
+        {
+          "name": "Price",
+          "type": "currency",
+          "description": "Retail price in USD.",
+          "options": {
+            "precision": 2,
+            "symbol": "$"
+          }
+        },
+        {
+          "name": "Weight Grams",
+          "type": "number",
+          "description": "Net weight in grams.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Subscription Eligible",
+          "type": "checkbox",
+          "description": "Can go into the monthly subscription box.",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          }
+        },
+        {
+          "name": "Wholesale Available",
+          "type": "checkbox",
+          "description": "Offered to wholesale buyers through the Price List.",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          }
+        },
+        {
+          "name": "Shopify Product ID",
+          "type": "singleLineText",
+          "description": "gid://shopify/Product/... Empty when the product is not sold on Shopify."
+        },
+        {
+          "name": "Shopify Variant ID",
+          "type": "singleLineText",
+          "description": "gid://shopify/ProductVariant/..."
+        },
+        {
+          "name": "Shopify Inventory Item ID",
+          "type": "singleLineText",
+          "description": "gid://shopify/InventoryItem/... Used to set stock in Shopify."
+        },
+        {
+          "name": "Shopify Stock",
+          "type": "number",
+          "description": "The available quantity Shopify showed after the last inventory sync (sellable minus units in unshipped Shopify orders).",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Stock Synced At",
+          "type": "dateTime",
+          "description": "When the inventory sync last pushed this product.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        },
+        {
+          "name": "Reorder Point",
+          "type": "number",
+          "description": "Raise a Purchasing Request when sellable stock drops below this.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Reorder Quantity",
+          "type": "number",
+          "description": "Suggested batch size for a Purchasing Request.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Daily Capacity",
+          "type": "number",
+          "description": "Units the kitchen can make per production day.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Production Lead Days",
+          "type": "number",
+          "description": "Days from starting a batch until it can ship (tempering, setting, packing).",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Needs Review",
+          "type": "checkbox",
+          "description": "Something about this product needs a person.",
+          "options": {
+            "icon": "flag",
+            "color": "orangeBright"
+          }
+        },
+        {
+          "name": "Review Reason",
+          "type": "multilineText",
+          "description": "Why the product needs review."
+        },
+        {
+          "name": "Production Batches",
+          "type": "multipleRecordLinks",
+          "description": "Batches of this product.",
+          "options": {
+            "linkedTableName": "Production Batches",
+            "inverseLinkFieldName": "Product",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        },
+        {
+          "name": "Order Lines",
+          "type": "multipleRecordLinks",
+          "description": "Order lines for this product.",
+          "options": {
+            "linkedTableName": "Order Lines",
+            "inverseLinkFieldName": "Product",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        },
+        {
+          "name": "Price List",
+          "type": "multipleRecordLinks",
+          "description": "Wholesale price tiers.",
+          "options": {
+            "linkedTableName": "Price List",
+            "inverseLinkFieldName": "Product",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        },
+        {
+          "name": "Quote Lines",
+          "type": "multipleRecordLinks",
+          "description": "Quote lines for this product.",
+          "options": {
+            "linkedTableName": "Quote Lines",
+            "inverseLinkFieldName": "Product",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        },
+        {
+          "name": "Box Shipments",
+          "type": "multipleRecordLinks",
+          "description": "Subscription boxes that contain this product.",
+          "options": {
+            "linkedTableName": "Box Shipments",
+            "inverseLinkFieldName": "Products",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        },
+        {
+          "name": "Box History",
+          "type": "multipleRecordLinks",
+          "description": "Subscription history rows for this product.",
+          "options": {
+            "linkedTableName": "Box History",
+            "inverseLinkFieldName": "Product",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        },
+        {
+          "name": "Promos",
+          "type": "multipleRecordLinks",
+          "description": "Short dated promos for this product.",
+          "options": {
+            "linkedTableName": "Promos",
+            "inverseLinkFieldName": "Product",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        },
+        {
+          "name": "Purchasing Requests",
+          "type": "multipleRecordLinks",
+          "description": "Requests to make more.",
+          "options": {
+            "linkedTableName": "Purchasing Requests",
+            "inverseLinkFieldName": "Product",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        }
+      ]
+    },
+    {
+      "name": "Production Batches",
+      "description": "Source of truth for stock: one row per batch made in the kitchen.",
+      "fields": [
+        {
+          "name": "Batch Code",
+          "type": "singleLineText",
+          "description": "Printed on the wrapper, for example B-DSS-260815. Primary field."
+        },
+        {
+          "name": "Product",
+          "type": "multipleRecordLinks",
+          "description": "The product in this batch.",
+          "options": {
+            "linkedTableName": "Products",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Production Batches"
+          }
+        },
+        {
+          "name": "Status",
+          "type": "singleSelect",
+          "description": "Released batches can be sold. Planned batches are scheduled. On Hold is waiting for quality control.",
+          "options": {
+            "choices": [
+              {
+                "name": "Planned",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Released",
+                "color": "greenLight2"
+              },
+              {
+                "name": "On Hold",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Expired",
+                "color": "redLight2"
+              },
+              {
+                "name": "Depleted",
+                "color": "grayLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Produced On",
+          "type": "date",
+          "description": "Production date. In the future for planned batches.",
+          "options": {
+            "dateFormat": {
+              "name": "iso"
+            }
+          }
+        },
+        {
+          "name": "Best Before",
+          "type": "date",
+          "description": "Best before date printed on the wrapper.",
+          "options": {
+            "dateFormat": {
+              "name": "iso"
+            }
+          }
+        },
+        {
+          "name": "Quantity Made",
+          "type": "number",
+          "description": "Units made (or planned).",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Quantity Reserved",
+          "type": "number",
+          "description": "Units promised to subscription boxes or wholesale orders, not yet shipped.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Quantity Sold",
+          "type": "number",
+          "description": "Units shipped.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Notes",
+          "type": "multilineText",
+          "description": "Anything worth knowing about the batch."
+        },
+        {
+          "name": "Promos",
+          "type": "multipleRecordLinks",
+          "description": "Promo created for this batch.",
+          "options": {
+            "linkedTableName": "Promos",
+            "inverseLinkFieldName": "Batch",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        },
+        {
+          "name": "Box Shipments",
+          "type": "multipleRecordLinks",
+          "description": "Subscription boxes packed from this batch.",
+          "options": {
+            "linkedTableName": "Box Shipments",
+            "inverseLinkFieldName": "Batches",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        }
+      ]
+    },
+    {
+      "name": "Customers",
+      "description": "One row per customer. Matched by Shopify Customer ID, then by trimmed lowercase email; updated by record id or created. Never upserted on Email.",
+      "fields": [
+        {
+          "name": "Name",
+          "type": "singleLineText",
+          "description": "Full name. Primary field."
+        },
+        {
+          "name": "Email",
+          "type": "email",
+          "description": "Lowercase email address. Orders are matched on this."
+        },
+        {
+          "name": "Phone",
+          "type": "phoneNumber",
+          "description": "Phone number."
+        },
+        {
+          "name": "Shopify Customer ID",
+          "type": "singleLineText",
+          "description": "Numeric Shopify customer id."
+        },
+        {
+          "name": "Created Via",
+          "type": "singleSelect",
+          "description": "Where the record came from.",
+          "options": {
+            "choices": [
+              {
+                "name": "Shopify",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Wholesale",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Import",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Manual",
+                "color": "orangeLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Accepts Marketing",
+          "type": "checkbox",
+          "description": "Opted in to marketing email.",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          }
+        },
+        {
+          "name": "Record Status",
+          "type": "singleSelect",
+          "description": "Duplicate rows are kept for history and point to the surviving record in Merged Into.",
+          "options": {
+            "choices": [
+              {
+                "name": "Active",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Duplicate",
+                "color": "grayLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Merged Into",
+          "type": "multipleRecordLinks",
+          "description": "For a duplicate: the surviving customer record.",
+          "options": {
+            "linkedTableName": "Customers",
+            "prefersSingleRecordLink": true
+          }
+        },
+        {
+          "name": "Lifetime Value",
+          "type": "currency",
+          "description": "Sum of order totals minus refunds, cancelled orders excluded.",
+          "options": {
+            "precision": 2,
+            "symbol": "$"
+          }
+        },
+        {
+          "name": "Order Count",
+          "type": "number",
+          "description": "Orders that were not cancelled.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Average Order Value",
+          "type": "currency",
+          "description": "Lifetime Value divided by Order Count.",
+          "options": {
+            "precision": 2,
+            "symbol": "$"
+          }
+        },
+        {
+          "name": "VIP Tier",
+          "type": "singleSelect",
+          "description": "Set by the customer stats script from Lifetime Value.",
+          "options": {
+            "choices": [
+              {
+                "name": "Standard",
+                "color": "grayLight2"
+              },
+              {
+                "name": "Silver",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Gold",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Platinum",
+                "color": "purpleLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Stats Updated At",
+          "type": "dateTime",
+          "description": "When the customer stats last changed.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        },
+        {
+          "name": "Notes",
+          "type": "multilineText",
+          "description": "Notes for the team."
+        },
+        {
+          "name": "Orders",
+          "type": "multipleRecordLinks",
+          "description": "Orders placed by this customer.",
+          "options": {
+            "linkedTableName": "Orders",
+            "inverseLinkFieldName": "Customer",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        },
+        {
+          "name": "Subscribers",
+          "type": "multipleRecordLinks",
+          "description": "Subscription linked to this customer.",
+          "options": {
+            "linkedTableName": "Subscribers",
+            "inverseLinkFieldName": "Customer",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        },
+        {
+          "name": "Tickets",
+          "type": "multipleRecordLinks",
+          "description": "Support tickets from this customer.",
+          "options": {
+            "linkedTableName": "Tickets",
+            "inverseLinkFieldName": "Customer",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        }
+      ]
+    },
+    {
+      "name": "Orders",
+      "description": "Shopify orders, upserted by Shopify Order ID from the orders/create and orders/updated webhooks.",
+      "fields": [
+        {
+          "name": "Order Number",
+          "type": "singleLineText",
+          "description": "Shopify order name, for example #1001. Primary field."
+        },
+        {
+          "name": "Shopify Order ID",
+          "type": "singleLineText",
+          "description": "Numeric Shopify order id. The upsert key."
+        },
+        {
+          "name": "Customer",
+          "type": "multipleRecordLinks",
+          "description": "The customer.",
+          "options": {
+            "linkedTableName": "Customers",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Orders"
+          }
+        },
+        {
+          "name": "Email",
+          "type": "email",
+          "description": "Email on the order (used to verify support claims)."
+        },
+        {
+          "name": "Order Date",
+          "type": "dateTime",
+          "description": "When the order was placed.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        },
+        {
+          "name": "Shopify Updated At",
+          "type": "dateTime",
+          "description": "updated_at of the last webhook applied. Older webhooks are ignored.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        },
+        {
+          "name": "Financial Status",
+          "type": "singleSelect",
+          "description": "From Shopify financial_status (pending, authorized, partially_paid, paid, partially_refunded, refunded, voided). Expired matches the GraphQL displayFinancialStatus EXPIRED.",
+          "options": {
+            "choices": [
+              {
+                "name": "Pending",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Authorized",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Paid",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Partially Paid",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Partially Refunded",
+                "color": "redLight2"
+              },
+              {
+                "name": "Refunded",
+                "color": "purpleLight2"
+              },
+              {
+                "name": "Voided",
+                "color": "cyanLight2"
+              },
+              {
+                "name": "Expired",
+                "color": "pinkLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Fulfillment Status",
+          "type": "singleSelect",
+          "description": "From Shopify fulfillment_status (fulfilled, partial, not_eligible, restocked; null means unfulfilled).",
+          "options": {
+            "choices": [
+              {
+                "name": "Unfulfilled",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Partial",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Fulfilled",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Restocked",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Not Eligible",
+                "color": "redLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Order Status",
+          "type": "singleSelect",
+          "description": "Open, Closed or Cancelled.",
+          "options": {
+            "choices": [
+              {
+                "name": "Open",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Closed",
+                "color": "grayLight2"
+              },
+              {
+                "name": "Cancelled",
+                "color": "redLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Cancelled At",
+          "type": "dateTime",
+          "description": "When Shopify cancelled the order.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        },
+        {
+          "name": "Subtotal",
+          "type": "currency",
+          "description": "Line items total.",
+          "options": {
+            "precision": 2,
+            "symbol": "$"
+          }
+        },
+        {
+          "name": "Shipping",
+          "type": "currency",
+          "description": "Shipping charged.",
+          "options": {
+            "precision": 2,
+            "symbol": "$"
+          }
+        },
+        {
+          "name": "Tax",
+          "type": "currency",
+          "description": "Tax charged.",
+          "options": {
+            "precision": 2,
+            "symbol": "$"
+          }
+        },
+        {
+          "name": "Total",
+          "type": "currency",
+          "description": "Order total.",
+          "options": {
+            "precision": 2,
+            "symbol": "$"
+          }
+        },
+        {
+          "name": "Refunded Amount",
+          "type": "currency",
+          "description": "Total refunded so far.",
+          "options": {
+            "precision": 2,
+            "symbol": "$"
+          }
+        },
+        {
+          "name": "Currency",
+          "type": "singleLineText",
+          "description": "ISO currency code."
+        },
+        {
+          "name": "Shipping Name",
+          "type": "singleLineText",
+          "description": "Recipient name."
+        },
+        {
+          "name": "Shipping Address",
+          "type": "singleLineText",
+          "description": "Street address line."
+        },
+        {
+          "name": "Shipping City",
+          "type": "singleLineText",
+          "description": "City, used for the melt-risk forecast."
+        },
+        {
+          "name": "Shipping Region",
+          "type": "singleLineText",
+          "description": "State or province code."
+        },
+        {
+          "name": "Shipping Country",
+          "type": "singleLineText",
+          "description": "ISO country code."
+        },
+        {
+          "name": "Shipping Postal Code",
+          "type": "singleLineText",
+          "description": "ZIP or postal code."
+        },
+        {
+          "name": "Is Gift",
+          "type": "checkbox",
+          "description": "The buyer marked the order as a gift.",
+          "options": {
+            "icon": "heart",
+            "color": "pinkBright"
+          }
+        },
+        {
+          "name": "Gift Note",
+          "type": "multilineText",
+          "description": "Message to print on the packing slip."
+        },
+        {
+          "name": "Cold Pack",
+          "type": "singleSelect",
+          "description": "Required when the forecast at the destination reaches MELT_TEMP_C. Review when the forecast could not be checked.",
+          "options": {
+            "choices": [
+              {
+                "name": "Not Needed",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Required",
+                "color": "redLight2"
+              },
+              {
+                "name": "Review",
+                "color": "orangeLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Forecast Max C",
+          "type": "number",
+          "description": "Highest forecast maximum temperature over the melt-risk window, in Celsius.",
+          "options": {
+            "precision": 1
+          }
+        },
+        {
+          "name": "Melt Check Note",
+          "type": "multilineText",
+          "description": "What the melt-risk check found."
+        },
+        {
+          "name": "Melt Checked At",
+          "type": "dateTime",
+          "description": "When the melt-risk check ran.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        },
+        {
+          "name": "Cold Pack Shipped",
+          "type": "checkbox",
+          "description": "Ticked by the packing team when a cold pack went in the box.",
+          "options": {
+            "icon": "check",
+            "color": "blueBright"
+          }
+        },
+        {
+          "name": "Shipped At",
+          "type": "dateTime",
+          "description": "When the parcel left.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        },
+        {
+          "name": "Expected Delivery",
+          "type": "date",
+          "description": "Delivery date promised by the carrier.",
+          "options": {
+            "dateFormat": {
+              "name": "iso"
+            }
+          }
+        },
+        {
+          "name": "Delivered At",
+          "type": "dateTime",
+          "description": "When the carrier marked it delivered.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        },
+        {
+          "name": "Tracking Number",
+          "type": "singleLineText",
+          "description": "Carrier tracking number."
+        },
+        {
+          "name": "Shopify Tags",
+          "type": "singleLineText",
+          "description": "Comma separated Shopify tags."
+        },
+        {
+          "name": "Needs Review",
+          "type": "checkbox",
+          "description": "Something about this order needs a person.",
+          "options": {
+            "icon": "flag",
+            "color": "orangeBright"
+          }
+        },
+        {
+          "name": "Review Reason",
+          "type": "multilineText",
+          "description": "Why the order needs review."
+        },
+        {
+          "name": "Order Lines",
+          "type": "multipleRecordLinks",
+          "description": "Line items.",
+          "options": {
+            "linkedTableName": "Order Lines",
+            "inverseLinkFieldName": "Order",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        },
+        {
+          "name": "Tickets",
+          "type": "multipleRecordLinks",
+          "description": "Support tickets about this order.",
+          "options": {
+            "linkedTableName": "Tickets",
+            "inverseLinkFieldName": "Order",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        },
+        {
+          "name": "Webhook Log",
+          "type": "multipleRecordLinks",
+          "description": "Webhooks that touched this order.",
+          "options": {
+            "linkedTableName": "Webhook Log",
+            "inverseLinkFieldName": "Order",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        }
+      ]
+    },
+    {
+      "name": "Order Lines",
+      "description": "Order line items, upserted by Shopify line item id.",
+      "fields": [
+        {
+          "name": "Line Item ID",
+          "type": "singleLineText",
+          "description": "Shopify line item id. Primary field and upsert key."
+        },
+        {
+          "name": "Order",
+          "type": "multipleRecordLinks",
+          "description": "The order.",
+          "options": {
+            "linkedTableName": "Orders",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Order Lines"
+          }
+        },
+        {
+          "name": "Product",
+          "type": "multipleRecordLinks",
+          "description": "The product, matched by SKU.",
+          "options": {
+            "linkedTableName": "Products",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Order Lines"
+          }
+        },
+        {
+          "name": "SKU",
+          "type": "singleLineText",
+          "description": "SKU as sent by Shopify."
+        },
+        {
+          "name": "Product Title",
+          "type": "singleLineText",
+          "description": "Title as sent by Shopify."
+        },
+        {
+          "name": "Quantity",
+          "type": "number",
+          "description": "Quantity ordered.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Current Quantity",
+          "type": "number",
+          "description": "Quantity after refunds and removals.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Refunded Quantity",
+          "type": "number",
+          "description": "Units refunded.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Unit Price",
+          "type": "currency",
+          "description": "Price per unit.",
+          "options": {
+            "precision": 2,
+            "symbol": "$"
+          }
+        },
+        {
+          "name": "Line Total",
+          "type": "currency",
+          "description": "Unit price times current quantity.",
+          "options": {
+            "precision": 2,
+            "symbol": "$"
+          }
+        },
+        {
+          "name": "SKU Status",
+          "type": "singleSelect",
+          "description": "Matched to a product, unknown SKU, or no SKU on the line.",
+          "options": {
+            "choices": [
+              {
+                "name": "Matched",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Unknown SKU",
+                "color": "redLight2"
+              },
+              {
+                "name": "Missing SKU",
+                "color": "orangeLight2"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Price List",
+      "description": "Wholesale price tiers by quantity.",
+      "fields": [
+        {
+          "name": "Tier Name",
+          "type": "singleLineText",
+          "description": "For example DC-BAR-DARK-SEASALT 100-299. Primary field."
+        },
+        {
+          "name": "Product",
+          "type": "multipleRecordLinks",
+          "description": "The product.",
+          "options": {
+            "linkedTableName": "Products",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Price List"
+          }
+        },
+        {
+          "name": "Min Quantity",
+          "type": "number",
+          "description": "Smallest quantity for this tier (inclusive).",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Max Quantity",
+          "type": "number",
+          "description": "Largest quantity for this tier (inclusive). Empty means no upper limit.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Unit Price",
+          "type": "currency",
+          "description": "Wholesale price per unit.",
+          "options": {
+            "precision": 2,
+            "symbol": "$"
+          }
+        },
+        {
+          "name": "Active",
+          "type": "checkbox",
+          "description": "Only active tiers are used for quotes.",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          }
+        },
+        {
+          "name": "Quote Lines",
+          "type": "multipleRecordLinks",
+          "description": "Quote lines priced with this tier.",
+          "options": {
+            "linkedTableName": "Quote Lines",
+            "inverseLinkFieldName": "Price Tier",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        }
+      ]
+    },
+    {
+      "name": "Quotes",
+      "description": "Wholesale quotes created from inquiries.",
+      "fields": [
+        {
+          "name": "Quote Number",
+          "type": "singleLineText",
+          "description": "For example Q-2026-0046. Primary field."
+        },
+        {
+          "name": "Status",
+          "type": "singleSelect",
+          "description": "Approved quotes become Shopify draft orders.",
+          "options": {
+            "choices": [
+              {
+                "name": "Draft",
+                "color": "grayLight2"
+              },
+              {
+                "name": "Needs Review",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Sent",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Approved",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Converted",
+                "color": "purpleLight2"
+              },
+              {
+                "name": "Rejected",
+                "color": "redLight2"
+              },
+              {
+                "name": "Expired",
+                "color": "grayLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Processed",
+          "type": "checkbox",
+          "description": "Ticked once the draft order was created and the invoice sent. Never processed twice.",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          }
+        },
+        {
+          "name": "Inquiry ID",
+          "type": "singleLineText",
+          "description": "Id of the form submission. Prevents duplicate quotes."
+        },
+        {
+          "name": "Business Name",
+          "type": "singleLineText",
+          "description": "Buyer business."
+        },
+        {
+          "name": "Contact Name",
+          "type": "singleLineText",
+          "description": "Buyer contact."
+        },
+        {
+          "name": "Contact Email",
+          "type": "email",
+          "description": "Where the quote and the invoice go."
+        },
+        {
+          "name": "Contact Phone",
+          "type": "phoneNumber",
+          "description": "Buyer phone."
+        },
+        {
+          "name": "Needed By",
+          "type": "date",
+          "description": "Date the buyer needs the goods.",
+          "options": {
+            "dateFormat": {
+              "name": "iso"
+            }
+          }
+        },
+        {
+          "name": "Inquiry Text",
+          "type": "multilineText",
+          "description": "The original message."
+        },
+        {
+          "name": "Extraction Method",
+          "type": "singleSelect",
+          "description": "Claude, or the rule-based fallback when Claude was unavailable.",
+          "options": {
+            "choices": [
+              {
+                "name": "Claude",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Rule-Based Fallback",
+                "color": "greenLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Subtotal",
+          "type": "currency",
+          "description": "Sum of quote lines.",
+          "options": {
+            "precision": 2,
+            "symbol": "$"
+          }
+        },
+        {
+          "name": "Total",
+          "type": "currency",
+          "description": "Amount to invoice.",
+          "options": {
+            "precision": 2,
+            "symbol": "$"
+          }
+        },
+        {
+          "name": "Feasibility",
+          "type": "singleSelect",
+          "description": "Can we deliver by the needed-by date?",
+          "options": {
+            "choices": [
+              {
+                "name": "In Stock",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Feasible With Production",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Not Feasible",
+                "color": "redLight2"
+              },
+              {
+                "name": "Unknown",
+                "color": "grayLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Feasibility Note",
+          "type": "multilineText",
+          "description": "How the feasibility was worked out."
+        },
+        {
+          "name": "Needs Review",
+          "type": "checkbox",
+          "description": "A person must check this quote before it is sent.",
+          "options": {
+            "icon": "flag",
+            "color": "orangeBright"
+          }
+        },
+        {
+          "name": "Review Reason",
+          "type": "multilineText",
+          "description": "Why the quote needs review."
+        },
+        {
+          "name": "Valid Until",
+          "type": "date",
+          "description": "Quote expiry date.",
+          "options": {
+            "dateFormat": {
+              "name": "iso"
+            }
+          }
+        },
+        {
+          "name": "Sent At",
+          "type": "dateTime",
+          "description": "When the quote email was sent.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        },
+        {
+          "name": "Email Message ID",
+          "type": "singleLineText",
+          "description": "Message id from the email API."
+        },
+        {
+          "name": "Draft Order ID",
+          "type": "singleLineText",
+          "description": "gid://shopify/DraftOrder/..."
+        },
+        {
+          "name": "Draft Order Name",
+          "type": "singleLineText",
+          "description": "For example #D12."
+        },
+        {
+          "name": "Invoice URL",
+          "type": "url",
+          "description": "Shopify invoice link sent to the buyer."
+        },
+        {
+          "name": "Invoice Sent At",
+          "type": "dateTime",
+          "description": "When Shopify sent the invoice.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        },
+        {
+          "name": "Processed At",
+          "type": "dateTime",
+          "description": "When the approved quote was turned into a draft order.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        },
+        {
+          "name": "Processing Error",
+          "type": "multilineText",
+          "description": "Last error while creating the draft order."
+        },
+        {
+          "name": "Quote Lines",
+          "type": "multipleRecordLinks",
+          "description": "Lines of this quote.",
+          "options": {
+            "linkedTableName": "Quote Lines",
+            "inverseLinkFieldName": "Quote",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        }
+      ]
+    },
+    {
+      "name": "Quote Lines",
+      "description": "One row per product requested in a quote.",
+      "fields": [
+        {
+          "name": "Line Label",
+          "type": "singleLineText",
+          "description": "For example Q-2026-0046 / 1. Primary field."
+        },
+        {
+          "name": "Quote",
+          "type": "multipleRecordLinks",
+          "description": "The quote.",
+          "options": {
+            "linkedTableName": "Quotes",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Quote Lines"
+          }
+        },
+        {
+          "name": "Product",
+          "type": "multipleRecordLinks",
+          "description": "Matched product. Empty when unmatched.",
+          "options": {
+            "linkedTableName": "Products",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Quote Lines"
+          }
+        },
+        {
+          "name": "Price Tier",
+          "type": "multipleRecordLinks",
+          "description": "Price tier used.",
+          "options": {
+            "linkedTableName": "Price List",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Quote Lines"
+          }
+        },
+        {
+          "name": "Requested Product",
+          "type": "singleLineText",
+          "description": "What the buyer wrote."
+        },
+        {
+          "name": "Quantity",
+          "type": "number",
+          "description": "Units requested.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Unit Price",
+          "type": "currency",
+          "description": "Tier price per unit.",
+          "options": {
+            "precision": 2,
+            "symbol": "$"
+          }
+        },
+        {
+          "name": "Line Total",
+          "type": "currency",
+          "description": "Quantity times unit price.",
+          "options": {
+            "precision": 2,
+            "symbol": "$"
+          }
+        },
+        {
+          "name": "Match Status",
+          "type": "singleSelect",
+          "description": "Unmatched lines are flagged for a person.",
+          "options": {
+            "choices": [
+              {
+                "name": "Matched",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Unmatched",
+                "color": "redLight2"
+              },
+              {
+                "name": "No Tier",
+                "color": "orangeLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Stock Available",
+          "type": "number",
+          "description": "Sellable stock when the quote was made.",
+          "options": {
+            "precision": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "Subscribers",
+      "description": "Monthly chocolate box subscribers.",
+      "fields": [
+        {
+          "name": "Subscriber ID",
+          "type": "singleLineText",
+          "description": "For example SUB-0001. Primary field."
+        },
+        {
+          "name": "Customer",
+          "type": "multipleRecordLinks",
+          "description": "The customer record.",
+          "options": {
+            "linkedTableName": "Customers",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Subscribers"
+          }
+        },
+        {
+          "name": "Name",
+          "type": "singleLineText",
+          "description": "Subscriber name."
+        },
+        {
+          "name": "Email",
+          "type": "email",
+          "description": "Subscriber email."
+        },
+        {
+          "name": "Status",
+          "type": "singleSelect",
+          "description": "Only Active subscribers get a box.",
+          "options": {
+            "choices": [
+              {
+                "name": "Active",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Paused",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Cancelled",
+                "color": "redLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Plan",
+          "type": "singleSelect",
+          "description": "Bars per box.",
+          "options": {
+            "choices": [
+              {
+                "name": "4 Bars",
+                "color": "blueLight2"
+              },
+              {
+                "name": "6 Bars",
+                "color": "greenLight2"
+              },
+              {
+                "name": "8 Bars",
+                "color": "yellowLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Dietary Needs",
+          "type": "multipleSelects",
+          "description": "Hard requirements. Nut-Free also excludes nut traces.",
+          "options": {
+            "choices": [
+              {
+                "name": "Nut-Free",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Dairy-Free",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Vegan",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Gluten-Free",
+                "color": "orangeLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Flavor Dislikes",
+          "type": "multipleSelects",
+          "description": "Flavor notes the subscriber does not want.",
+          "options": {
+            "choices": [
+              {
+                "name": "Sea Salt",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Red Fruit",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Caramel",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Hazelnut",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Almond",
+                "color": "redLight2"
+              },
+              {
+                "name": "Raspberry",
+                "color": "purpleLight2"
+              },
+              {
+                "name": "Orange",
+                "color": "cyanLight2"
+              },
+              {
+                "name": "Chili",
+                "color": "pinkLight2"
+              },
+              {
+                "name": "Cinnamon",
+                "color": "tealLight2"
+              },
+              {
+                "name": "Matcha",
+                "color": "grayLight2"
+              },
+              {
+                "name": "Vanilla",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Coffee",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Mint",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Peanut",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Cookie",
+                "color": "redLight2"
+              },
+              {
+                "name": "Lavender",
+                "color": "purpleLight2"
+              },
+              {
+                "name": "Honey",
+                "color": "cyanLight2"
+              },
+              {
+                "name": "Strawberry",
+                "color": "pinkLight2"
+              },
+              {
+                "name": "Cherry",
+                "color": "tealLight2"
+              },
+              {
+                "name": "Pumpkin",
+                "color": "grayLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Started On",
+          "type": "date",
+          "description": "Subscription start date. Longest tenure is served first.",
+          "options": {
+            "dateFormat": {
+              "name": "iso"
+            }
+          }
+        },
+        {
+          "name": "Notes",
+          "type": "multilineText",
+          "description": "Notes for the packing team."
+        },
+        {
+          "name": "Box Shipments",
+          "type": "multipleRecordLinks",
+          "description": "Boxes for this subscriber.",
+          "options": {
+            "linkedTableName": "Box Shipments",
+            "inverseLinkFieldName": "Subscriber",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        },
+        {
+          "name": "Box History",
+          "type": "multipleRecordLinks",
+          "description": "Bars this subscriber received.",
+          "options": {
+            "linkedTableName": "Box History",
+            "inverseLinkFieldName": "Subscriber",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        }
+      ]
+    },
+    {
+      "name": "Box Shipments",
+      "description": "One row per subscriber per month.",
+      "fields": [
+        {
+          "name": "Shipment ID",
+          "type": "singleLineText",
+          "description": "BOX-<month>-<subscriber id>, for example BOX-2026-11-SUB-0001. Primary field and upsert key."
+        },
+        {
+          "name": "Subscriber",
+          "type": "multipleRecordLinks",
+          "description": "Who gets the box.",
+          "options": {
+            "linkedTableName": "Subscribers",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Box Shipments"
+          }
+        },
+        {
+          "name": "Box Month",
+          "type": "singleLineText",
+          "description": "YYYY-MM."
+        },
+        {
+          "name": "Products",
+          "type": "multipleRecordLinks",
+          "description": "Packing list.",
+          "options": {
+            "linkedTableName": "Products",
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldName": "Box Shipments"
+          }
+        },
+        {
+          "name": "Batches",
+          "type": "multipleRecordLinks",
+          "description": "Batches the bars were reserved from.",
+          "options": {
+            "linkedTableName": "Production Batches",
+            "prefersSingleRecordLink": false,
+            "inverseLinkFieldName": "Box Shipments"
+          }
+        },
+        {
+          "name": "Packing List",
+          "type": "multilineText",
+          "description": "Readable packing list with batch codes."
+        },
+        {
+          "name": "Bars Planned",
+          "type": "number",
+          "description": "Plan size.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Bars Packed",
+          "type": "number",
+          "description": "Bars allocated.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Fill Status",
+          "type": "singleSelect",
+          "description": "Full, Partial or Empty.",
+          "options": {
+            "choices": [
+              {
+                "name": "Full",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Partial",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Empty",
+                "color": "redLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Shortfall Reason",
+          "type": "multilineText",
+          "description": "Why the box could not be filled."
+        },
+        {
+          "name": "Status",
+          "type": "singleSelect",
+          "description": "Packing progress.",
+          "options": {
+            "choices": [
+              {
+                "name": "Planned",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Packed",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Shipped",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Cancelled",
+                "color": "orangeLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Box History",
+          "type": "multipleRecordLinks",
+          "description": "History rows written for this box.",
+          "options": {
+            "linkedTableName": "Box History",
+            "inverseLinkFieldName": "Box Shipment",
+            "prefersSingleRecordLink": false
+          },
+          "createdAutomatically": true
+        }
+      ]
+    },
+    {
+      "name": "Box History",
+      "description": "Every bar a subscriber received, one row per bar.",
+      "fields": [
+        {
+          "name": "History ID",
+          "type": "singleLineText",
+          "description": "<month> / <subscriber id> / <SKU>. Primary field."
+        },
+        {
+          "name": "Subscriber",
+          "type": "multipleRecordLinks",
+          "description": "The subscriber.",
+          "options": {
+            "linkedTableName": "Subscribers",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Box History"
+          }
+        },
+        {
+          "name": "Product",
+          "type": "multipleRecordLinks",
+          "description": "The bar.",
+          "options": {
+            "linkedTableName": "Products",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Box History"
+          }
+        },
+        {
+          "name": "Box Month",
+          "type": "singleLineText",
+          "description": "YYYY-MM."
+        },
+        {
+          "name": "Shipped On",
+          "type": "date",
+          "description": "Ship date.",
+          "options": {
+            "dateFormat": {
+              "name": "iso"
+            }
+          }
+        },
+        {
+          "name": "Box Shipment",
+          "type": "multipleRecordLinks",
+          "description": "The box, when it was planned by the curation workflow.",
+          "options": {
+            "linkedTableName": "Box Shipments",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Box History"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tickets",
+      "description": "Customer support messages about deliveries.",
+      "fields": [
+        {
+          "name": "Ticket ID",
+          "type": "singleLineText",
+          "description": "For example T-0005. Primary field."
+        },
+        {
+          "name": "Message ID",
+          "type": "singleLineText",
+          "description": "Id of the incoming message. Prevents processing the same message twice."
+        },
+        {
+          "name": "Received At",
+          "type": "dateTime",
+          "description": "When the message arrived.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        },
+        {
+          "name": "Channel",
+          "type": "singleSelect",
+          "description": "Where it came from.",
+          "options": {
+            "choices": [
+              {
+                "name": "Help Form",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Email",
+                "color": "greenLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Customer Name",
+          "type": "singleLineText",
+          "description": "Name given in the message."
+        },
+        {
+          "name": "Customer Email",
+          "type": "email",
+          "description": "Sender email."
+        },
+        {
+          "name": "Customer",
+          "type": "multipleRecordLinks",
+          "description": "Matched customer.",
+          "options": {
+            "linkedTableName": "Customers",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Tickets"
+          }
+        },
+        {
+          "name": "Order",
+          "type": "multipleRecordLinks",
+          "description": "Matched order.",
+          "options": {
+            "linkedTableName": "Orders",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Tickets"
+          }
+        },
+        {
+          "name": "Order Number Given",
+          "type": "singleLineText",
+          "description": "Order number as written by the customer."
+        },
+        {
+          "name": "Email Matches Order",
+          "type": "checkbox",
+          "description": "The sender email is the email on the order.",
+          "options": {
+            "icon": "check",
+            "color": "greenBright"
+          }
+        },
+        {
+          "name": "Subject",
+          "type": "singleLineText",
+          "description": "Message subject."
+        },
+        {
+          "name": "Message",
+          "type": "multilineText",
+          "description": "Message text."
+        },
+        {
+          "name": "Issue Type",
+          "type": "singleSelect",
+          "description": "Classified issue.",
+          "options": {
+            "choices": [
+              {
+                "name": "Melted",
+                "color": "redLight2"
+              },
+              {
+                "name": "Damaged",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Wrong Item",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Missing",
+                "color": "purpleLight2"
+              },
+              {
+                "name": "Allergy Question",
+                "color": "pinkLight2"
+              },
+              {
+                "name": "Other",
+                "color": "grayLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Sentiment",
+          "type": "singleSelect",
+          "description": "Tone of the message.",
+          "options": {
+            "choices": [
+              {
+                "name": "Positive",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Neutral",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Negative",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Angry",
+                "color": "orangeLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Classification Method",
+          "type": "singleSelect",
+          "description": "Claude, or keyword fallback when Claude was unavailable.",
+          "options": {
+            "choices": [
+              {
+                "name": "Claude",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Keyword Fallback",
+                "color": "greenLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Status",
+          "type": "singleSelect",
+          "description": "Where the ticket is.",
+          "options": {
+            "choices": [
+              {
+                "name": "New",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Auto-Approved",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Waiting on Customer",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Human Queue",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Resolved",
+                "color": "grayLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Priority",
+          "type": "singleSelect",
+          "description": "Human queue priority.",
+          "options": {
+            "choices": [
+              {
+                "name": "Low",
+                "color": "grayLight2"
+              },
+              {
+                "name": "Normal",
+                "color": "blueLight2"
+              },
+              {
+                "name": "High",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Urgent",
+                "color": "redLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Resolution",
+          "type": "singleSelect",
+          "description": "What was done.",
+          "options": {
+            "choices": [
+              {
+                "name": "Replacement Approved",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Photo Requested",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Routed to Human",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "None",
+                "color": "orangeLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Routing Reason",
+          "type": "multilineText",
+          "description": "Why the ticket went where it went."
+        },
+        {
+          "name": "Replacement Draft Order ID",
+          "type": "singleLineText",
+          "description": "gid://shopify/DraftOrder/... for an approved replacement."
+        },
+        {
+          "name": "Replacement Order Name",
+          "type": "singleLineText",
+          "description": "Shopify order name of the replacement."
+        },
+        {
+          "name": "Reply Sent At",
+          "type": "dateTime",
+          "description": "When the reply email went out.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        },
+        {
+          "name": "Reply Message ID",
+          "type": "singleLineText",
+          "description": "Message id from the email API."
+        },
+        {
+          "name": "Photos",
+          "type": "multipleAttachments",
+          "description": "Photos sent by the customer."
+        },
+        {
+          "name": "Action Log",
+          "type": "multilineText",
+          "description": "Every automated action, one line each, newest last."
+        }
+      ]
+    },
+    {
+      "name": "Promos",
+      "description": "One promo per short dated batch.",
+      "fields": [
+        {
+          "name": "Promo Name",
+          "type": "singleLineText",
+          "description": "PROMO-<batch code>. Primary field and upsert key, so a batch never gets two promos."
+        },
+        {
+          "name": "Batch",
+          "type": "multipleRecordLinks",
+          "description": "The short dated batch.",
+          "options": {
+            "linkedTableName": "Production Batches",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Promos"
+          }
+        },
+        {
+          "name": "Product",
+          "type": "multipleRecordLinks",
+          "description": "The product.",
+          "options": {
+            "linkedTableName": "Products",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Promos"
+          }
+        },
+        {
+          "name": "Best Before",
+          "type": "date",
+          "description": "Best before date of the batch.",
+          "options": {
+            "dateFormat": {
+              "name": "iso"
+            }
+          }
+        },
+        {
+          "name": "Units Available",
+          "type": "number",
+          "description": "Unsold units when the promo was created.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Discount Percent",
+          "type": "number",
+          "description": "Suggested discount, for example 25.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Status",
+          "type": "singleSelect",
+          "description": "Proposed promos need a person to switch them on in Shopify.",
+          "options": {
+            "choices": [
+              {
+                "name": "Proposed",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Active",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Ended",
+                "color": "grayLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Created At",
+          "type": "dateTime",
+          "description": "When the inventory sync created it.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Purchasing Requests",
+      "description": "Requests to make more of a product. One open request per SKU at a time.",
+      "fields": [
+        {
+          "name": "Request ID",
+          "type": "singleLineText",
+          "description": "PR-<SKU>-<date>. Primary field."
+        },
+        {
+          "name": "Product",
+          "type": "multipleRecordLinks",
+          "description": "The product.",
+          "options": {
+            "linkedTableName": "Products",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Purchasing Requests"
+          }
+        },
+        {
+          "name": "SKU",
+          "type": "singleLineText",
+          "description": "Copied so formulas can filter on it."
+        },
+        {
+          "name": "Status",
+          "type": "singleSelect",
+          "description": "Open until the kitchen schedules the batch.",
+          "options": {
+            "choices": [
+              {
+                "name": "Open",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Scheduled",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Received",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Cancelled",
+                "color": "grayLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Sellable Stock",
+          "type": "number",
+          "description": "Sellable stock when the request was raised.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Reorder Point",
+          "type": "number",
+          "description": "Reorder point at the time.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Suggested Quantity",
+          "type": "number",
+          "description": "Units to make.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Requested At",
+          "type": "dateTime",
+          "description": "When the request was raised.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        },
+        {
+          "name": "Notes",
+          "type": "multilineText",
+          "description": "Notes."
+        }
+      ]
+    },
+    {
+      "name": "Sync Log",
+      "description": "One row per automation run, with counts.",
+      "fields": [
+        {
+          "name": "Run ID",
+          "type": "singleLineText",
+          "description": "Unique run id, for example inventory-2026-10-20T06:00:00Z-48213 (start time plus the n8n execution id). Primary field."
+        },
+        {
+          "name": "Automation",
+          "type": "singleSelect",
+          "description": "Which automation ran.",
+          "options": {
+            "choices": [
+              {
+                "name": "01 Shopify Orders",
+                "color": "blueLight2"
+              },
+              {
+                "name": "02 Inventory Sync",
+                "color": "greenLight2"
+              },
+              {
+                "name": "03 Wholesale Quotes",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "04 Subscription Boxes",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "05 Delivery Triage",
+                "color": "redLight2"
+              },
+              {
+                "name": "06 Airtable Scripts",
+                "color": "purpleLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Trigger",
+          "type": "singleSelect",
+          "description": "What started it.",
+          "options": {
+            "choices": [
+              {
+                "name": "Schedule",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Run Now",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Webhook",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Airtable Automation",
+                "color": "orangeLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Started At",
+          "type": "dateTime",
+          "description": "Start time.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        },
+        {
+          "name": "Finished At",
+          "type": "dateTime",
+          "description": "End time.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        },
+        {
+          "name": "Status",
+          "type": "singleSelect",
+          "description": "Outcome.",
+          "options": {
+            "choices": [
+              {
+                "name": "Success",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Partial",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Failed",
+                "color": "redLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Items Checked",
+          "type": "number",
+          "description": "Records looked at (SKUs, quotes, subscribers...).",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Items Changed",
+          "type": "number",
+          "description": "Records changed.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Shopify Updates",
+          "type": "number",
+          "description": "Calls that changed Shopify.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Promos Created",
+          "type": "number",
+          "description": "New promos.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Purchasing Requests Created",
+          "type": "number",
+          "description": "New purchasing requests.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Errors",
+          "type": "number",
+          "description": "Errors counted during the run.",
+          "options": {
+            "precision": 0
+          }
+        },
+        {
+          "name": "Details",
+          "type": "multilineText",
+          "description": "Readable summary."
+        }
+      ]
+    },
+    {
+      "name": "Data Quality",
+      "description": "Findings from the weekly data quality script.",
+      "fields": [
+        {
+          "name": "Finding ID",
+          "type": "singleLineText",
+          "description": "<week> / <check> / <record id>. Primary field."
+        },
+        {
+          "name": "Report Week",
+          "type": "singleLineText",
+          "description": "ISO week, for example 2026-W43."
+        },
+        {
+          "name": "Check",
+          "type": "singleSelect",
+          "description": "Which rule found it.",
+          "options": {
+            "choices": [
+              {
+                "name": "Missing Required Field",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Invalid Email",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Orphan Order Line",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Duplicate Customer",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Unknown SKU",
+                "color": "redLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Table",
+          "type": "singleSelect",
+          "description": "Table of the record.",
+          "options": {
+            "choices": [
+              {
+                "name": "Customers",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Orders",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Order Lines",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Products",
+                "color": "orangeLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Record ID",
+          "type": "singleLineText",
+          "description": "Airtable record id."
+        },
+        {
+          "name": "Record Name",
+          "type": "singleLineText",
+          "description": "Primary field value of the record."
+        },
+        {
+          "name": "Details",
+          "type": "multilineText",
+          "description": "What is wrong."
+        },
+        {
+          "name": "Severity",
+          "type": "singleSelect",
+          "description": "How urgent.",
+          "options": {
+            "choices": [
+              {
+                "name": "Low",
+                "color": "grayLight2"
+              },
+              {
+                "name": "Medium",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "High",
+                "color": "redLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Status",
+          "type": "singleSelect",
+          "description": "Open until fixed.",
+          "options": {
+            "choices": [
+              {
+                "name": "Open",
+                "color": "orangeLight2"
+              },
+              {
+                "name": "Fixed",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Ignored",
+                "color": "grayLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Found At",
+          "type": "dateTime",
+          "description": "When the script found it.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Webhook Log",
+      "description": "Every webhook delivery received, for deduplication and audit.",
+      "fields": [
+        {
+          "name": "Event ID",
+          "type": "singleLineText",
+          "description": "X-Shopify-Webhook-Id, or the form submission id. Primary field."
+        },
+        {
+          "name": "Source",
+          "type": "singleSelect",
+          "description": "Sender.",
+          "options": {
+            "choices": [
+              {
+                "name": "Shopify",
+                "color": "blueLight2"
+              },
+              {
+                "name": "Wholesale Form",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Help Form",
+                "color": "yellowLight2"
+              },
+              {
+                "name": "Email Parser",
+                "color": "orangeLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Topic",
+          "type": "singleLineText",
+          "description": "For example orders/create."
+        },
+        {
+          "name": "Received At",
+          "type": "dateTime",
+          "description": "When it arrived.",
+          "options": {
+            "timeZone": "America/New_York",
+            "dateFormat": {
+              "name": "iso"
+            },
+            "timeFormat": {
+              "name": "24hour"
+            }
+          }
+        },
+        {
+          "name": "Status",
+          "type": "singleSelect",
+          "description": "Processed, Duplicate (skipped), Ignored or Failed.",
+          "options": {
+            "choices": [
+              {
+                "name": "Processed",
+                "color": "greenLight2"
+              },
+              {
+                "name": "Duplicate",
+                "color": "grayLight2"
+              },
+              {
+                "name": "Ignored",
+                "color": "grayLight2"
+              },
+              {
+                "name": "Failed",
+                "color": "redLight2"
+              }
+            ]
+          }
+        },
+        {
+          "name": "Order",
+          "type": "multipleRecordLinks",
+          "description": "Order it touched.",
+          "options": {
+            "linkedTableName": "Orders",
+            "prefersSingleRecordLink": true,
+            "inverseLinkFieldName": "Webhook Log"
+          }
+        },
+        {
+          "name": "Notes",
+          "type": "multilineText",
+          "description": "Details."
+        }
+      ]
+    }
+  ]
+}
